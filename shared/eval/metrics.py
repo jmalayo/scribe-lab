@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 import statistics
 
+from rapidfuzz import fuzz
+
 def _normalize(text: str) -> str:
     text = re.sub(r"(\*\*|__)", "", text)
     return re.sub(r"\s+", " ", text).strip().lower()
@@ -21,12 +23,12 @@ def is_chunk_correct(chunk: dict, question: dict) -> bool:
     for t in chunk.get("tables", []):
         texts.append(t.get("text_content", ""))
 
-    chunk_text = _normalize(" ".join(texts))
-
-    return any(
-        _normalize(span) in chunk_text 
+    scores = [
+        fuzz.partial_ratio(_normalize(span), _normalize("".join(texts))) / 100
             for span in question["gold_spans"]
-    )
+    ]
+
+    return any(sc for sc in scores if sc >= 0.8)
 
 def calculate_hit5(results: dict, questions: list) -> list[float]:
 

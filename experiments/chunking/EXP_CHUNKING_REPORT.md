@@ -31,6 +31,7 @@ Modelo de embeddings: `paraphrase-multilingual-MiniLM-L12-v2` (`shared/settings.
 > **Pendiente** — si fase 3 sigue sin mejorar los chunks que le llegan al LLM, una acción a evaluar es trocear el texto sin el formato markdown (negrita, headers, etc.) y reservar el markdown únicamente para el payload de las tablas, ya que el markdown no aporta significado real al LLM que consume el chunk y solo suma tokens adicionales.
 
 
+
 ## Fase 1 (chunk_size fijo, sin validar contra el límite del embedder)
 
 Script: `experiments/chunking/run.py`.  
@@ -112,6 +113,8 @@ Causa raíz: `chunk_documents()` (`shared/ingest.py`) cortaba el texto por carac
 - **Caso borde manejado:** si un `split` queda compuesto solo por marcador(es) de tabla (sin texto propio alrededor), no se crea un chunk vacío — sus tablas se acarrean (`pending_tables`) al próximo chunk con texto real del mismo doc. Sin este fix el texto embebido llegaba vacío (`""`) y el servidor de embeddings (`text-embeddings-inference`) rechazaba el batch completo (`413`, `"inputs cannot be empty"`), bloqueando toda la corrida.
 - `is_chunk_correct()` (`shared/eval/metrics.py`): ahora concatena `chunk["text"]` con el `text_content` de cada tabla en `chunk["tables"]` antes de buscar los `gold_spans` — una pregunta cuya respuesta viva solo en una tabla adjunta cuenta como acierto.
 
+
+
 ### Qué se hizo en Qdrant
 
 Colección separada del baseline, para no pisar los números que ya usa el resto de este reporte: `exp_chunking_dynamic_tables__paraphrase-multilingual-MiniLM-L12-v2` (antes: `exp_chunking_dynamic`). El payload de cada punto mantiene el esquema de siempre (`chunk_id`, `text`, `doc_id`, `library`, `chunk_index`) y suma `tables: list[dict]` — cada entrada con `text_content` (markdown crudo de esa tabla) y `doc_id`. Nunca participa del vector, solo viaja en el payload.
@@ -122,6 +125,8 @@ Validado directo contra Qdrant con `experiments/chunking/results/validate_tables
 - Verificado con muestras reales: ningún punto quedó con `tables` poblado y `text=""` (confirma el fix de `pending_tables`); el `text_content` de las tablas trae el markdown crudo intacto (pipes y fila separadora incluidos), no una versión aplanada.
 
 > **Nota:** una primera medición de este experimento daba **13** puntos con tabla para las mismas 10 tablas del corpus — la razón por la que el marcador se inserta inline y no aislado (justificación más abajo) evita justamente esa duplicación.
+
+
 
 ### Justificación del uso del marcador inline
 
@@ -153,9 +158,11 @@ def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().lower()
 ```
 
+
+
 ### Resultado (`chunk_size` dinámico + tablas)
 
-Script: `experiments/chunking/run.py`.   
+Script: `experiments/chunking/run.py`.  
 Experimento MLflow: `exp_chunking_dynamic_tables`. 
 
 ```

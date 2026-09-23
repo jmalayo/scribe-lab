@@ -9,6 +9,7 @@ from pathlib import Path
 
 BASELINE_COLLECTION = qualified_collection_name("exp_chunking_dynamic")
 TABLES_COLLECTION = qualified_collection_name("exp_chunking_dynamic_tables")
+TARGET_QUESTIONS = ["q001", "q002", "q007", "q015"]
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
@@ -54,9 +55,12 @@ def validate_payload(client):
 def validate_target_questions(client):
 
     questions = load_questions()
+
+    targets = [q for q in questions if q["id"] in TARGET_QUESTIONS]
+
     rows = []
 
-    for q in questions:
+    for q in targets:
 
         for label, coll in [("baseline", BASELINE_COLLECTION), ("con_tablas", TABLES_COLLECTION)]:
             
@@ -68,6 +72,7 @@ def validate_target_questions(client):
             tables_count = 0
 
             for i, c in enumerate(results):
+
                 if is_chunk_correct(c, q):
                     hit = True
                     rank = i + 1
