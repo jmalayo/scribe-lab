@@ -50,6 +50,16 @@
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
             "justMyCode": true
+        },
+        {
+            "name": "py-module: chunking/results/validate_tables_payload.py",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "experiments.chunking.results.validate_tables_payload",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "justMyCode": true
         }
     ]
 }
