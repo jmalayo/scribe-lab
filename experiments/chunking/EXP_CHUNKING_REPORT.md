@@ -1,6 +1,6 @@
 # Experimento 1 — Chunking
 
-**Resultado vigente** — `chunk_size=284`, `overlap=25%` → `recall@5=0.500`, `mrr@10=0.360` (experimento MLflow `exp_chunking_dynamic_tables`, run `255db59bb08847b4b89694ac7bf6b3d8`, config en [best_config.json](./results/best_config.json)). Es la indexación de la fase 3 evaluada con el criterio de acierto vigente y el gold set auditado, ambos documentados en [EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md).
+**Resultado vigente** — `chunk_size=284`, `overlap=25%` → `recall@5=0.559`, `mrr@10=0.397` (experimento MLflow `exp_chunking_dynamic_tables`, run `77906c70bb624c95b44a842db8fb7568`, config en [best_config.json](./results/best_config.json)). Es la indexación de la fase 3 evaluada con el criterio de acierto vigente y el gold set auditado, ambos documentados en [EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md).
 
 El experimento llegó a ese resultado en 3 fases. Primero el caso vigente y después las fases en orden.
 
@@ -42,19 +42,19 @@ Experimento MLflow: `exp_chunking_dynamic_tables` (corridas del 2026-10-05).
 
 | chunk_size | overlap | recall@5 | mrr@10 | run MLflow |
 |---|---|---|---|---|
-| 128 | 0% | 0.176 | 0.118 | `f714f469ad3d486d82d7fe482478fd36` |
-| 128 | 10% | 0.206 | 0.146 | `3e16f6b8d2fe4ff6ae753ab03bb91bd4` |
-| 128 | 25% | 0.235 | 0.156 | `83d35975c10641bd81163dda34003dd4` |
-| 256 | 0% | 0.471 | 0.316 | `38eb2d58c01247869cd37d376194d388` |
-| 256 | 10% | 0.441 | 0.347 | `8ad12fe41f324dd7bc7247c1aca6c87a` |
-| 256 | 25% | 0.471 | 0.345 | `16acafbd7ce24a35a8f2a35457814229` |
-| 284 | 0% | 0.500 | 0.335 | `e4cec143c64740f5a5819c71050bbc42` |
-| 284 | 10% | 0.500 | 0.335 | `84d768bcb7b84ddbb59bfa84cb45200b` |
-| ★ 284 | 25% | **0.500** | **0.360** | `255db59bb08847b4b89694ac7bf6b3d8` |
+| 128 | 0% | 0.176 | 0.118 | `48d7a13a4085431ead1328dcb13c0468` |
+| 128 | 10% | 0.206 | 0.146 | `32782f5d2f224aa8b1ce7481108ae5e8` |
+| 128 | 25% | 0.235 | 0.156 | `cddc0a8cc4f8422ebbe1003180852ef6` |
+| 256 | 0% | 0.500 | 0.349 | `a45232ab5a854cb7ab240e3b08b151c6` |
+| 256 | 10% | 0.471 | 0.380 | `a87a682e6cf14ec6a07f2b657e4765d6` |
+| 256 | 25% | 0.500 | 0.377 | `d405385558234d9b8e38b1cf73821bcb` |
+| 284 | 0% | 0.559 | 0.374 | `b9e8ab059cba4178837d62a88d648827` |
+| 284 | 10% | 0.559 | 0.374 | `c9b0bf7d2ce341e686e18fd3f0ad380e` |
+| ★ 284 | 25% | **0.559** | **0.397** | `77906c70bb624c95b44a842db8fb7568` |
 
-**Mejor config:** `chunk_size=284, overlap=25%` → `recall@5=0.500`, `mrr@10=0.360`. Las tres configs de 284 empatan en `recall@5` y desempata `mrr@10`. Frente a los `0.441`/`0.336` de la fase 3, la diferencia en esta config viene del gold set y no de la indexación — `q001` (fila de tabla incorporada a sus `gold_spans`) y `q002` (gold span transcrito literal desde la fuente) pasan a rank 2 ([matcher_comparison.json](./results/matcher_comparison.json), campo `ranks`).
+**Mejor config:** `chunk_size=284, overlap=25%` → `recall@5=0.559`, `mrr@10=0.397`. Las tres configs de 284 empatan en `recall@5` y desempata `mrr@10`. Frente a los `0.441`/`0.336` de la fase 3, la diferencia en esta config viene del gold set auditado y no de la indexación — `q001` y `q002` pasan a rank 2, `q027` a rank 1 y `q029` a rank 4 ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md#data-quality-del-ground-truth)).
 
-El criterio de acierto importa para el **orden** del barrido. Con matching tolerante sin guardas, `cs284_ov0` y `cs284_ov10` subirían a `recall@5=0.529` al contar como acierto un chunk truncado de `q011`, y el barrido elegiría otra config ganadora. La guarda de cobertura lo descarta y deja a `cs284_ov25` como ganadora ([matcher_comparison.csv](./results/matcher_comparison.csv)).
+El criterio de acierto importa para el **orden** del barrido. Con matching tolerante sin guardas, `cs284_ov0` y `cs284_ov10` subirían a `recall@5=0.588` al contar como acierto un chunk truncado de `q011`, y el barrido elegiría otra config ganadora. La guarda de cobertura lo descarta y deja a `cs284_ov25` como ganadora ([matcher_comparison.csv](./results/matcher_comparison.csv)).
 
 ## Fase 1 (chunk_size fijo, sin validar contra el límite del embedder)
 
@@ -228,8 +228,8 @@ chunk_size= 284 overlap=25% -> recall@5=0.441 mrr@10=0.336 CI95=[0.2647, 0.6176]
 
 |                                 | `chunk_size=512, overlap=25%` (anterior)                                       | `chunk_size=277, overlap=25%` (dinámico)         | `chunk_size=284, overlap=25%` (dinámico + tablas)                                                                          | ★ `chunk_size=284, overlap=25%` (criterio vigente)                                              |
 | ------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| recall@5                        | 0.471                                                                          | 0.382                                            | 0.441                                                                                                                      | 0.500                                                                                           |
-| mrr@10                          | 0.336                                                                          | 0.303                                            | 0.336                                                                                                                      | 0.360                                                                                           |
+| recall@5                        | 0.471                                                                          | 0.382                                            | 0.441                                                                                                                      | 0.559                                                                                           |
+| mrr@10                          | 0.336                                                                          | 0.303                                            | 0.336                                                                                                                      | 0.397                                                                                           |
 | ¿excede el límite del embedder? | Sí — avg 158.6 tok, max 201 tok sobre cap real de 128                          | No — p95 verificado ≤ 108.8 tok (cap con margen) | No — mismo cap, calibrado sobre texto sin tablas                                                                           | No — misma indexación que la fase 3                                                             |
 | ¿qué se embeddea realmente?     | ~81% del chunk en promedio (resto truncado en silencio, corte arbitrario)      | El chunk completo                                | El chunk completo, sin el markdown de sus tablas                                                                           | Igual que la fase 3                                                                             |
 | ¿tablas markdown separadas?     | No — vivían inline en el texto embebido                                        | No — vivían inline en el texto embebido          | Sí — extraídas y adjuntas como payload aparte (`chunk.tables`), nunca entran al embedding                                  | Igual que la fase 3                                                                             |

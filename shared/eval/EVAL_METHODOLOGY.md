@@ -36,7 +36,7 @@ Para un experimento de chunking el segundo caso es crítico — el truncamiento 
 
 ## Calibración del umbral de cobertura
 
-Se revisaron a mano todos los pares (pregunta, chunk) del barrido de chunking que superan el score `0.8` con números correctos pero no cubren el span completo. Fuente [matcher_comparison.json](../../experiments/chunking/results/matcher_comparison.json), campo `calibration_pairs`.
+Se revisaron a mano todos los pares (pregunta, chunk) del barrido de chunking que superan el score `0.8` con números correctos pero no cubren el span completo (revisión manual del barrido del 2026-10-05).
 
 | Pregunta | Cobertura | Configs | Qué le falta a la ventana | Veredicto |
 |---|---|---|---|---|
@@ -60,31 +60,33 @@ Top-10 congelado por config, evaluado con cada criterio. `recall@5 / mrr@10` sob
 | `cs128_ov0` | 0.147 / 0.103 | 0.176 / 0.118 | 0.353 / 0.238 | 0.176 / 0.118 |
 | `cs128_ov10` | 0.176 / 0.132 | 0.206 / 0.146 | 0.324 / 0.235 | 0.206 / 0.146 |
 | `cs128_ov25` | 0.235 / 0.149 | 0.235 / 0.156 | 0.324 / 0.234 | 0.235 / 0.156 |
-| `cs256_ov0` | 0.412 / 0.281 | 0.441 / 0.310 | 0.500 / 0.345 | 0.471 / 0.316 |
-| `cs256_ov10` | 0.382 / 0.313 | 0.441 / 0.343 | 0.471 / 0.376 | 0.441 / 0.347 |
-| `cs256_ov25` | 0.382 / 0.310 | 0.441 / 0.339 | 0.500 / 0.359 | 0.471 / 0.345 |
-| `cs284_ov0` | 0.412 / 0.310 | 0.500 / 0.335 | **0.529** / 0.343 | 0.500 / 0.335 |
-| `cs284_ov10` | 0.412 / 0.310 | 0.500 / 0.335 | **0.529** / 0.343 | 0.500 / 0.335 |
-| `cs284_ov25` | **0.441 / 0.336** | **0.500 / 0.360** | 0.500 / 0.360 | **0.500 / 0.360** |
+| `cs256_ov0` | 0.412 / 0.281 | 0.471 / 0.343 | 0.529 / 0.379 | 0.500 / 0.349 |
+| `cs256_ov10` | 0.382 / 0.313 | 0.471 / 0.375 | 0.500 / 0.409 | 0.471 / 0.380 |
+| `cs256_ov25` | 0.382 / 0.310 | 0.471 / 0.371 | 0.529 / 0.392 | 0.500 / 0.377 |
+| `cs284_ov0` | 0.412 / 0.310 | 0.559 / 0.374 | **0.588** / 0.382 | 0.559 / 0.374 |
+| `cs284_ov10` | 0.412 / 0.310 | 0.559 / 0.374 | **0.588** / 0.382 | 0.559 / 0.374 |
+| `cs284_ov25` | **0.441 / 0.336** | **0.559 / 0.397** | 0.559 / 0.397 | **0.559 / 0.397** |
 | Config ganadora | `cs284_ov25` | `cs284_ov25` | `cs284_ov0` / `ov10` | `cs284_ov25` |
 
-- **Los falsos positivos cambian la decisión.** Sin guardas, `cs284_ov0/ov10` suben a `0.529` solo por el chunk truncado de `q011` (cobertura 0.855), y el barrido elegiría otra config. En `cs128_ov0` el recall pasa de `0.176` a `0.353` por 8 preguntas que el criterio vigente rechaza por cobertura o números (`ranks` de cada criterio en el JSON).
-- **La mejora en la config ganadora viene del ground truth, no del criterio.** Comparando las dos columnas estrictas en `cs284_ov25`, `q001` sube de rank 6 a 2 (fila de tabla agregada a sus `gold_spans` en `2066799`) y `q002` de rank 7 a 2 (gold span corregido, ver data quality). Con el ground truth auditado, estricto y vigente coinciden en las tres configs de 284.
+- **Los falsos positivos cambian la decisión.** Sin guardas, `cs284_ov0/ov10` suben a `0.588` solo por el chunk truncado de `q011` (cobertura 0.855), y el barrido elegiría otra config. En `cs128_ov0` el recall pasa de `0.176` a `0.353`, 6 preguntas más en el top-5 que el criterio vigente rechaza por cobertura o números.
+- **La mejora en la config ganadora viene del ground truth, no del criterio.** Comparando las dos columnas estrictas en `cs284_ov25` (de `0.441` a `0.559`, 4 preguntas más en el top-5), `q001` sube de rank 6 a 2 (fila de tabla agregada a sus `gold_spans` en `2066799`), `q002` de 7 a 2, `q027` entra en rank 1 y `q029` en rank 4 (gold spans corregidos, ver data quality). Con el ground truth auditado, estricto y vigente coinciden en las tres configs de 284.
 - **El criterio vigente aporta robustez, no recall** — no infla con truncamientos y tolera la diferencia de redacción que queda en `cs256_ov0/ov25`, donde `q028` acierta con la misma fórmula (`-2.276·kernel + 55.55`) en una segunda ocurrencia del documento redactada distinto.
 
 La corrida oficial del experimento con el criterio vigente da los mismos números que la columna *Vigente* — experimento MLflow `exp_chunking_dynamic_tables`, corridas del 2026-10-05, con `run_id` por config en [EXP_CHUNKING_REPORT.md](../../experiments/chunking/EXP_CHUNKING_REPORT.md#-resultado-vigente-fase-3-con-criterio-de-acierto-vigente).
 
 ## Data quality del ground truth
 
-Un gold span tiene que ser texto literal de su fuente — es la referencia contra la que se mide todo lo demás, y el matching tolerante no debería tapar errores del dato. Auditados los 44 spans de las 34 preguntas, 3 no aparecían literal en su `source_doc` (campo `gold_audit.HEAD` del [JSON](../../experiments/chunking/results/matcher_comparison.json), con el score del fragmento más cercano).
+Un gold span tiene que ser texto literal de su fuente y contener el núcleo de la respuesta — es la referencia contra la que se mide todo lo demás, y el matching tolerante no debería tapar errores del dato. La auditoría encontró dos tipos de problema en 5 de las 34 preguntas. En 3, el span no aparecía literal en su `source_doc` (`tests/data/test_gold_spans.py`, con el score del fragmento más cercano). En otras 2, el span era literal pero no contenía la respuesta, detectado al analizar por qué su chunk quedaba fuera del top-80 (`python -m tests.data.ranking_report` con `K=100`).
 
 | Pregunta | Score | Tipo de error | Corrección |
 |---|---|---|---|
 | `q002` | 0.993 | Error de transcripción — se perdieron los backticks de `` `kernel_size=9` `` | Copiado literal de `tagger-music-genesis.md` |
 | `q014` | 0.966 | Paráfrasis — *"subestimaba… a 96"* en vez de *"subestima… a escala de 96"* | Copiado literal de `music-tagger-benchmark.md` |
 | `q012` | 0.652 | **Drift del corpus** — el documento se reescribió el 2026-08-18 tras verificar contra el código que el SR vigente es 22050, y la frase original (*"afecta directamente `compute_lra()`"*) dejó de existir | Reemplazado por la frase actual de `tagger-music-genesis.md` |
+| `q027` | — | **Span mal elegido** — tomaba la aclaración secundaria (*"no media ± 2 errores estándar…"*), que cruzaba el límite del chunk. El pasaje con la respuesta ya salía primero | Reemplazado por el núcleo (*"…es la media de los 5 folds ± 2 veces la desviación estándar…"*) |
+| `q029` | — | **Span mal elegido** — describía cómo se pondera el promedio, no la métrica ni su valor | Reemplazado por dos spans, la frase con `silhouette_score` y la fila de tabla con `0.0085` |
 
-Después de la corrección, `gold_audit.actual` queda vacío — los 44 spans son literales.
+Después de la corrección, los 45 spans de las 34 preguntas son literales (`test_gold_spans.py` en verde).
 
 > **Impacto en grounding** — el `expected_answer` de `q012` todavía afirma que el cambio de SR afecta `compute_lra()`, algo que el corpus ya no respalda. No influye en `recall@k` (solo se usan los `gold_spans`), pero sí en las métricas de generación que comparen respuestas contra `expected_answer` (groundedness, answer correctness).
 
@@ -94,6 +96,6 @@ Después de la corrección, `gold_audit.actual` queda vacío — los 44 spans so
 - [`tests/fixtures/real_chunks.json`](../../tests/fixtures/real_chunks.json) — **tests de regresión** con chunks reales de `q002`, `q014` y `q028` (deben ser acierto) y el truncado de `q011` (debe ser rechazo). Fallan tanto con el `in` estricto como con el fuzzy sin guardas, así que una regresión del criterio en cualquiera de las dos direcciones rompe el CI.
 - [`tests/data/test_gold_spans.py`](../../tests/data/test_gold_spans.py) — **data quality check** que exige que todo gold span sea literal en su fuente y, si falla, lista cuáles. Detecta el drift del corpus automáticamente. Necesita el corpus (`shared/corpus/`, fuera del repo), por eso corre localmente y no en CI.
 
-Para reproducir la comparación y la calibración, `python -m experiments.chunking.results.compare_matchers` (requiere Qdrant y el embedder levantados).
+Para reproducir la comparación de criterios, `python -m experiments.chunking.results.compare_matchers` (requiere Qdrant y el embedder levantados).
 
 > Los resultados de hybrid search y reranking (`experiments/hybrid-search/results/results.json`, `experiments/reranking/results/results.json`) se calcularon con el criterio estricto y el ground truth anterior a esta auditoría.
