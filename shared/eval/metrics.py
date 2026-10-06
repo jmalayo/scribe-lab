@@ -9,6 +9,45 @@ def _normalize(text: str) -> str:
     text = re.sub(r"(\*\*|__)", "", text)
     return re.sub(r"\s+", " ", text).strip().lower()
 
+
+
+def _find_numbers(text: str) -> list[str]:
+    
+    return [
+        re.sub(r"\s+", "", n)
+            for n in re.findall(r"\d+\.?\d*\s*%?", text)
+    ]
+
+def _is_subsequence(needle: list[str], haystack: list[str]) -> bool:
+    it = iter(haystack)
+
+    return all(n in it for n in needle)
+
+def _span_matches(span: str, chunk_text: str) -> bool:
+
+    fuzzy_threshold = 0.8
+    coverage_threshold = 0.9
+
+    alignment = fuzz.partial_ratio_alignment(span, chunk_text)
+
+    if alignment.score / 100 < fuzzy_threshold:
+        return False
+
+    coverage = min(
+        alignment.src_end - alignment.src_start,
+        alignment.dest_end - alignment.dest_start
+    ) / len(span)
+
+    if coverage < coverage_threshold:
+        return False
+
+    window = chunk_text[alignment.dest_start:alignment.dest_end]
+
+    return _is_subsequence(
+        _find_numbers(span),
+        _find_numbers(window)
+    )
+
 def is_chunk_correct(chunk: dict, question: dict) -> bool:
 
     valid_docs = [
@@ -23,12 +62,12 @@ def is_chunk_correct(chunk: dict, question: dict) -> bool:
     for t in chunk.get("tables", []):
         texts.append(t.get("text_content", ""))
 
-    scores = [
-        fuzz.partial_ratio(_normalize(span), _normalize("".join(texts))) / 100
-            for span in question["gold_spans"]
-    ]
+    chunk_text = _normalize(" ".join(texts))
 
-    return any(sc for sc in scores if sc >= 0.8)
+    return any(
+        _span_matches(_normalize(span), chunk_text)
+            for span in question["gold_spans"]
+    )
 
 def calculate_hit5(results: dict, questions: list) -> list[float]:
 

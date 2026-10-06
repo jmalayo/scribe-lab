@@ -1,0 +1,99 @@
+# Metodología de evaluación — criterio de acierto y ground truth
+
+Todos los `recall@k` y `mrr@k` del proyecto dependen de una sola decisión — si un chunk recuperado cuenta como acierto. La toma `is_chunk_correct()` (`shared/eval/metrics.py`), comparando el chunk contra el **ground truth** del proyecto, los `gold_spans` de [questions.jsonl](./questions.jsonl). Es la base de la **evaluación con métricas** de retrieval en los experimentos de chunking, hybrid search, reranking y evaluation.
+
+| Área | Qué resuelve este documento |
+|---|---|
+| Evaluación con métricas | Criterio de acierto de retrieval y su efecto sobre `recall@k`/`mrr@k` |
+| Decisiones de calidad | Calibración del umbral de cobertura con casos revisados a mano |
+| Data quality | Auditoría del ground truth y corrección por drift del corpus |
+| Testing + CI | Tests unitarios y de regresión que fijan el criterio, corridos en CI (sin CD, no hay despliegue todavía) |
+| Grounding | Ground truth limpio como prerequisito de las métricas de groundedness y answer correctness |
+
+## Criterio de acierto de retrieval
+
+Un chunk es acierto si cumple las cuatro condiciones, en este orden.
+
+1. **Documento correcto** — `chunk["doc_id"]` está entre los `source_doc` de la pregunta.
+2. **Similitud léxica** — sobre texto normalizado (`_normalize`, minúsculas, sin `**`/`__`, espacios colapsados) y con el `text` del chunk unido a sus tablas por un espacio, `fuzz.partial_ratio_alignment(span, chunk)` da un score `≥ 0.8`.
+3. **Cobertura del span** — `min(largo alineado en el span, largo alineado en el chunk) / len(span) ≥ 0.9`. Detecta chunks truncados.
+4. **Consistencia numérica** — los números del span (`_find_numbers`) aparecen en el mismo orden dentro de la ventana del chunk que hizo match, no en cualquier otra parte del chunk.
+
+| Condición | Tolera | Rechaza (evita falsos positivos) |
+|---|---|---|
+| Score `≥ 0.8` | Espacios, pipes de tabla, un typo, una redacción levemente distinta | Texto que no se parece |
+| Cobertura `≥ 0.9` | Diferencias menores en los bordes del span | Chunks truncados que contienen solo una parte del span |
+| Números en la ventana | Cifras idénticas en orden | Cifras invertidas o cambiadas, aunque el resto de la oración coincida |
+
+## Por qué matching tolerante con guardas
+
+Los dos extremos fallan en direcciones opuestas.
+
+- **`in` estricto** (`_normalize(span) in chunk`) — exige cada carácter. Cualquier diferencia de transcripción en el ground truth (un backtick, una paráfrasis) produce un **falso negativo** y subestima el recall.
+- **`partial_ratio` sin guardas** — busca la cadena más corta dentro de la más larga, sin dirección. Si el chunk está truncado, termina midiendo *el chunk dentro del span* y da un score alto aunque falte la mitad de la respuesta. Tampoco distingue `22050, no 44100` de `44100, no 22050`. Produce **falsos positivos** y sobreestima el recall.
+
+Para un experimento de chunking el segundo caso es crítico — el truncamiento es justamente lo que el barrido existe para penalizar. La cobertura devuelve esa sensibilidad sin perder la tolerancia, y la consistencia numérica cubre las cifras alteradas.
+
+## Calibración del umbral de cobertura
+
+Se revisaron a mano todos los pares (pregunta, chunk) del barrido de chunking que superan el score `0.8` con números correctos pero no cubren el span completo. Fuente [matcher_comparison.json](../../experiments/chunking/results/matcher_comparison.json), campo `calibration_pairs`.
+
+| Pregunta | Cobertura | Configs | Qué le falta a la ventana | Veredicto |
+|---|---|---|---|---|
+| `q030` | 0.984 | `cs284_ov25` | Nada — mismo dato redactado en otra oración (*"con 16 procesos… 3.12×"*) | Verdadero positivo |
+| `q025` | 0.897 | `cs128_ov10` | La primera palabra (*"calculados"*) | Truncado |
+| `q011` | 0.855 | `cs284_ov0/10/25` | Termina en *"…no"*, pierde *"entre sí"* y se invierte el sentido | Truncado |
+| `q009` | 0.834 | `cs128_ov*` | Corta antes de *"default con más frecuencia…"* | Truncado |
+| `q025` | 0.813 | `cs128_ov0` | El comienzo del span | Truncado |
+| `q012` | 0.753 | `cs128_ov*` | Corta antes de *"…se confunda con el tempo real"* | Truncado |
+| `q031` | 0.710 | `cs128_ov0`, `cs256_ov*` | La fórmula `(√v - √lo) / (√hi - √lo)` queda a la mitad | Truncado |
+| `q006` | 0.637 | `cs128_ov25` | La primera mitad del span | Truncado |
+
+Todo lo que queda bajo `0.9` es truncamiento real y lo único por encima es un verdadero positivo. Con `0.9` y `0.95` los resultados son idénticos en las 9 configs, por eso queda `0.9` — el margen es chico, `q025` está en `0.897`. En el mismo barrido la consistencia numérica no rechazó por sí sola ningún verdadero positivo (ningún par con cobertura `≥ 0.9` falla solo por números).
+
+## Comparación de criterios sobre el mismo retrieval
+
+Top-10 congelado por config, evaluado con cada criterio. `recall@5 / mrr@10` sobre las 34 preguntas, fuente [matcher_comparison.csv](../../experiments/chunking/results/matcher_comparison.csv). La columna *estricto, gold de MLflow* usa `questions.jsonl` de `2066799^` y reproduce exactamente las corridas originales registradas en MLflow (`exp_chunking_dynamic_tables`), lo que confirma que la comparación es reproducible contra el tracking histórico.
+
+| Config | Estricto, gold de MLflow | Estricto, gold actual | Fuzzy sin guardas | **Vigente** |
+|---|---|---|---|---|
+| `cs128_ov0` | 0.147 / 0.103 | 0.176 / 0.118 | 0.353 / 0.238 | 0.176 / 0.118 |
+| `cs128_ov10` | 0.176 / 0.132 | 0.206 / 0.146 | 0.324 / 0.235 | 0.206 / 0.146 |
+| `cs128_ov25` | 0.235 / 0.149 | 0.235 / 0.156 | 0.324 / 0.234 | 0.235 / 0.156 |
+| `cs256_ov0` | 0.412 / 0.281 | 0.441 / 0.310 | 0.500 / 0.345 | 0.471 / 0.316 |
+| `cs256_ov10` | 0.382 / 0.313 | 0.441 / 0.343 | 0.471 / 0.376 | 0.441 / 0.347 |
+| `cs256_ov25` | 0.382 / 0.310 | 0.441 / 0.339 | 0.500 / 0.359 | 0.471 / 0.345 |
+| `cs284_ov0` | 0.412 / 0.310 | 0.500 / 0.335 | **0.529** / 0.343 | 0.500 / 0.335 |
+| `cs284_ov10` | 0.412 / 0.310 | 0.500 / 0.335 | **0.529** / 0.343 | 0.500 / 0.335 |
+| `cs284_ov25` | **0.441 / 0.336** | **0.500 / 0.360** | 0.500 / 0.360 | **0.500 / 0.360** |
+| Config ganadora | `cs284_ov25` | `cs284_ov25` | `cs284_ov0` / `ov10` | `cs284_ov25` |
+
+- **Los falsos positivos cambian la decisión.** Sin guardas, `cs284_ov0/ov10` suben a `0.529` solo por el chunk truncado de `q011` (cobertura 0.855), y el barrido elegiría otra config. En `cs128_ov0` el recall pasa de `0.176` a `0.353` por 8 preguntas que el criterio vigente rechaza por cobertura o números (`ranks` de cada criterio en el JSON).
+- **La mejora en la config ganadora viene del ground truth, no del criterio.** Comparando las dos columnas estrictas en `cs284_ov25`, `q001` sube de rank 6 a 2 (fila de tabla agregada a sus `gold_spans` en `2066799`) y `q002` de rank 7 a 2 (gold span corregido, ver data quality). Con el ground truth auditado, estricto y vigente coinciden en las tres configs de 284.
+- **El criterio vigente aporta robustez, no recall** — no infla con truncamientos y tolera la diferencia de redacción que queda en `cs256_ov0/ov25`, donde `q028` acierta con la misma fórmula (`-2.276·kernel + 55.55`) en una segunda ocurrencia del documento redactada distinto.
+
+La corrida oficial del experimento con el criterio vigente da los mismos números que la columna *Vigente* — experimento MLflow `exp_chunking_dynamic_tables`, corridas del 2026-10-05, con `run_id` por config en [EXP_CHUNKING_REPORT.md](../../experiments/chunking/EXP_CHUNKING_REPORT.md#-resultado-vigente-fase-3-con-criterio-de-acierto-vigente).
+
+## Data quality del ground truth
+
+Un gold span tiene que ser texto literal de su fuente — es la referencia contra la que se mide todo lo demás, y el matching tolerante no debería tapar errores del dato. Auditados los 44 spans de las 34 preguntas, 3 no aparecían literal en su `source_doc` (campo `gold_audit.HEAD` del [JSON](../../experiments/chunking/results/matcher_comparison.json), con el score del fragmento más cercano).
+
+| Pregunta | Score | Tipo de error | Corrección |
+|---|---|---|---|
+| `q002` | 0.993 | Error de transcripción — se perdieron los backticks de `` `kernel_size=9` `` | Copiado literal de `tagger-music-genesis.md` |
+| `q014` | 0.966 | Paráfrasis — *"subestimaba… a 96"* en vez de *"subestima… a escala de 96"* | Copiado literal de `music-tagger-benchmark.md` |
+| `q012` | 0.652 | **Drift del corpus** — el documento se reescribió el 2026-08-18 tras verificar contra el código que el SR vigente es 22050, y la frase original (*"afecta directamente `compute_lra()`"*) dejó de existir | Reemplazado por la frase actual de `tagger-music-genesis.md` |
+
+Después de la corrección, `gold_audit.actual` queda vacío — los 44 spans son literales.
+
+> **Impacto en grounding** — el `expected_answer` de `q012` todavía afirma que el cambio de SR afecta `compute_lra()`, algo que el corpus ya no respalda. No influye en `recall@k` (solo se usan los `gold_spans`), pero sí en las métricas de generación que comparen respuestas contra `expected_answer` (groundedness, answer correctness).
+
+## Testing + CI
+
+- [`tests/unit/test_metrics.py`](../../tests/unit/test_metrics.py) — 17 **tests unitarios** sin dependencias pesadas, corridos por [`ci.yml`](../../.github/workflows/ci.yml) en cada push. Cubren los casos sintéticos (span idéntico, typo, números invertidos con y sin los correctos en otra oración, truncamiento en chunk corto y largo), documento equivocado, negrita, span dentro de una tabla, `recall_at_k` y `mrr`.
+- [`tests/fixtures/real_chunks.json`](../../tests/fixtures/real_chunks.json) — **tests de regresión** con chunks reales de `q002`, `q014` y `q028` (deben ser acierto) y el truncado de `q011` (debe ser rechazo). Fallan tanto con el `in` estricto como con el fuzzy sin guardas, así que una regresión del criterio en cualquiera de las dos direcciones rompe el CI.
+- [`tests/data/test_gold_spans.py`](../../tests/data/test_gold_spans.py) — **data quality check** que exige que todo gold span sea literal en su fuente y, si falla, lista cuáles. Detecta el drift del corpus automáticamente. Necesita el corpus (`shared/corpus/`, fuera del repo), por eso corre localmente y no en CI.
+
+Para reproducir la comparación y la calibración, `python -m experiments.chunking.results.compare_matchers` (requiere Qdrant y el embedder levantados).
+
+> Los resultados de hybrid search y reranking (`experiments/hybrid-search/results/results.json`, `experiments/reranking/results/results.json`) se calcularon con el criterio estricto y el ground truth anterior a esta auditoría.

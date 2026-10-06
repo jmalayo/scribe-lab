@@ -1,0 +1,50 @@
+[
+ {
+  "id": "q002",
+  "why": "gold span sin los backticks de la fuente",
+  "expected": true,
+  "source_doc": "music-tagger/tagger-music-genesis.md; music-tagger/music-tagger-benchmark.md",
+  "gold_span": "kernel_size=9 fue **rechazado** tras validación estadística rigurosa (Spearman=0.86 sobre umbral seguro 0.98; desvío relativo medio 57.3%, máximo 189.6%)",
+  "chunk": {
+   "doc_id": "music-tagger/tagger-music-genesis.md",
+   "text": "- `kernel_size` de HPSS: default `31`. `kernel_size=9` fue **rechazado** tras validación estadística rigurosa (Spearman=0.86 sobre umbral seguro 0.98; desvío relativo medio 57.3%, máximo 189.6%)",
+   "tables": []
+  }
+ },
+ {
+  "id": "q014",
+  "why": "gold span parafraseado (subestimaba / a escala de 96)",
+  "expected": true,
+  "source_doc": "music-tagger/music-tagger-benchmark.md",
+  "gold_span": "la muestra de 28 canciones subestimaba el costo real a 96 en 37-54 %, incluso corregida",
+  "chunk": {
+   "doc_id": "music-tagger/music-tagger-benchmark.md",
+   "text": "— y, como muestra \"Tiempo real de producción\" en el Benchmark más arriba, un costo **inestable al escalar** (la muestra de 28 canciones subestimaba el costo real a 96 en 37-54 %, incluso ya corregida)",
+   "tables": []
+  }
+ },
+ {
+  "id": "q028",
+  "why": "misma fórmula, distinta redacción alrededor",
+  "expected": true,
+  "source_doc": "music-tagger/music-tagger-benchmark.md",
+  "gold_span": "dando la recta desvío ≈ -2.276·kernel + 55.55",
+  "chunk": {
+   "doc_id": "music-tagger/music-tagger-benchmark.md",
+   "text": ". Con esa metodología, el sesgo con signo por kernel (`evidence/phase_b_kernel_validation/perc_ratio_per_segment.csv`) es +16.93 % (k=17), +30.23 % (k=11) y +35.28 % (k=9); el ajuste lineal de esos 3 puntos da **desvío ≈ -2.276·kernel + 55.55 → -15.0 % en",
+   "tables": []
+  }
+ },
+ {
+  "id": "q011",
+  "why": "chunk truncado: termina en '...no' y pierde 'entre sí'",
+  "expected": false,
+  "source_doc": "music-tagger/music-tagger-benchmark.md",
+  "gold_span": "MERT las confunde con `incrementable-decreciente`, no entre sí",
+  "chunk": {
+   "doc_id": "music-tagger/music-tagger-benchmark.md",
+   "text": "- `alta-ritmica` (-0.040) y `baja-ritmica` (-0.053) dan silhouette negativo: en ambas, la distancia promedio hacia `incrementable-decreciente` (0.086 y 0.084) es menor que su propia distancia intra-categoría (0.088 y 0.087) — MERT las confunde con `incrementable-decreciente`, no",
+   "tables": []
+  }
+ }
+]
