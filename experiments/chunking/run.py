@@ -9,7 +9,7 @@ import numpy as np
 import requests
 
 from shared.eval.data import load_questions
-from shared.eval.metrics import bootstrap_ci, is_chunk_correct, latency_summary, mrr, recall_at_k
+from shared.eval.metrics import bootstrap_ci, calculate_hit_at_k, latency_summary, mrr, recall_at_k
 from shared.ingest import (
     SourceDoc,
     build_qdrant_client,
@@ -61,14 +61,7 @@ def run_config(docs, tables, questions, chunk_size: int, overlap_frac: int):
 
         latencies.append((time.perf_counter() - t0) * 1000) # ms
 
-    per_question_hit5 = [
-        1.0 if any(is_chunk_correct(c, q) 
-            for c in results[q["id"]][:5]) 
-                else 0.0 
-                    for q in questions
-    ]
-
-    ci_low, ci_high = bootstrap_ci(per_question_hit5)
+    ci_low, ci_high = bootstrap_ci(calculate_hit_at_k(results, questions, K_MAX))
 
     row = {
         "chunk_size": chunk_size,
@@ -78,8 +71,9 @@ def run_config(docs, tables, questions, chunk_size: int, overlap_frac: int):
         "recall@1": round(recall_at_k(results, questions, 1), 4),
         "recall@3": round(recall_at_k(results, questions, 3), 4),
         "recall@5": round(recall_at_k(results, questions, 5), 4),
-        "recall@5_ci95": [ci_low, ci_high],
         "recall@10": round(recall_at_k(results, questions, 10), 4),
+        "recall@10_ci95_low": ci_low,
+        "recall@10_ci95_high": ci_high,
         "mrr@10": round(mrr(results, questions, 10), 4),
         **latency_summary(latencies),
     }
@@ -220,11 +214,11 @@ def main():
 
                 print(
                     f"chunk_size={chunk_size:>4} overlap={overlap_frac:.0%} "
-                    f"-> recall@5={row['recall@5']:.3f} mrr@10={row['mrr@10']:.3f} boostrap_ci={row['recall@5_ci95']}"
-                    f"p50={row['p50_ms']}ms"
+                    f"-> recall@10={row['recall@10']:.3f} mrr@10={row['mrr@10']:.3f} "
+                    f"CI95=[{row['recall@10_ci95_low']}, {row['recall@10_ci95_high']}] p50={row['p50_ms']}ms"
                 )
 
-    rows.sort(key=lambda r: (r["recall@5"], r["mrr@10"]), reverse=True)
+    rows.sort(key=lambda r: (r["recall@10"], r["mrr@10"]), reverse=True)
     best = rows[0]
 
     (OUT_DIR / "results" / "best_config.json").write_text(
@@ -238,7 +232,7 @@ def main():
     )
 
     print(f"\nMejor config: chunk_size={best['chunk_size']} overlap={best['overlap_frac']:.0%} "
-          f"(recall@5={best['recall@5']:.3f}) -> guardado en 01-chunking/best_config.json")
+          f"(recall@10={best['recall@10']:.3f}, mrr@10={best['mrr@10']:.3f}) -> guardado en results/best_config.json")
 
 if __name__ == "__main__":
     main()

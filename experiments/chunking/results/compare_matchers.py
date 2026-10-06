@@ -1,15 +1,3 @@
-"""Compara criterios de acierto de is_chunk_correct sobre el MISMO retrieval por config.
-
-Re-indexa cada config del barrido de chunking en una colección temporal (no toca la
-colección del experimento ni MLflow), congela el top-10 de cada pregunta y lo evalúa con:
-
-- estricto_gold_mlflow : `in` estricto con questions.jsonl de 2066799^ (reproduce MLflow)
-- estricto             : `in` estricto con el gold set actual
-- fuzzy_sin_guardas    : partial_ratio >= 0.8 sobre "".join (versión de 2066799)
-- actual               : is_chunk_correct de shared/eval/metrics.py
-
-Salida: matcher_comparison.csv en esta misma carpeta.
-"""
 from __future__ import annotations
 
 import csv
@@ -74,10 +62,10 @@ def main():
     sizes = evaluate_chunks_limits("".join(text_wo))
 
     matchers = {
-        "estricto_gold_mlflow": (strict, _git_questions("2066799^")),
-        "estricto": (strict, qs),
+        "in_gold_mlflow": (strict, _git_questions("2066799^")),
+        "in_gold_actualizado": (strict, qs),
         "fuzzy_sin_guardas": (fuzzy_plain, qs),
-        "actual": (is_chunk_correct, qs),
+        "fuzzy_actual": (is_chunk_correct, qs),
     }
 
     client = build_qdrant_client()

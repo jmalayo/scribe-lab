@@ -1,60 +1,54 @@
 {
   "chunking_config": {
-    "chunk_size": 512,
-    "chunk_overlap": 128
+    "chunk_size": 284,
+    "chunk_overlap": 71
   },
   "n_questions": 34,
   "rows": [
     {
       "method": "hybrid_rrf",
-      "recall@1": 0.2353,
-      "recall@3": 0.4118,
-      "recall@5": 0.5294,
-      "recall@5_ci95": [
-        0.3529,
-        0.7059
-      ],
-      "recall@10": 0.6765,
-      "mrr@10": 0.3474,
-      "p50_ms": 11.6,
-      "p95_ms": 13.4,
-      "mean_ms": 135.5
-    },
-    {
-      "method": "bm25",
-      "recall@1": 0.2353,
-      "recall@3": 0.4412,
-      "recall@5": 0.5,
-      "recall@5_ci95": [
-        0.3529,
-        0.6765
-      ],
-      "recall@10": 0.5588,
-      "mrr@10": 0.3461,
-      "p50_ms": 0.3,
-      "p95_ms": 0.4,
-      "mean_ms": 0.3
+      "recall@1": 0.2647,
+      "recall@3": 0.4706,
+      "recall@5": 0.6471,
+      "recall@10": 0.7059,
+      "recall@10_ci95_low": 0.5294,
+      "recall@10_ci95_high": 0.8529,
+      "mrr@10": 0.4052,
+      "p50_ms": 11.2,
+      "p95_ms": 13.1,
+      "mean_ms": 67.4
     },
     {
       "method": "dense",
       "recall@1": 0.2647,
+      "recall@3": 0.4706,
+      "recall@5": 0.5588,
+      "recall@10": 0.7059,
+      "recall@10_ci95_low": 0.5588,
+      "recall@10_ci95_high": 0.8529,
+      "mrr@10": 0.3971,
+      "p50_ms": 10.8,
+      "p95_ms": 12.7,
+      "mean_ms": 67.0
+    },
+    {
+      "method": "bm25",
+      "recall@1": 0.1471,
       "recall@3": 0.3529,
-      "recall@5": 0.4706,
-      "recall@5_ci95": [
-        0.2941,
-        0.6471
-      ],
-      "recall@10": 0.5882,
-      "mrr@10": 0.3356,
-      "p50_ms": 11.3,
-      "p95_ms": 13.1,
-      "mean_ms": 135.1
+      "recall@5": 0.5,
+      "recall@10": 0.5294,
+      "recall@10_ci95_low": 0.3824,
+      "recall@10_ci95_high": 0.7059,
+      "mrr@10": 0.2873,
+      "p50_ms": 0.4,
+      "p95_ms": 0.5,
+      "mean_ms": 0.4
     }
   ],
   "best_method": "hybrid_rrf",
-  "dense_recall@5": 0.4706,
-  "delta_recall@5": 0.0588,
-  "latency_delta_p50_ms": 0.3,
+  "dense_recall@10": 0.7059,
+  "delta_recall@10": 0.0,
+  "latency_delta_p50_ms": 0.4,
   "adopted_method": "hybrid_rrf",
   "negative_finding": false
 }

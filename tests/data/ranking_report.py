@@ -7,8 +7,7 @@ from shared.retrieval import dense_search
 
 COLLECTION = qualified_collection_name("exp_chunking_dynamic_tables")
 K = 100
-RECALL_KS = [5, 10, 15, 20, 100]
-
+TARGET_K = 5
 
 def find_rank(chunks: list[dict], question: dict) -> int | None:
 
@@ -18,7 +17,6 @@ def find_rank(chunks: list[dict], question: dict) -> int | None:
             return position
 
     return None
-
 
 def main():
 
@@ -34,9 +32,7 @@ def main():
 
         rows.append({
             "id": question["id"],
-            "rank": rank,
-            "posicion": rank if rank is not None else "fuera de rango",
-            "pregunta": question["question"][:80],
+            "rank": rank if rank is not None else "fuera de rango",
         })
 
     df = pd.DataFrame(rows)
@@ -46,18 +42,17 @@ def main():
     pd.set_option("display.width", 200)
 
     print(f"Colección: {COLLECTION} | top-{K}\n")
-    print(df[["id", "posicion", "pregunta"]].to_string(index=False))
+    print(df[["id", "rank"]].to_string(index=False))
 
     print()
 
-    for k in RECALL_KS:
-
-        hits = df["rank"].notna() & (df["rank"] <= k)
-        print(f"recall@{k}: {hits.mean():.3f} ({hits.sum()}/{len(df)})")
-
     out_of_range = df["rank"].isna().sum()
-    print(f"fuera de rango (> {K}): {out_of_range}/{len(df)}")
+    in_scope = df[
+       df["rank"].apply(lambda x: isinstance(x, int) and x <= TARGET_K)
+    ]
 
+    print(f"fuera de rango (> {K}): {out_of_range}/{len(df)}")
+    print(f"dentro del rango objetivo (< {TARGET_K}): {len(in_scope)}")
 
 if __name__ == "__main__":
     main()

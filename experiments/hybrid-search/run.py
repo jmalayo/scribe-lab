@@ -5,8 +5,9 @@ from pathlib import Path
 
 import logging
 
+from experiments.chunking.run import get_tables_from_docs
 from shared.eval.data import load_questions
-from shared.eval.metrics import bootstrap_ci, calculate_hit5, is_chunk_correct, latency_summary, mrr, recall_at_k
+from shared.eval.metrics import bootstrap_ci, calculate_hit_at_k, latency_summary, mrr, recall_at_k
 from shared.ingest import (
     build_qdrant_client,
     chunk_documents,
@@ -23,7 +24,12 @@ K_MAX = 10
 COLLECTION = qualified_collection_name("exp_hybrid_search")
 OUT_DIR = Path(__file__).resolve().parent
 
-_best_chunking_run = get_best_run("chunking")
+_best_chunking_run = get_best_run(
+    "exp_chunking_dynamic_tables",
+    recall_at_k="recall_at_10",
+    tiebreak="mrr_at_10",
+    filter_string="attributes.status = 'FINISHED'"
+)
 BEST_CHUNKING = {
     "chunk_size": int(_best_chunking_run["metrics.chunk_size"]),
     "chunk_overlap": int(_best_chunking_run["metrics.overlap_tokens"]),
@@ -33,15 +39,16 @@ logger = logging.getLogger(__name__)
 
 def evaluate(name: str, results: dict, questions: list, latencies: list) -> dict:
 
-    ci_low, ci_high = bootstrap_ci(calculate_hit5(results, questions))
+    ci_low, ci_high = bootstrap_ci(calculate_hit_at_k(results, questions, K_MAX))
 
     return {
         "method": name,
         "recall@1": round(recall_at_k(results, questions, 1), 4),
         "recall@3": round(recall_at_k(results, questions, 3), 4),
         "recall@5": round(recall_at_k(results, questions, 5), 4),
-        "recall@5_ci95": [ci_low, ci_high],
         "recall@10": round(recall_at_k(results, questions, 10), 4),
+        "recall@10_ci95_low": ci_low,
+        "recall@10_ci95_high": ci_high,
         "mrr@10": round(mrr(results, questions, 10), 4),
         **latency_summary(latencies),
     }
@@ -75,7 +82,9 @@ def main():
 
         logger.info(f"Indexing chunks with config: {expected_config}")
 
-        chunks = chunk_documents(docs, **BEST_CHUNKING)
+        tables = [t for doc in docs for t in get_tables_from_docs(doc)[0]]
+
+        chunks = chunk_documents(docs, tables, **BEST_CHUNKING)
 
         index_chunks(
             client,
@@ -136,11 +145,11 @@ def main():
         with tracked_run("hybrid-search", row["method"], {**BEST_CHUNKING, "method": row["method"]}):
             log_metrics(row)
 
-    rows.sort(key=lambda r: r["recall@5"], reverse=True)
+    rows.sort(key=lambda r: (r["recall@10"], r["mrr@10"]), reverse=True)
     best = rows[0]
 
     dense_row = next(r for r in rows if r["method"] == "dense")
-    delta = best["recall@5"] - dense_row["recall@5"]
+    delta = best["recall@10"] - dense_row["recall@10"]
 
     adopted = (
         best["method"] 
@@ -153,8 +162,8 @@ def main():
         "n_questions": len(questions),
         "rows": rows,
         "best_method": best["method"],
-        "dense_recall@5": dense_row["recall@5"],
-        "delta_recall@5": round(delta, 4),
+        "dense_recall@10": dense_row["recall@10"],
+        "delta_recall@10": round(delta, 4),
         "latency_delta_p50_ms": round(best["p50_ms"] - dense_row["p50_ms"], 1),
         "adopted_method": adopted,
         "negative_finding": adopted == "dense" and best["method"] != "dense",
@@ -169,7 +178,7 @@ def main():
     )
 
     for r in rows:
-        print(f"{r['method']:>10}: recall@5={r['recall@5']:.3f} mrr@10={r['mrr@10']:.3f} "
+        print(f"{r['method']:>10}: recall@10={r['recall@10']:.3f} mrr@10={r['mrr@10']:.3f} "
               f"p50={r['p50_ms']}ms")
 
     print(f"\nMejor método: {best['method']} -> registrado en MLflow (rag-system-eval-hybrid-search), usar get_best_run('hybrid-search')")

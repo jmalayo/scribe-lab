@@ -52,16 +52,6 @@
             "justMyCode": true
         },
         {
-            "name": "py-module: chunking/results/validate_tables_payload.py",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "experiments.chunking.results.validate_tables_payload",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "envFile": "${workspaceFolder}/.env",
-            "justMyCode": true
-        },
-        {
             "name": "py-module: tests/data/ranking_report.py",
             "type": "debugpy",
             "request": "launch",
@@ -76,7 +66,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "pytest",
-            "args": ["tests", "-v", "-k", "${input:pytestFilter}"],
+            "args": [
+                "tests",
+                "-v",
+                "-k",
+                "${input:pytestFilter}"
+            ],
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
@@ -87,7 +82,10 @@
             "type": "debugpy",
             "request": "launch",
             "module": "pytest",
-            "args": ["${file}", "-v"],
+            "args": [
+                "${file}",
+                "-v"
+            ],
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",

@@ -53,9 +53,9 @@ Todo lo que queda bajo `0.9` es truncamiento real y lo único por encima es un v
 
 ## Comparación de criterios sobre el mismo retrieval
 
-Top-10 congelado por config, evaluado con cada criterio. `recall@5 / mrr@10` sobre las 34 preguntas, fuente [matcher_comparison.csv](../../experiments/chunking/results/matcher_comparison.csv). La columna *estricto, gold de MLflow* usa `questions.jsonl` de `2066799^` y reproduce exactamente las corridas originales registradas en MLflow (`exp_chunking_dynamic_tables`), lo que confirma que la comparación es reproducible contra el tracking histórico.
+Top-10 congelado por config, evaluado con cada criterio. `recall@5 / mrr@10` sobre las 34 preguntas, fuente [matcher_comparison.csv](../../experiments/chunking/results/matcher_comparison.csv). Los cuatro criterios son `in_gold_mlflow` (`in` estricto con `questions.jsonl` de `2066799^`), `in_gold_actualizado` (`in` estricto con el ground truth actual), `fuzzy_sin_guardas` (solo `partial_ratio ≥ 0.8`, versión de `2066799`) y `fuzzy_actual` (versión actual de `is_chunk_correct`). `in_gold_mlflow` usa `questions.jsonl` de `2066799^` y reproduce exactamente las corridas originales registradas en MLflow (`exp_chunking_dynamic_tables`), lo que confirma que la comparación es reproducible contra el tracking histórico.
 
-| Config | Estricto, gold de MLflow | Estricto, gold actual | Fuzzy sin guardas | **Vigente** |
+| Config | `in_gold_mlflow` | `in_gold_actualizado` | `fuzzy_sin_guardas` | **`fuzzy_actual`** |
 |---|---|---|---|---|
 | `cs128_ov0` | 0.147 / 0.103 | 0.176 / 0.118 | 0.353 / 0.238 | 0.176 / 0.118 |
 | `cs128_ov10` | 0.176 / 0.132 | 0.206 / 0.146 | 0.324 / 0.235 | 0.206 / 0.146 |
@@ -68,11 +68,19 @@ Top-10 congelado por config, evaluado con cada criterio. `recall@5 / mrr@10` sob
 | `cs284_ov25` | **0.441 / 0.336** | **0.559 / 0.397** | 0.559 / 0.397 | **0.559 / 0.397** |
 | Config ganadora | `cs284_ov25` | `cs284_ov25` | `cs284_ov0` / `ov10` | `cs284_ov25` |
 
-- **Los falsos positivos cambian la decisión.** Sin guardas, `cs284_ov0/ov10` suben a `0.588` solo por el chunk truncado de `q011` (cobertura 0.855), y el barrido elegiría otra config. En `cs128_ov0` el recall pasa de `0.176` a `0.353`, 6 preguntas más en el top-5 que el criterio vigente rechaza por cobertura o números.
-- **La mejora en la config ganadora viene del ground truth, no del criterio.** Comparando las dos columnas estrictas en `cs284_ov25` (de `0.441` a `0.559`, 4 preguntas más en el top-5), `q001` sube de rank 6 a 2 (fila de tabla agregada a sus `gold_spans` en `2066799`), `q002` de 7 a 2, `q027` entra en rank 1 y `q029` en rank 4 (gold spans corregidos, ver data quality). Con el ground truth auditado, estricto y vigente coinciden en las tres configs de 284.
-- **El criterio vigente aporta robustez, no recall** — no infla con truncamientos y tolera la diferencia de redacción que queda en `cs256_ov0/ov25`, donde `q028` acierta con la misma fórmula (`-2.276·kernel + 55.55`) en una segunda ocurrencia del documento redactada distinto.
+- **Los falsos positivos cambian la decisión.** Sin guardas, `cs284_ov0/ov10` suben a `0.588` solo por el chunk truncado de `q011` (cobertura 0.855), y el barrido elegiría otra config. En `cs128_ov0` el recall pasa de `0.176` a `0.353`, 6 preguntas más en el top-5 que `fuzzy_actual` rechaza por cobertura o números. Con `recall@10`, la métrica de decisión vigente desde el 2026-10-06, el fuzzy sin guardas ya no cambia la ganadora (empata `cs284_ov0/ov10/ov25` en `0.706` y desempata `mrr@10` a favor de `cs284_ov25`), pero sigue inflando las configs de 128 (`cs128_ov0`: `recall@10=0.412` contra `0.206`). La tabla de arriba está en `recall@5` porque es la métrica con la que se tomó la decisión original.
+- **La mejora en la config ganadora viene del ground truth, no del criterio.** Comparando `in_gold_mlflow` contra `in_gold_actualizado` en `cs284_ov25` (de `0.441` a `0.559`, 4 preguntas más en el top-5), `q001` sube de rank 6 a 2 (fila de tabla agregada a sus `gold_spans` en `2066799`), `q002` de 7 a 2, `q027` entra en rank 1 y `q029` en rank 4 (gold spans corregidos, ver data quality). Con el ground truth auditado, `in_gold_actualizado` y `fuzzy_actual` coinciden en las tres configs de 284.
+- **`fuzzy_actual` aporta robustez, no recall** — no infla con truncamientos y tolera la diferencia de redacción que queda en `cs256_ov0/ov25`, donde `q028` acierta con la misma fórmula (`-2.276·kernel + 55.55`) en una segunda ocurrencia del documento redactada distinto.
 
-La corrida oficial del experimento con el criterio vigente da los mismos números que la columna *Vigente* — experimento MLflow `exp_chunking_dynamic_tables`, corridas del 2026-10-05, con `run_id` por config en [EXP_CHUNKING_REPORT.md](../../experiments/chunking/EXP_CHUNKING_REPORT.md#-resultado-vigente-fase-3-con-criterio-de-acierto-vigente).
+En la config ganadora las curvas de recall de `in_gold_actualizado`, `fuzzy_sin_guardas` y `fuzzy_actual` coinciden en todos los `k`, y solo `in_gold_mlflow` queda por debajo — la diferencia en esa config es del ground truth.
+
+![Curvas de recall por criterio en cs284_ov25](../../experiments/chunking/results/recall_curves_cs284_ov25.png)
+
+En el barrido completo se ve dónde divergen. `fuzzy_sin_guardas` se separa del resto en las configs de 128 (chunks cortos, más truncamientos) y en `cs284_ov0/ov10`.
+
+![MRR@10 y Recall@10 por configuración y criterio](../../experiments/chunking/results/heatmaps_criterios.png)
+
+La corrida oficial del experimento con `fuzzy_actual` da los mismos números que la columna `fuzzy_actual` — experimento MLflow `exp_chunking_dynamic_tables`, corridas del 2026-10-05, con `run_id` por config en [EXP_CHUNKING_REPORT.md](../../experiments/chunking/EXP_CHUNKING_REPORT.md#-resultado-vigente-fase-3-con-fuzzy_actual-top-10).
 
 ## Data quality del ground truth
 
@@ -92,10 +100,15 @@ Después de la corrección, los 45 spans de las 34 preguntas son literales (`tes
 
 ## Testing + CI
 
-- [`tests/unit/test_metrics.py`](../../tests/unit/test_metrics.py) — 17 **tests unitarios** sin dependencias pesadas, corridos por [`ci.yml`](../../.github/workflows/ci.yml) en cada push. Cubren los casos sintéticos (span idéntico, typo, números invertidos con y sin los correctos en otra oración, truncamiento en chunk corto y largo), documento equivocado, negrita, span dentro de una tabla, `recall_at_k` y `mrr`.
-- [`tests/fixtures/real_chunks.json`](../../tests/fixtures/real_chunks.json) — **tests de regresión** con chunks reales de `q002`, `q014` y `q028` (deben ser acierto) y el truncado de `q011` (debe ser rechazo). Fallan tanto con el `in` estricto como con el fuzzy sin guardas, así que una regresión del criterio en cualquiera de las dos direcciones rompe el CI.
+Los tests unitarios corren con [`ci.yml`](../../.github/workflows/ci.yml) en cada push, sin dependencias pesadas. Los casos sintéticos y los reales van en archivos separados.
+
+- [`tests/unit/test_chunk_correct_synthetic.py`](../../tests/unit/test_chunk_correct_synthetic.py) — **casos sintéticos**, sin depender del corpus. 6 que deben ser acierto (mismo dato con otro formato: espacios, negrita, backticks, typo, fila de tabla con otro padding) y 8 que no (número cambiado, números invertidos con y sin los correctos en otra oración, número faltante, truncado al inicio y al final, misma estructura con otro modelo, documento equivocado).
+- [`tests/unit/test_chunk_correct_real.py`](../../tests/unit/test_chunk_correct_real.py) — **tests de regresión** con chunks reales ([`real_chunks.json`](../../tests/fixtures/real_chunks.json)) de `q002`, `q014` y `q028` (deben ser acierto) y el truncado de `q011` (debe ser rechazo).
+- [`tests/unit/test_metrics.py`](../../tests/unit/test_metrics.py) — `_find_numbers`, `recall_at_k` y `mrr` sobre rankings calculables a mano.
+
+Contra las versiones anteriores del criterio, `fuzzy_sin_guardas` falla los 7 sintéticos de dato alterado y el real `q011`, y el `in` estricto falla los sintéticos de backticks y typo y los reales `q002`, `q014` y `q028`. Una regresión en cualquiera de las dos direcciones rompe el CI.
 - [`tests/data/test_gold_spans.py`](../../tests/data/test_gold_spans.py) — **data quality check** que exige que todo gold span sea literal en su fuente y, si falla, lista cuáles. Detecta el drift del corpus automáticamente. Necesita el corpus (`shared/corpus/`, fuera del repo), por eso corre localmente y no en CI.
 
-Para reproducir la comparación de criterios, `python -m experiments.chunking.results.compare_matchers` (requiere Qdrant y el embedder levantados).
+Para reproducir la comparación de criterios, `python -m experiments.chunking.results.compare_matchers` (requiere Qdrant y el embedder levantados), y para regenerar los gráficos a partir del CSV, `python -m experiments.chunking.results.plot_matchers`.
 
 > Los resultados de hybrid search y reranking (`experiments/hybrid-search/results/results.json`, `experiments/reranking/results/results.json`) se calcularon con el criterio estricto y el ground truth anterior a esta auditoría.

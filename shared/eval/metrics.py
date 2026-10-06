@@ -69,10 +69,10 @@ def is_chunk_correct(chunk: dict, question: dict) -> bool:
             for span in question["gold_spans"]
     )
 
-def calculate_hit5(results: dict, questions: list) -> list[float]:
+def calculate_hit_at_k(results: dict, questions: list, k: int) -> list[float]:
 
     return [
-        1.0 if any(is_chunk_correct(c, q) for c in results[q["id"]][:5]) else 0.0
+        1.0 if any(is_chunk_correct(c, q) for c in results[q["id"]][:k]) else 0.0
         for q in questions
     ]
 
