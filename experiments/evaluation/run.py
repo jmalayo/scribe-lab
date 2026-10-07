@@ -2,38 +2,64 @@ import json
 import time
 from pathlib import Path
 
+from experiments.chunking.run import get_tables_from_docs
 from shared.eval.data import load_questions
 from shared.eval.metrics import bootstrap_ci, groundedness_rate, hallucination_rate, latency_summary
 from shared.ingest import build_qdrant_client, chunk_documents, index_chunks, load_corpus
 from shared.llm import generate
 from shared.retrieval import BM25Index, fetch_all_chunks, rerank
+from shared.settings import settings
 from shared.tracking import get_best_run, log_metrics, tracked_run
 
 from experiments.evaluation.prompts import ANSWER_PROMPT, GROUNDEDNESS_PROMPT, RELEVANCE_PROMPT
-
-from experiments.reranking.run import base_search, POOL_SIZE, TOP_K
+from experiments.reranking.run import base_search, BEST_CHUNKING, BEST_METHOD, POOL_SIZE, TOP_K
 
 COLLECTION = "exp_evaluation"
 OUT_DIR = Path(__file__).resolve().parent
 
-_best_chunking_run = get_best_run("chunking")
-
-BEST_CHUNKING = {
-    "chunk_size": int(_best_chunking_run["metrics.chunk_size"]),
-    "chunk_overlap": int(_best_chunking_run["metrics.overlap_tokens"]),
-}
-
-BEST_METHOD = get_best_run("hybrid-search")["params.method"]
-USE_RERANKER = get_best_run("reranking")["params.use_reranker"] == "True"
+USE_RERANKER = get_best_run(
+    "reranking",
+    recall_at_k="recall_at_10",
+    tiebreak="mrr_at_10",
+    filter_string=(
+        f"params.chunk_size = '{BEST_CHUNKING['chunk_size']}' "
+        f"and params.chunk_overlap = '{BEST_CHUNKING['chunk_overlap']}' "
+        f"and params.base_method = '{BEST_METHOD}' "
+        f"and params.reranker_model = '{settings.cross_encoder_model}' "
+        "and metrics.recall_at_10 >= 0"
+    )
+)["params.use_reranker"] == "True"
 
 def retrieve_context(client, bm25, question: str) -> list[dict]:
 
-    candidates = base_search(client, bm25, question, POOL_SIZE)
+    candidates = base_search(client, bm25, question, collection=COLLECTION, k=POOL_SIZE)
 
     if USE_RERANKER:
         return rerank(question, candidates, TOP_K)
 
     return candidates[:TOP_K]
+
+def build_context_text(context_chunks: list[dict]) -> str:
+
+    blocks = []
+
+    for chunk in context_chunks:
+
+        doc_id = chunk["doc_id"]
+        text = chunk["text"]
+        tables_list = chunk.get("tables") or []
+
+        table_texts = [t["text_content"] for t in tables_list]
+        tables_str = "\n\n".join(table_texts)
+
+        chunk_block = f"[{doc_id}] {text}"
+
+        if tables_str:
+            chunk_block += f"\n\n{tables_str}"
+
+        blocks.append(chunk_block)
+
+    return "\n\n".join(blocks)
 
 def main():
     docs = load_corpus()
@@ -41,7 +67,9 @@ def main():
 
     client = build_qdrant_client()
 
-    chunks = chunk_documents(docs, BEST_CHUNKING["chunk_size"], BEST_CHUNKING["chunk_overlap"])
+    tables = [t for doc in docs for t in get_tables_from_docs(doc)[0]]
+
+    chunks = chunk_documents(docs, tables, BEST_CHUNKING["chunk_size"], BEST_CHUNKING["chunk_overlap"])
 
     index_chunks(client, chunks, COLLECTION, BEST_CHUNKING)
 
@@ -55,11 +83,11 @@ def main():
     for q in questions:
 
         context_chunks = retrieve_context(client, bm25, q["question"])
-        context_text = "\n\n".join(
-            [f"[{c['doc_id']}] {c['text']}" for c in context_chunks]
-        )
+        context_text = build_context_text(context_chunks)
 
+        t0 = time.perf_counter()
         answer = generate(ANSWER_PROMPT.format(context=context_text, question=q["question"]))
+        gen_latencies.append((time.perf_counter() - t0) * 1000)
 
         grounded = generate(GROUNDEDNESS_PROMPT.format(context=context_text, answer=answer))
         

@@ -7,6 +7,7 @@ from shared.eval.data import load_questions
 from shared.eval.metrics import bootstrap_ci, calculate_hit_at_k, latency_summary, mrr, recall_at_k
 from shared.ingest import build_qdrant_client, chunk_documents, index_chunks, load_corpus
 from shared.retrieval import BM25Index, dense_search, fetch_all_chunks, reciprocal_rank_fusion, rerank
+from shared.settings import settings
 from shared.tracking import get_best_run, log_metrics, tracked_run
 
 from qdrant_client import QdrantClient
@@ -134,7 +135,8 @@ def main():
             {
                 **BEST_CHUNKING, 
                 "base_method": BEST_METHOD, 
-                "use_reranker": row["config"] == "reranked"
+                "use_reranker": row["config"] == "reranked",
+                "reranker_model": settings.cross_encoder_model
             }
         ):
             log_metrics(row)

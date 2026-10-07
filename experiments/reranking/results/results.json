@@ -13,23 +13,23 @@
       "recall@10_ci95_low": 0.5294,
       "recall@10_ci95_high": 0.8529,
       "mrr@10": 0.3854,
-      "p50_ms": 11.7,
-      "p95_ms": 14.5,
-      "mean_ms": 12.1
+      "p50_ms": 12.4,
+      "p95_ms": 24.2,
+      "mean_ms": 14.7
     },
     {
       "config": "reranked",
-      "recall@5": 0.6176,
-      "recall@10": 0.7353,
-      "recall@10_ci95_low": 0.5882,
-      "recall@10_ci95_high": 0.8824,
-      "mrr@10": 0.4395,
-      "p50_ms": 28.4,
-      "p95_ms": 31.7,
-      "mean_ms": 157.6
+      "recall@5": 0.6765,
+      "recall@10": 0.7059,
+      "recall@10_ci95_low": 0.5294,
+      "recall@10_ci95_high": 0.8529,
+      "mrr@10": 0.4559,
+      "p50_ms": 197.4,
+      "p95_ms": 226.3,
+      "mean_ms": 4728.7
     }
   ],
-  "delta_recall@10": 0.0588,
-  "delta_p95_ms": 17.2,
+  "delta_recall@10": 0.0294,
+  "delta_p95_ms": 202.1,
   "negative_finding": false
 }

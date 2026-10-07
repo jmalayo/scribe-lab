@@ -1,0 +1,6 @@
+transformers==4.49.0
+tokenizers==0.21.4
+huggingface_hub==0.36.2
+lettucedetect==0.2.3
+fastapi==0.115.12
+uvicorn==0.34.2

@@ -65,6 +65,24 @@ services:
     environment:
       OLLAMA_HOST: "ollama:11434"
 
+  detector:
+    restart: "no"
+    build:
+      context: "./detector"
+    image: rag-lettuce-detector:es-v1
+    profiles: ["eval"]
+    ports:
+      - "8100:8000"
+    mem_limit: 3g
+    volumes:
+      - detector_models:/models
+    environment:
+      - MODEL_ID=KRLabsOrg/lettucedect-210m-eurobert-es-v1
+      - LANG_CODE=es
+      - HF_HUB_OFFLINE=${DETECTOR_OFFLINE:-0}
+      - LETTUCE_REVISION=7698129a608994d734762a116f6ed770f27a7d24
+      - OMP_NUM_THREADS=4
+
   mlflow-server:
     restart: unless-stopped
     image: ghcr.io/mlflow/mlflow:v3.15.2
@@ -85,3 +103,4 @@ volumes:
   embedder_cache:
   ollama_data:
   mlflow_data:
+  detector_models:

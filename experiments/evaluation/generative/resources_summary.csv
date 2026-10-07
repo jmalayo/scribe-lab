@@ -1,0 +1,7 @@
+component;model;device;n_items;load_s;p50_s;p95_s;max_s;total_s;peak_ram_gb;ram_delta_gb;vram_gb;vram_peak_nvidia_smi_gb
+nli_mdeberta;MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7;cpu;34;1.8;15.05;37.88;42.03;576.7;2.06;1.3;0.0;
+nli_mdeberta;MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7;cuda;34;2.73;0.05;0.13;0.66;3.0;1.87;1.1;1.19;
+lettucedetect;KRLabsOrg/lettucedect-210m-eurobert-es-v1;cpu;34;4.96;0.7;1.11;13.76;37.9;1.16;0.63;0.0;
+qwen3_relevance_think;qwen3:8b;gpu;34;28.73;4.59;6.21;6.71;159.2;;;5.58;5.97
+qwen3_relevance_json;qwen3:8b;gpu;34;7.23;0.99;1.35;1.41;34.3;;;5.58;5.97
+llama31_generation;llama3.1:8b-instruct-q4_K_M;gpu;34;19.51;1.28;1.77;2.23;44.2;;;5.27;5.65

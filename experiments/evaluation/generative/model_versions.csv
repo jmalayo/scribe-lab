@@ -1,0 +1,6 @@
+component;model;source;version;quantization;size_gb;device;runtime;license
+generator;llama3.1:8b-instruct-q4_K_M;ollama;sha256:46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e;Q4_K_M;4.92;gpu;ollama 0.33.3;llama3.1 community
+relevance_judge;qwen3:8b;ollama;sha256:500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41;Q4_K_M;5.23;gpu;ollama 0.33.3;apache-2.0
+span_hallucination;KRLabsOrg/lettucedect-210m-eurobert-es-v1;huggingface;7698129a608994d734762a116f6ed770f27a7d24;fp32;0.86;cpu;transformers 4.49.0 + lettucedetect 0.2.3 (contenedor detector, torch 2.6.0 CPU);mit
+span_hallucination_code;EuroBERT/EuroBERT-210m (modeling_eurobert.py remoto);huggingface;39b51e15dd1f1a06f58b5cbf6a8a188cec60bd0e;;;cpu;transformers 4.49.0;apache-2.0
+sentence_nli;MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7;huggingface;b5113eb38ab63efdd7f280f8c144ea8b13f978ce;fp32;0.58;cpu;transformers 5.16.1 (venv .rag-system);mit

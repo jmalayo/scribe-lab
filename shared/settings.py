@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2" # INGLES
     embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2" # ESPAÑOL
 
-    cross_encoder_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    cross_encoder_model: str = "BAAI/bge-reranker-v2-m3"
 
     llm_host: str = "http://127.0.0.1:11434"
     llm_backend: str = "ollama"
