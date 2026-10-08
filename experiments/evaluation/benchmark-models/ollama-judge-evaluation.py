@@ -23,16 +23,29 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 os.chdir(REPO_ROOT)
 
+from experiments.chunking.run import get_tables_from_docs
+from experiments.evaluation.prompts import (
+    ANSWER_PROMPT,
+    GROUNDEDNESS_PROMPT,
+    RELEVANCE_PROMPT,
+)
+from experiments.evaluation.run import (
+    BEST_CHUNKING,
+    COLLECTION,
+    build_context_text,
+    retrieve_context,
+)
 from shared.eval.data import load_questions
 from shared.eval.metrics import latency_summary
-from shared.ingest import build_qdrant_client, chunk_documents, index_chunks, load_corpus
+from shared.ingest import (
+    build_qdrant_client,
+    chunk_documents,
+    index_chunks,
+    load_corpus,
+)
 from shared.llm import generate
 from shared.retrieval import BM25Index, fetch_all_chunks
 from shared.settings import settings
-
-from experiments.chunking.run import get_tables_from_docs
-from experiments.evaluation.prompts import ANSWER_PROMPT, GROUNDEDNESS_PROMPT, RELEVANCE_PROMPT
-from experiments.evaluation.run import BEST_CHUNKING, COLLECTION, build_context_text, retrieve_context
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
@@ -186,7 +199,7 @@ def agreement_rate(verdicts_a: list[dict], verdicts_b: list[dict], key: str) -> 
 
     matches = 0
 
-    for a, b in zip(verdicts_a, verdicts_b):
+    for a, b in zip(verdicts_a, verdicts_b, strict=True):
         if a[key] == b[key]:
             matches += 1
 

@@ -7,10 +7,21 @@ from pathlib import Path
 
 from rapidfuzz import fuzz
 
-from experiments.chunking.run import K_MAX, OVERLAP_FRACS, evaluate_chunks_limits, get_tables_from_docs
+from experiments.chunking.run import (
+    K_MAX,
+    OVERLAP_FRACS,
+    evaluate_chunks_limits,
+    get_tables_from_docs,
+)
 from shared.eval.data import load_questions
 from shared.eval.metrics import _normalize, is_chunk_correct
-from shared.ingest import build_qdrant_client, chunk_documents, corpus_hash, index_chunks, load_corpus
+from shared.ingest import (
+    build_qdrant_client,
+    chunk_documents,
+    corpus_hash,
+    index_chunks,
+    load_corpus,
+)
 from shared.retrieval import dense_search
 
 OUT_DIR = Path(__file__).resolve().parent
@@ -18,7 +29,7 @@ TMP_COLLECTION = "compare_matchers_tmp"
 
 def _git_questions(rev: str) -> list[dict]:
     raw = subprocess.check_output(["git", "show", f"{rev}:shared/eval/questions.jsonl"]).decode()
-    return [json.loads(l) for l in raw.splitlines() if l.strip()]
+    return [json.loads(line) for line in raw.splitlines() if line.strip()]
 
 def _valid_doc(c, q):
     return c.get("doc_id") in [d.strip() for d in q["source_doc"].split(";")]

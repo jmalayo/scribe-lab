@@ -2,15 +2,32 @@ import json
 import time
 from pathlib import Path
 
+from qdrant_client import QdrantClient
+
 from experiments.chunking.run import get_tables_from_docs
 from shared.eval.data import load_questions
-from shared.eval.metrics import bootstrap_ci, calculate_hit_at_k, latency_summary, mrr, recall_at_k
-from shared.ingest import build_qdrant_client, chunk_documents, index_chunks, load_corpus
-from shared.retrieval import BM25Index, dense_search, fetch_all_chunks, reciprocal_rank_fusion, rerank
+from shared.eval.metrics import (
+    bootstrap_ci,
+    calculate_hit_at_k,
+    latency_summary,
+    mrr,
+    recall_at_k,
+)
+from shared.ingest import (
+    build_qdrant_client,
+    chunk_documents,
+    index_chunks,
+    load_corpus,
+)
+from shared.retrieval import (
+    BM25Index,
+    dense_search,
+    fetch_all_chunks,
+    reciprocal_rank_fusion,
+    rerank,
+)
 from shared.settings import settings
 from shared.tracking import get_best_run, log_metrics, tracked_run
-
-from qdrant_client import QdrantClient
 
 POOL_SIZE = 20  # cuántos candidatos trae el retriever base antes de rerankear
 TOP_K = 10
@@ -38,9 +55,9 @@ BEST_METHOD = get_best_run(
 )["params.method"]
 
 def base_search(
-    client: QdrantClient = None, 
-    bm25: BM25Index = None, 
-    question: str = None,
+    client: QdrantClient | None = None, 
+    bm25: BM25Index | None = None, 
+    question: str | None = None,
     collection: str = COLLECTION,
     k: int = POOL_SIZE
 ) -> list[dict]:

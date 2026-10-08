@@ -1,15 +1,20 @@
 import json
+import logging
 import re
 import time
 from pathlib import Path
-
-import logging
 
 import numpy as np
 import requests
 
 from shared.eval.data import load_questions
-from shared.eval.metrics import bootstrap_ci, calculate_hit_at_k, latency_summary, mrr, recall_at_k
+from shared.eval.metrics import (
+    bootstrap_ci,
+    calculate_hit_at_k,
+    latency_summary,
+    mrr,
+    recall_at_k,
+)
 from shared.ingest import (
     SourceDoc,
     build_qdrant_client,
@@ -17,7 +22,7 @@ from shared.ingest import (
     corpus_hash,
     index_chunks,
     load_corpus,
-    qualified_collection_name
+    qualified_collection_name,
 )
 from shared.retrieval import dense_search
 from shared.settings import settings
@@ -202,7 +207,7 @@ def main():
                     "overlap_frac": overlap_frac
                 }
 
-            ) as run:
+            ):
 
                 logger.info(f"Running config: chunk_size={chunk_size} overlap_frac={overlap_frac}")
 

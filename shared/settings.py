@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 
+
 class Settings(BaseSettings):
 
     qdrant_mode: str = "server"

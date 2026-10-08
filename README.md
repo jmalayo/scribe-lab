@@ -14,6 +14,15 @@ Fase de evaluación — módulos independientes, cada uno con su propio objetivo
 
 Ambos servicios corren vía `docker-compose up` y se reutilizan entre experimentos.
 
+### Entorno de desarrollo
+
+```bash
+pip install -r requirements.txt
+pre-commit install   # activa `ruff check` antes de cada commit (el gancho es local, no se versiona)
+```
+
+Las reglas de `ruff` están en `ruff.toml`. El CI (`.github/workflows/ci.yml`) corre `ruff check .` y los tests unitarios en cada push.
+
 ### Modelo de embeddings (descarga previa requerida)
 
 El servicio `embedder` corre con `HF_HUB_OFFLINE=1` (no descarga nada en runtime), así que el modelo debe existir en `./embedder_cache/` **antes** de levantar el stack:

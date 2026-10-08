@@ -1,13 +1,17 @@
 import json
-import sys
+import logging
 import time
 from pathlib import Path
 
-import logging
-
 from experiments.chunking.run import get_tables_from_docs
 from shared.eval.data import load_questions
-from shared.eval.metrics import bootstrap_ci, calculate_hit_at_k, latency_summary, mrr, recall_at_k
+from shared.eval.metrics import (
+    bootstrap_ci,
+    calculate_hit_at_k,
+    latency_summary,
+    mrr,
+    recall_at_k,
+)
 from shared.ingest import (
     build_qdrant_client,
     chunk_documents,
@@ -17,7 +21,12 @@ from shared.ingest import (
     load_corpus,
     qualified_collection_name,
 )
-from shared.retrieval import BM25Index, dense_search, fetch_all_chunks, reciprocal_rank_fusion
+from shared.retrieval import (
+    BM25Index,
+    dense_search,
+    fetch_all_chunks,
+    reciprocal_rank_fusion,
+)
 from shared.tracking import get_best_run, log_metrics, tracked_run
 
 K_MAX = 10

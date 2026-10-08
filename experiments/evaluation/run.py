@@ -3,16 +3,35 @@ import time
 from pathlib import Path
 
 from experiments.chunking.run import get_tables_from_docs
+from experiments.evaluation.prompts import (
+    ANSWER_PROMPT,
+    GROUNDEDNESS_PROMPT,
+    RELEVANCE_PROMPT,
+)
+from experiments.reranking.run import (
+    BEST_CHUNKING,
+    BEST_METHOD,
+    POOL_SIZE,
+    TOP_K,
+    base_search,
+)
 from shared.eval.data import load_questions
-from shared.eval.metrics import bootstrap_ci, groundedness_rate, hallucination_rate, latency_summary
-from shared.ingest import build_qdrant_client, chunk_documents, index_chunks, load_corpus
+from shared.eval.metrics import (
+    bootstrap_ci,
+    groundedness_rate,
+    hallucination_rate,
+    latency_summary,
+)
+from shared.ingest import (
+    build_qdrant_client,
+    chunk_documents,
+    index_chunks,
+    load_corpus,
+)
 from shared.llm import generate
 from shared.retrieval import BM25Index, fetch_all_chunks, rerank
 from shared.settings import settings
 from shared.tracking import get_best_run, log_metrics, tracked_run
-
-from experiments.evaluation.prompts import ANSWER_PROMPT, GROUNDEDNESS_PROMPT, RELEVANCE_PROMPT
-from experiments.reranking.run import base_search, BEST_CHUNKING, BEST_METHOD, POOL_SIZE, TOP_K
 
 COLLECTION = "exp_evaluation"
 OUT_DIR = Path(__file__).resolve().parent

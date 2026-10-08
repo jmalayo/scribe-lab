@@ -12,11 +12,22 @@ os.chdir(REPO_ROOT)
 from experiments.chunking.run import get_tables_from_docs
 from experiments.evaluation.prompts import ANSWER_PROMPT
 from experiments.evaluation.run import (
-    BEST_CHUNKING, BEST_METHOD, COLLECTION, POOL_SIZE, TOP_K, USE_RERANKER,
-    build_context_text, retrieve_context,
+    BEST_CHUNKING,
+    BEST_METHOD,
+    COLLECTION,
+    POOL_SIZE,
+    TOP_K,
+    USE_RERANKER,
+    build_context_text,
+    retrieve_context,
 )
 from shared.eval.data import load_questions
-from shared.ingest import build_qdrant_client, chunk_documents, index_chunks, load_corpus
+from shared.ingest import (
+    build_qdrant_client,
+    chunk_documents,
+    index_chunks,
+    load_corpus,
+)
 from shared.retrieval import BM25Index, fetch_all_chunks
 from shared.settings import settings
 

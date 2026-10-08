@@ -55,7 +55,7 @@ def peak_rss_gb() -> float:
 
 def gpu_used_mib() -> int:
     out = subprocess.run(["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
-                         capture_output=True, text=True).stdout
+                         capture_output=True, text=True, check=True).stdout
     return int(out.strip().splitlines()[0])
 
 
@@ -82,7 +82,7 @@ def row(component, model, device, latencies, load_s, **extra) -> dict:
     return {
         "component": component, "model": model, "device": device, "n_items": len(lat),
         "load_s": round(load_s, 2), "p50_s": round(statistics.median(lat), 2),
-        "p95_s": round(lat[min(len(lat) - 1, int(round(0.95 * (len(lat) - 1))))], 2),
+        "p95_s": round(lat[min(len(lat) - 1, round(0.95 * (len(lat) - 1)))], 2),
         "max_s": round(lat[-1], 2), "total_s": round(sum(lat), 1), **extra,
     }
 
@@ -116,7 +116,7 @@ def run_nli(device: str) -> dict:
 
 def container_kb(field: str) -> int:
     status = subprocess.run(["docker", "exec", DETECTOR_CONTAINER, "cat", "/proc/1/status"],
-                            capture_output=True, text=True).stdout
+                            capture_output=True, text=True, check=True).stdout
     return int(re.search(rf"{field}:\s+(\d+)", status).group(1))
 
 
@@ -207,8 +207,8 @@ def main():
 
     rows = []
     for name in RUN:
-        out = subprocess.run([sys.executable, __file__, name], capture_output=True, text=True)
-        line = next((l for l in out.stdout.splitlines() if l.startswith("RESULT ")), None)
+        out = subprocess.run([sys.executable, __file__, name], capture_output=True, text=True, check=False)
+        line = next((ln for ln in out.stdout.splitlines() if ln.startswith("RESULT ")), None)
         if line is None:
             raise RuntimeError(f"{name} falló:\n{out.stderr[-3000:]}")
         rows.append(json.loads(line[len("RESULT "):]))

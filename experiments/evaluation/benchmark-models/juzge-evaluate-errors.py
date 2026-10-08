@@ -95,7 +95,7 @@ def main():
 
     valid_col = f"{judge_name}_asw_valido"
 
-    failed_ids = verdicts[verdicts[valid_col] == False]["id"].tolist()
+    failed_ids = verdicts[verdicts[valid_col].eq(False)]["id"].tolist()
 
     if not failed_ids:
         print(f"Ninguna fila inválida para {judge_name} en {run_dir}.")

@@ -5,6 +5,7 @@ import statistics
 
 from rapidfuzz import fuzz
 
+
 def _normalize(text: str) -> str:
     text = re.sub(r"(\*\*|__)", "", text)
     return re.sub(r"\s+", " ", text).strip().lower()
