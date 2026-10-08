@@ -1,4 +1,3 @@
-import re
 import sys
 from pathlib import Path
 
@@ -9,6 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
 from experiments.evaluation.prompts import GROUNDEDNESS_PROMPT, RELEVANCE_PROMPT
+from shared.eval.judge import VERDICT_RE
 from shared.settings import settings
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -24,7 +24,6 @@ JUDGES = {
 NUM_PREDICT = 3000
 REPEAT_PENALTY = 1.3
 
-VERDICT_RE = re.compile(r"TRUE|FALSE", re.IGNORECASE)
 
 def generate(prompt: str, model: str) -> dict:
 

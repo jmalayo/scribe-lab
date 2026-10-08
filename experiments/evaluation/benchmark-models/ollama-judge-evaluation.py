@@ -12,7 +12,6 @@ Salida en `results/<EXP>/<TAG>/`: `base_answers.csv` y, con `--use-judge True`,
 import argparse
 import itertools
 import os
-import re
 import sys
 import time
 from pathlib import Path
@@ -36,6 +35,7 @@ from experiments.evaluation.run import (
     retrieve_context,
 )
 from shared.eval.data import load_questions
+from shared.eval.judge import agreement_rate, parse_verdict
 from shared.eval.metrics import latency_summary
 from shared.ingest import (
     build_qdrant_client,
@@ -67,18 +67,6 @@ JUDGES = {
 # opciones de los jueces de exp_5/exp_6
 JUDGE_NUM_PREDICT = 1500
 JUDGE_REPEAT_PENALTY = 1.3
-
-VERDICT_RE = re.compile(r"TRUE|FALSE", re.IGNORECASE)
-
-def parse_verdict(raw: str) -> tuple[bool, bool]:
-
-    match = VERDICT_RE.search(raw)
-
-    if not match:
-        print(f"  [!] Veredicto no reconocido, se toma como FALSE: {raw[:80]!r}", flush=True)
-        return False, False
-
-    return match.group().upper() == "TRUE", True
 
 def build_answers(questions: list[dict], answer_model: str, answers_path: Path,
                   num_predict: int, repeat_penalty: float) -> list[dict]:
@@ -191,19 +179,6 @@ def summarize(judge_name: str, judge_model: str, answer_model: str,
         **latency_summary(latencies),
     }
 
-
-def agreement_rate(verdicts_a: list[dict], verdicts_b: list[dict], key: str) -> float:
-
-    if not verdicts_a:
-        return 0.0
-
-    matches = 0
-
-    for a, b in zip(verdicts_a, verdicts_b, strict=True):
-        if a[key] == b[key]:
-            matches += 1
-
-    return round(matches / len(verdicts_a), 4)
 
 def parse_args() -> argparse.Namespace:
 
