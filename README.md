@@ -14,6 +14,15 @@ Fase de evaluación — módulos independientes, cada uno con su propio objetivo
 
 Ambos servicios corren vía `docker-compose up` y se reutilizan entre experimentos.
 
+### Entorno de desarrollo
+
+```bash
+pip install -r requirements.txt
+pre-commit install   # activa `ruff check` antes de cada commit (el gancho es local, no se versiona)
+```
+
+Las reglas de `ruff` están en `ruff.toml`. El CI (`.github/workflows/ci.yml`) corre `ruff check .` y los tests unitarios en cada push.
+
 ### Modelo de embeddings (descarga previa requerida)
 
 El servicio `embedder` corre con `HF_HUB_OFFLINE=1` (no descarga nada en runtime), así que el modelo debe existir en `./embedder_cache/` **antes** de levantar el stack:
@@ -40,9 +49,9 @@ Todo vive en `shared/eval/metrics.py` (métricas) y `shared/retrieval.py` (scori
 
 ## Experimentos realizados
 
-- **Experimento 1 (chunking)** — resuelto en 3 fases. Reporte en `experiments/chunking/EXP_CHUNKING_REPORT.md`, config final en `experiments/chunking/results/best_config.json`. Mejor config (fase 3, dinámica + tablas separadas del embedding): `chunk_size=284`, `overlap=25%` → `recall@5=0.441`, `mrr@10=0.336`. Reemplaza la config `512/25%` de la fase 1 (`recall@5=0.471`), inválida por truncación silenciosa contra el límite de tokens del embedder (ver reporte).
-- **Experimento 2 (hybrid search)** — resuelto. Reporte en `experiments/hybrid-search/EXP_RRF_REPORT.md`, resultados en `experiments/hybrid-search/results/results.json`. Mejor método: `hybrid_rrf` → `recall@5=0.529` (vs. `dense=0.471`, delta `+0.059`). Corrido sobre la config de chunking `512/25%` de la fase 1 del experimento 1 (`chunking_config` en `results.json`) — todavía no se repitió contra `284/25%` de la fase 3.
-- **Experimento 3 (reranking)** — resuelto. Reporte en `experiments/reranking/EXP_RERANK_REPORT.md`, resultados en `experiments/reranking/results/results.json`. Cross-encoder sobre `hybrid_rrf`: `recall@5` 0.529→0.588 (+0.059), `mrr@5` 0.328→0.393 (+0.065), a costa de +22.7ms en p95 — se adopta el reranker. Misma config de chunking `512/25%` que el experimento 2 (misma salvedad).
+- **Experimento 1 (chunking)** — resuelto en 3 fases. Reporte en `experiments/chunking/EXP_CHUNKING_REPORT.md`, config final en `experiments/chunking/results/best_config.json`. Mejor config (fase 3, dinámica + tablas separadas del embedding): `chunk_size=284`, `overlap=25%` → `recall@10=0.706`, `mrr@10=0.397`, con `recall@10` como métrica de decisión (el pipeline le pasa 10 chunks al LLM) y el criterio de acierto y el ground truth auditados en `shared/eval/EVAL_METHODOLOGY.md`. Reemplaza la config `512/25%` de la fase 1 (`recall@5=0.471`), inválida por truncación silenciosa contra el límite de tokens del embedder (ver reporte).
+- **Experimento 2 (hybrid search)** — resuelto. Reporte en `experiments/hybrid-search/EXP_RRF_REPORT.md`, resultados en `experiments/hybrid-search/results/results.json`. Mejor método: `hybrid_rrf` → `recall@10=0.706`, `mrr@10=0.405`. Empata con `dense` en `recall@10` (24 de 34 preguntas cada uno, no las mismas) y gana por `mrr@10`, sobre la config de chunking `284/25%`.
+- **Experimento 3 (reranking)** — resuelto. Reporte en `experiments/reranking/EXP_RERANK_REPORT.md`, resultados en `experiments/reranking/results/results.json`. Cross-encoder sobre un pool de 20 candidatos de `hybrid_rrf`, 10 chunks finales: `recall@10` 0.676→0.735 (+0.059), `mrr@10` 0.385→0.440 (+0.055), a costa de +17.2ms en p95 — se adopta el reranker. Con 10 chunks finales llega al techo del pool (`recall@20=0.735`).
 - **Experimento 4 (evaluation / LLM-judge)** — standalone, sin MLflow. Reporte en `experiments/evaluation/EXP_EVALUATION_REPORT.md`, resultados en `experiments/evaluation/benchmark-models/results/exp_6/{llama_base,deepseek_base}/results_summary.csv`. Compara auto-juicio vs. juicio cruzado entre `llama3.2:3b` y `deepseek-r1:7b` sobre las mismas 34 respuestas — paso previo a implementar `groundedness_rate`/`hallucination_rate`, aún pausadas (`NotImplementedError`) en `experiments/evaluation/run.py`. Hallazgo: Llama es un juez sistemáticamente más estricto que DeepSeek — groundedness `llama→llama=2.9%` vs. `deepseek→llama=73.5%` (80.6% limpio, n=31); `deepseek→deepseek=70.6%` (80.0% limpio, n=30) vs. `llama→deepseek=8.8%` (9.1% limpio, n=33) — brecha por juez muchísimo mayor que por autor, descarta el self-enhancement bias como explicación principal.
 
 La carpeta se renombró de `hybrid-serach` a `hybrid-search` (typo corregido) y los resultados de cada experimento ahora viven en su propia subcarpeta `results/` en vez de sueltos junto al `run.py`.

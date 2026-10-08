@@ -1,15 +1,18 @@
 # Experimento 1 — Chunking
 
-La fase 3 (`dinámico + tablas`) fue la última corrida del experimento — sobre la base validada en fase 2 contra el embedder, mantuvo el criterio de límite de tokens y recalibró el cap sobre el corpus sin tablas markdown. Así cerró dos problemas que arrastraba desde fase 1.
+**Resultado vigente** — `chunk_size=284`, `overlap=25%` → `recall@10=0.706`, `mrr@10=0.397`, CI95 `[0.5588, 0.8529]` (experimento MLflow `exp_chunking_dynamic_tables`, run `332b6b735b4e4b9791a6cff2f5b7b17f`, config en [best_config.json](./results/best_config.json)). Es la indexación de la fase 3 evaluada con el criterio de acierto `fuzzy_actual` y el gold set auditado ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md)), con `recall@10` como métrica de decisión porque el pipeline le pasa 10 chunks al LLM.
+
+El experimento llegó a ese resultado en 3 fases. Primero el caso vigente y después las fases en orden.
+
+- **★ Fase 3 con `fuzzy_actual`, top-10** — misma indexación que la fase 3, con un acierto definido por matching tolerante (`rapidfuzz.fuzz.partial_ratio_alignment`) acotado por cobertura del span y por los números de la ventana que hizo match, y decidida por `recall@10`. Detalle en [Resultado vigente](#-resultado-vigente-fase-3-con-fuzzy_actual-top-10).
+- **Fase 1, corrida original** — barrido de `chunk_size` fijos (128/256/512) y `overlap` (0%/10%/25%) sin verificar contra el límite del embedder. El "ganador" (512/25%) resultó inválido por la truncación descrita más abajo.
+- **Fase 2, barrido dinámico** — reemplaza la elección a ciegas, derivando `chunk_size` (candidato final `277`) al medir tokens reales contra el embedder (`/tokenize` de TEI, con margen de seguridad), así que ningún candidato evaluado excede el límite.
+- **Fase 3, dinámico + tablas** — mismo criterio de límite de tokens que la fase 2, recalibrado sobre el corpus sin tablas markdown (candidato final `284`), con las tablas extraídas del embedding y adjuntas aparte en el payload. Medida en su momento con coincidencia exacta del gold span y decidida por `recall@5` (`0.441`).
+
+La fase 3 cerró dos problemas que arrastraba la fase 1.
 
 1. El problema de elegir `chunk_size` (`128, 256, 512`) sin validar el límite del embedder era silencioso. `paraphrase-multilingual-MiniLM-L12-v2` vía TEI establece `max_input_length=128` tokens, mientras que el chunk de 512 caracteres ganador alcanzaba **158.6 tokens de media y 201 en el peor caso**, medidos mediante `/tokenize` real de TEI. `validate_chunk()` (`shared/ingest.py`) lo truncaba antes del embedding, por lo que el `512/25%` de fase 1 (`recall@5=0.471`) representaba chunks con una pérdida de **~19% de contenido promedio y ~36% máxima**, determinada por cortes arbitrarios del tokenizer.
 2. Trocear el texto sin reconocer las tablas markdown como unidad, cortándolas entre chunks o dejándolas inline sin que el LLM llegara a leerlas completas.
-
-El experimento tuvo estas 3 fases.
-
-1. **Corrida original** — barrido de `chunk_size` fijos (128/256/512) y `overlap` (0%/10%/25%) sin verificar contra el límite del embedder; el "ganador" (512/25%) resultó inválido por la truncación escrita anteriormente.
-2. **Barrido dinámico** — reemplaza la elección a ciegas, derivando `chunk_size` (candidato final `277`) al medir tokens reales contra el embedder (`/tokenize` de TEI, con margen de seguridad), así que ningún candidato evaluado excede el límite.
-3. **★ Dinámico + tablas** — la fase final, con el mismo criterio de límite de tokens que la fase 2 pero recalibrado sobre el corpus sin tablas markdown (candidato final `284`) y con las tablas extraídas del embedding y adjuntas aparte en el payload — la config recomendada y la que cierra el problema de la fase 1.
 
 El overlap (25%) tampoco afecta este análisis en ninguna de las 3 fases. `chunk_overlap` controla cuánto texto se repite **entre** chunks consecutivos (`RecursiveCharacterTextSplitter`), pero ningún chunk individual crece más allá de `chunk_size` caracteres por tener overlap — el splitter sigue cortando cada pieza al mismo tope, así que el límite de tokens depende únicamente de `chunk_size` y vale igual para las tres corridas de este experimento.
 
@@ -17,7 +20,7 @@ Los archivos `results/*.json` (`best_config.json`) tampoco son estables entre fa
 
 ## Cómo se evaluó (misma forma de evaluación densa para las 3 fases)
 
-Por cada config, en cualquiera de las 3 fases: se trocea el corpus, se indexa en Qdrant, y para cada pregunta del set se hace una búsqueda densa (embedding + similitud) pidiendo los 10 resultados más cercanos. Un chunk se marca "correcto" si viene del documento fuente correcto **y** contiene el texto exacto de la respuesta esperada (gold span).
+Por cada config, en cualquiera de las 3 fases, se trocea el corpus, se indexa en Qdrant, y para cada pregunta del set se hace una búsqueda densa (embedding + similitud) pidiendo los 10 resultados más cercanos. Un chunk se marca "correcto" si viene del documento fuente correcto **y** contiene la respuesta esperada (gold span) según `is_chunk_correct()` (`shared/eval/metrics.py`). Las tablas de resultados de las fases 1 a 3 se midieron con coincidencia exacta del texto (`_normalize(span) in chunk`) y se decidieron por `recall@5`, el criterio de ese momento. El resultado vigente decide por `recall@10` y usa el criterio de acierto `fuzzy_actual`, tolerante a diferencias de formato pero no a truncamientos ni a cifras alteradas ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md)).
 
 Modelo de embeddings: `paraphrase-multilingual-MiniLM-L12-v2` (`shared/settings.py`), el mismo en las 3 fases, con límite de **128 tokens**. Un chunk que supera ese límite se trunca en silencio antes de generar el embedding (`validate_chunk` en `shared/ingest.py`, vía `truncation=True`) — verificado debuggeando. Esto importa porque `chunk_size` se mide en caracteres, no en tokens: un chunk de 512 caracteres puede superar los 128 tokens del modelo, y en ese caso el embedding solo representa la parte truncada, no el chunk completo. Fase 1 ignoraba este límite; fases 2 y 3 lo miden contra el servicio real antes de correr el experimento, en vez de adivinarlo.
 
@@ -28,9 +31,28 @@ Modelo de embeddings: `paraphrase-multilingual-MiniLM-L12-v2` (`shared/settings.
 - **bootstrap CI (intervalo de confianza)**: el set de preguntas es chico (34), así que un solo número de recall puede ser ruido. Se re-muestrea el set de preguntas al azar miles de veces y se recalcula recall en cada muestra; el rango donde cae el 95% de esas muestras es el intervalo de confianza. Un intervalo ancho significa "con este poco de datos, no confíes demasiado en el número exacto".
 - **p50 (latencia)**: mediana del tiempo de respuesta por búsqueda. Sirve para chequear que la config ganadora no sea impráctica en producción, no para elegir la config.
 
-> **Pendiente** — si fase 3 sigue sin mejorar los chunks que le llegan al LLM, una acción a evaluar es trocear el texto sin el formato markdown (negrita, headers, etc.) y reservar el markdown únicamente para el payload de las tablas, ya que el markdown no aporta significado real al LLM que consume el chunk y solo suma tokens adicionales.
+## ★ Resultado vigente (fase 3 con `fuzzy_actual`, top-10)
 
+Script: `experiments/chunking/run.py`.  
+Experimento MLflow: `exp_chunking_dynamic_tables` (corridas del 2026-10-06).
 
+El pipeline le pasa **10 chunks** al LLM (`TOP_K=10` en `experiments/reranking/run.py`), así que la métrica de decisión es `recall@10`, con `mrr@10` como desempate. El intervalo de confianza también es sobre `recall@10` y queda registrado en MLflow (`recall_at_10_ci95_low` / `recall_at_10_ci95_high`).
+
+```
+chunk_size= 128 overlap=0%  -> recall@10=0.206 mrr@10=0.118 CI95=[0.0882, 0.3529]
+chunk_size= 128 overlap=10% -> recall@10=0.235 mrr@10=0.146 CI95=[0.1176, 0.3824]
+chunk_size= 128 overlap=25% -> recall@10=0.265 mrr@10=0.156 CI95=[0.1176, 0.4118]
+chunk_size= 256 overlap=0%  -> recall@10=0.618 mrr@10=0.349 CI95=[0.4412, 0.7941]
+chunk_size= 256 overlap=10% -> recall@10=0.647 mrr@10=0.380 CI95=[0.5000, 0.8235]
+chunk_size= 256 overlap=25% -> recall@10=0.618 mrr@10=0.377 CI95=[0.4412, 0.7941]
+chunk_size= 284 overlap=0%  -> recall@10=0.676 mrr@10=0.374 CI95=[0.5294, 0.8235]
+chunk_size= 284 overlap=10% -> recall@10=0.676 mrr@10=0.374 CI95=[0.5294, 0.8235]
+chunk_size= 284 overlap=25% -> recall@10=0.706 mrr@10=0.397 CI95=[0.5588, 0.8529]
+```
+
+**Mejor config:** `chunk_size=284, overlap=25%` → `recall@10=0.706`, `mrr@10=0.397`, CI95 `[0.5588, 0.8529]`. Gana por `recall@10` sin necesidad de desempate (las otras dos configs de 284 quedan en `0.676`). Frente al `recall@10=0.618` de la fase 3, la diferencia en esta config viene del gold set auditado y no de la indexación — `q014` (rank 8), `q027` (rank 1) y `q029` (rank 4) entran al top-10 ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md#data-quality-del-ground-truth)).
+
+El criterio de acierto importa para que el número sea real. Con matching tolerante sin guardas, las configs de 128 casi duplicarían su `recall@10` (`cs128_ov0`: `0.412` contra `0.206`) al contar chunks truncados como aciertos. En las configs de 284 la elección no cambia con `recall@10` (el fuzzy sin guardas también elegiría `cs284_ov25`), pero sí cambiaría con `recall@5` ([matcher_comparison.csv](./results/matcher_comparison.csv)).
 
 ## Fase 1 (chunk_size fijo, sin validar contra el límite del embedder)
 
@@ -119,7 +141,7 @@ Causa raíz: `chunk_documents()` (`shared/ingest.py`) cortaba el texto por carac
 
 Colección separada del baseline, para no pisar los números que ya usa el resto de este reporte: `exp_chunking_dynamic_tables__paraphrase-multilingual-MiniLM-L12-v2` (antes: `exp_chunking_dynamic`). El payload de cada punto mantiene el esquema de siempre (`chunk_id`, `text`, `doc_id`, `library`, `chunk_index`) y suma `tables: list[dict]` — cada entrada con `text_content` (markdown crudo de esa tabla) y `doc_id`. Nunca participa del vector, solo viaja en el payload.
 
-Validado directo contra Qdrant con `experiments/chunking/results/validate_tables_payload.py` (transcript completo: [tables_validation.log](./results/tables_validation.log)), sobre el estado final de la colección (`chunk_size=284, overlap=25%`, 215 puntos totales):
+Validado directo contra Qdrant (2026-10-05), sobre el estado final de la colección (`chunk_size=284, overlap=25%`, 215 puntos totales):
 
 - **215 puntos totales, 10 con ≥ 1 tabla adjunta en el payload — exactamente las 10 tablas únicas del corpus, sin duplicados** (9 en `music-tagger/music-tagger-benchmark.md`, 1 en `music-tagger/tagger-music-genesis.md`).
 - Verificado con muestras reales: ningún punto quedó con `tables` poblado y `text=""` (confirma el fix de `pending_tables`); el `text_content` de las tablas trae el markdown crudo intacto (pipes y fila separadora incluidos), no una versión aplanada.
@@ -183,33 +205,35 @@ chunk_size= 284 overlap=25% -> recall@5=0.441 mrr@10=0.336 CI95=[0.2647, 0.6176]
 
 ### Impacto puntual en las 3 preguntas que motivaron el cambio
 
-`hit@5` (¿el chunk correcto aparece entre los primeros 5 resultados de `dense_search`?) para `q002`/`q010`/`q015`, comparando la colección baseline (`exp_chunking_dynamic`, sin mecanismo de tablas) contra esta (`exp_chunking_dynamic_tables`, con las dos correcciones aplicadas) — datos completos (las 34 preguntas, no solo estas 3) en [coll_evaluation_exp_chunking.csv](./results/coll_evaluation_exp_chunking.csv):
+`hit@5` (¿el chunk correcto aparece entre los primeros 5 resultados de `dense_search`?) para `q002`/`q010`/`q015`, comparando la colección baseline (`exp_chunking_dynamic`, `277/25%`, sin mecanismo de tablas) contra esta (`exp_chunking_dynamic_tables`, `284/25%`), evaluadas con el criterio de acierto `fuzzy_actual` y el ground truth vigente (2026-10-06).
 
 
 | pregunta | gold span depende de tabla        | hit@5 baseline | hit@5 con tablas                  |
 | -------- | --------------------------------- | -------------- | --------------------------------- |
 | q015     | Sí — fila de ranking de features  | No             | **Sí** (rank 1, `tables_count=1`) |
-| q002     | Sí — fila de tabla comparativa    | No             | No                                |
+| q002     | Parcial — una fila de tabla y dos spans en prosa | Sí (rank 2)    | Sí (rank 2)                       |
 | q010     | No — sus 3 `gold_spans` son prosa | Sí (rank 4)    | Sí (rank 5)                       |
 
 
 `q015` mejora de forma directa y verificable: el mismo chunk que ya se recuperaba por su texto ahora trae la tabla completa adjunta en el payload, resolviendo el corte de contexto que causaba el "No lo sé" original. Antes de corregir la duplicación de tablas, este mismo hit aparecía en el rank 5 (con la tabla ya adjunta, pero repartida entre dos chunks candidatos); al dejar de fragmentar el chunk relevante, el chunk queda con más contexto propio y sube al rank 1 — la corrección de ingesta no solo evitó el duplicado, mejoró la calidad del embedding de ese chunk.
 
-`q002` sigue sin resolverse a nivel de recall@5 — limitación abierta, no ocultada: el mecanismo solo adjunta la tabla al chunk que **ya** entra en el top 5 por su propio texto; no cambia el ranking de ningún chunk. Si el chunk correcto no se recupera por su contenido (como acá), tener la tabla en el payload no lo hace aparecer.
+`q002` entra en el top 5 en las dos colecciones (rank 2) por su gold span en prosa (*"`kernel_size=9` fue **rechazado** tras validación estadística rigurosa…"*), así que su resultado no depende del mecanismo de tablas. Su fila de tabla queda en un chunk que no entra en el top 5 — el mecanismo solo adjunta la tabla al chunk que **ya** se recupera por su propio texto, no cambia el ranking de ningún chunk.
 
 `q010` no dependía de una tabla — su falla original no se explica por este mecanismo, es un problema distinto (de generación del LLM sobre un contexto que ya estaba completo, no de recuperación).
 
 ## Comparación: mejor config anterior (inválida) vs. mejor config dinámica (válida) vs. dinámica + tablas
 
 
-|                                 | `chunk_size=512, overlap=25%` (anterior)                                       | `chunk_size=277, overlap=25%` (dinámico)         | `chunk_size=284, overlap=25%` (dinámico + tablas)                                                                          |
-| ------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| recall@5                        | 0.471                                                                          | 0.382                                            | 0.441                                                                                                                      |
-| mrr@10                          | 0.336                                                                          | 0.303                                            | 0.336                                                                                                                      |
-| ¿excede el límite del embedder? | Sí — avg 158.6 tok, max 201 tok sobre cap real de 128                          | No — p95 verificado ≤ 108.8 tok (cap con margen) | No — mismo cap, calibrado sobre texto sin tablas                                                                           |
-| ¿qué se embeddea realmente?     | ~81% del chunk en promedio (resto truncado en silencio, corte arbitrario)      | El chunk completo                                | El chunk completo, sin el markdown de sus tablas                                                                           |
-| ¿tablas markdown separadas?     | No — vivían inline en el texto embebido                                        | No — vivían inline en el texto embebido          | Sí — extraídas y adjuntas como payload aparte (`chunk.tables`), nunca entran al embedding                                  |
-| confiabilidad del número        | Baja — mide una config que no se puede desplegar tal cual sin seguir truncando | Alta — validado contra el servicio real          | Alta — validado contra el servicio real y contra Qdrant directo ([tables_validation.log](./results/tables_validation.log)) |
+|                                 | `chunk_size=512, overlap=25%` (anterior)                                       | `chunk_size=277, overlap=25%` (dinámico)         | `chunk_size=284, overlap=25%` (dinámico + tablas)                                         | ★ `chunk_size=284, overlap=25%` (`fuzzy_actual`)                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| recall@5                        | 0.471                                                                          | 0.382                                            | 0.441                                                                                     | 0.559                                                                                                             |
+| recall@10 (métrica vigente)     | 0.588                                                                          | 0.559                                            | 0.618                                                                                     | **0.706**                                                                                                         |
+| mrr@10                          | 0.336                                                                          | 0.303                                            | 0.336                                                                                     | 0.397                                                                                                             |
+| ¿excede el límite del embedder? | Sí — avg 158.6 tok, max 201 tok sobre cap real de 128                          | No — p95 verificado ≤ 108.8 tok (cap con margen) | No — mismo cap, calibrado sobre texto sin tablas                                          | No — misma indexación que la fase 3                                                                               |
+| ¿qué se embeddea realmente?     | ~81% del chunk en promedio (resto truncado en silencio, corte arbitrario)      | El chunk completo                                | El chunk completo, sin el markdown de sus tablas                                          | Igual que la fase 3                                                                                               |
+| ¿tablas markdown separadas?     | No — vivían inline en el texto embebido                                        | No — vivían inline en el texto embebido          | Sí — extraídas y adjuntas como payload aparte (`chunk.tables`), nunca entran al embedding | Igual que la fase 3                                                                                               |
+| criterio de acierto             | Coincidencia exacta                                                            | Coincidencia exacta                              | Coincidencia exacta                                                                       | Tolerante con guardas de cobertura y números, gold set auditado                                                   |
+| confiabilidad del número        | Baja — mide una config que no se puede desplegar tal cual sin seguir truncando | Alta — validado contra el servicio real          | Alta — validado contra el servicio real y contra Qdrant directo                           | Alta — mismo retrieval evaluado con varios criterios ([matcher_comparison.csv](./results/matcher_comparison.csv)) |
 
 
 **Resumen:** `512` sobreestima su rendimiento al evaluarse con truncación, por lo que `277` es el candidato válido sin truncación oculta. `256` y `277` no muestran diferencias significativas y `128` resulta inferior. `284` corresponde a una calibración independiente sobre el corpus sin tablas, por lo que no debe compararse directamente con `277`.

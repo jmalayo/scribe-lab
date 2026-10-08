@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import requests
-from shared.settings import settings
-
 import pandas as pd
+import requests
 from transformers import AutoTokenizer
 
 from shared.eval.data import load_questions
+from shared.settings import settings
+
 
 def generate(
     prompt: str,

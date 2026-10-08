@@ -2,30 +2,62 @@ import json
 import time
 from pathlib import Path
 
-from shared.eval.data import load_questions
-from shared.eval.metrics import bootstrap_ci, calculate_hit5, latency_summary, mrr, recall_at_k
-from shared.ingest import build_qdrant_client, chunk_documents, index_chunks, load_corpus
-from shared.retrieval import BM25Index, dense_search, fetch_all_chunks, reciprocal_rank_fusion, rerank
-from shared.tracking import get_best_run, log_metrics, tracked_run
-
 from qdrant_client import QdrantClient
 
+from experiments.chunking.run import get_tables_from_docs
+from shared.eval.data import load_questions
+from shared.eval.metrics import (
+    bootstrap_ci,
+    calculate_hit_at_k,
+    latency_summary,
+    mrr,
+    recall_at_k,
+)
+from shared.ingest import (
+    build_qdrant_client,
+    chunk_documents,
+    index_chunks,
+    load_corpus,
+)
+from shared.retrieval import (
+    BM25Index,
+    dense_search,
+    fetch_all_chunks,
+    reciprocal_rank_fusion,
+    rerank,
+)
+from shared.settings import settings
+from shared.tracking import get_best_run, log_metrics, tracked_run
+
 POOL_SIZE = 20  # cuántos candidatos trae el retriever base antes de rerankear
-TOP_K = 5
+TOP_K = 10
 COLLECTION = "exp_reranking"
 OUT_DIR = Path(__file__).resolve().parent
 
-_best_chunking_run = get_best_run("chunking")
+_best_chunking_run = get_best_run(
+    "exp_chunking_dynamic_tables",
+    recall_at_k="recall_at_10",
+    tiebreak="mrr_at_10",
+    filter_string="attributes.status = 'FINISHED'"
+)
 BEST_CHUNKING = {
     "chunk_size": int(_best_chunking_run["metrics.chunk_size"]),
     "chunk_overlap": int(_best_chunking_run["metrics.overlap_tokens"]),
 }
-BEST_METHOD = get_best_run("hybrid-search")["params.method"]
+BEST_METHOD = get_best_run(
+    "hybrid-search",
+    recall_at_k="recall_at_10",
+    tiebreak="mrr_at_10",
+    filter_string=(
+        f"params.chunk_size = '{BEST_CHUNKING['chunk_size']}' "
+        f"and params.chunk_overlap = '{BEST_CHUNKING['chunk_overlap']}'"
+    )
+)["params.method"]
 
 def base_search(
-    client: QdrantClient = None, 
-    bm25: BM25Index = None, 
-    question: str = None,
+    client: QdrantClient | None = None, 
+    bm25: BM25Index | None = None, 
+    question: str | None = None,
     collection: str = COLLECTION,
     k: int = POOL_SIZE
 ) -> list[dict]:
@@ -47,12 +79,14 @@ def base_search(
 
 def evaluate(name, results, questions, latencies):
 
-    ci_low, ci_high = bootstrap_ci(calculate_hit5(results, questions))
+    ci_low, ci_high = bootstrap_ci(calculate_hit_at_k(results, questions, TOP_K))
     return {
         "config": name,
         "recall@5": round(recall_at_k(results, questions, 5), 4),
-        "recall@5_ci95": [ci_low, ci_high],
-        "mrr@5": round(mrr(results, questions, 5), 4),
+        "recall@10": round(recall_at_k(results, questions, TOP_K), 4),
+        "recall@10_ci95_low": ci_low,
+        "recall@10_ci95_high": ci_high,
+        "mrr@10": round(mrr(results, questions, TOP_K), 4),
         **latency_summary(latencies),
     }
 
@@ -64,7 +98,9 @@ def main():
 
     client = build_qdrant_client()
     
-    chunks = chunk_documents(docs, BEST_CHUNKING["chunk_size"], BEST_CHUNKING["chunk_overlap"])
+    tables = [t for doc in docs for t in get_tables_from_docs(doc)[0]]
+
+    chunks = chunk_documents(docs, tables, BEST_CHUNKING["chunk_size"], BEST_CHUNKING["chunk_overlap"])
 
     index_chunks(client, chunks, COLLECTION, BEST_CHUNKING)
 
@@ -107,7 +143,7 @@ def main():
         evaluate("reranked", reranked_results, questions, reranked_lat),
     ]
 
-    delta_recall_at_5 = rows[1]["recall@5"] - rows[0]["recall@5"]
+    delta_recall_at_10 = rows[1]["recall@10"] - rows[0]["recall@10"]
 
     for row in rows:
         with tracked_run(
@@ -116,7 +152,8 @@ def main():
             {
                 **BEST_CHUNKING, 
                 "base_method": BEST_METHOD, 
-                "use_reranker": row["config"] == "reranked"
+                "use_reranker": row["config"] == "reranked",
+                "reranker_model": settings.cross_encoder_model
             }
         ):
             log_metrics(row)
@@ -126,9 +163,9 @@ def main():
         "base_method": BEST_METHOD,
         "n_questions": len(questions),
         "rows": rows,
-        "delta_recall@5": round(delta_recall_at_5, 4),
+        "delta_recall@10": round(delta_recall_at_10, 4),
         "delta_p95_ms": round(rows[1]["p95_ms"] - rows[0]["p95_ms"], 1),
-        "negative_finding": delta_recall_at_5 < 0,
+        "negative_finding": delta_recall_at_10 < 0,
     }
 
     (OUT_DIR / "results").mkdir(parents=True, exist_ok=True)
@@ -141,10 +178,10 @@ def main():
     )
 
     for r in rows:
-        print(f"{r['config']:>10}: recall@5={r['recall@5']:.3f} mrr@5={r['mrr@5']:.3f} "
+        print(f"{r['config']:>10}: recall@10={r['recall@10']:.3f} mrr@10={r['mrr@10']:.3f} "
               f"p50={r['p50_ms']}ms p95={r['p95_ms']}ms")
 
-    print(f"\n¿Se adopta el reranker?: {delta_recall_at_5 > 0} -> guardado en reranking/results/results.json")
+    print(f"\n¿Se adopta el reranker?: {delta_recall_at_10 > 0} -> guardado en reranking/results/results.json")
 
 if __name__ == "__main__":
     main()

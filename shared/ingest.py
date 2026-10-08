@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import functools
 import hashlib
-import re
 import logging
+import re
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -307,7 +307,7 @@ def index_chunks(
                     **config,
                 },
             )
-            for c, vector in zip(batch, vectors)
+            for c, vector in zip(batch, vectors, strict=True)
         ]
 
         client.upsert(

@@ -52,14 +52,52 @@
             "justMyCode": true
         },
         {
-            "name": "py-module: chunking/results/validate_tables_payload.py",
+            "name": "py-module: tests/data/ranking_report.py",
             "type": "debugpy",
             "request": "launch",
-            "module": "experiments.chunking.results.validate_tables_payload",
+            "module": "tests.data.ranking_report",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
             "justMyCode": true
+        },
+        {
+            "name": "py-module: pytest (tests/)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests",
+                "-v",
+                "-k",
+                "${input:pytestFilter}"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "justMyCode": true
+        },
+        {
+            "name": "py-module: pytest (archivo actual)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "${file}",
+                "-v"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "justMyCode": true
+        }
+    ],
+    "inputs": [
+        {
+            "id": "pytestFilter",
+            "type": "promptString",
+            "description": "Filtro -k de pytest (vacío = todos los tests)",
+            "default": ""
         }
     ]
 }

@@ -1,37 +1,35 @@
 {
   "chunking_config": {
-    "chunk_size": 512,
-    "chunk_overlap": 128
+    "chunk_size": 284,
+    "chunk_overlap": 71
   },
   "base_method": "hybrid_rrf",
   "n_questions": 34,
   "rows": [
     {
       "config": "baseline",
-      "recall@5": 0.5294,
-      "recall@5_ci95": [
-        0.3824,
-        0.7059
-      ],
-      "mrr@5": 0.3279,
-      "p50_ms": 13.4,
-      "p95_ms": 23.1,
-      "mean_ms": 14.9
+      "recall@5": 0.5588,
+      "recall@10": 0.6765,
+      "recall@10_ci95_low": 0.5294,
+      "recall@10_ci95_high": 0.8529,
+      "mrr@10": 0.3854,
+      "p50_ms": 12.4,
+      "p95_ms": 24.2,
+      "mean_ms": 14.7
     },
     {
       "config": "reranked",
-      "recall@5": 0.5882,
-      "recall@5_ci95": [
-        0.4118,
-        0.7353
-      ],
-      "mrr@5": 0.3926,
-      "p50_ms": 34.4,
-      "p95_ms": 45.8,
-      "mean_ms": 150.9
+      "recall@5": 0.6765,
+      "recall@10": 0.7059,
+      "recall@10_ci95_low": 0.5294,
+      "recall@10_ci95_high": 0.8529,
+      "mrr@10": 0.4559,
+      "p50_ms": 197.4,
+      "p95_ms": 226.3,
+      "mean_ms": 4728.7
     }
   ],
-  "delta_recall@5": 0.0588,
-  "delta_p95_ms": 22.7,
+  "delta_recall@10": 0.0294,
+  "delta_p95_ms": 202.1,
   "negative_finding": false
 }

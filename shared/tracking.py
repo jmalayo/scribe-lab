@@ -22,11 +22,24 @@ def log_metrics(metrics: dict) -> None:
     if numeric:
         mlflow.log_metrics(numeric)
         
-def get_best_run(stage: str, recall_at_k: str = "recall_at_5", asc: bool = False) -> dict:
+def get_best_run(
+    stage: str,
+    recall_at_k: str = "recall_at_5",
+    asc: bool = False,
+    tiebreak: str | None = None,
+    filter_string: str = ""
+) -> dict:
+
+    order = "asc" if asc else "desc"
+    order_by = [f"metrics.{recall_at_k} {order}"]
+
+    if tiebreak:
+        order_by.append(f"metrics.{tiebreak} {order}")
 
     runs = mlflow.search_runs(
         experiment_names=[f"{settings.mlflow_experiment_prefix}-{stage}"],
-        order_by=[f"metrics.{recall_at_k} {'asc' if asc else 'desc'}"],
+        filter_string=filter_string,
+        order_by=order_by,
         max_results=1
     )
 

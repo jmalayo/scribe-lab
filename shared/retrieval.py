@@ -1,17 +1,21 @@
 from __future__ import annotations
 
-from shared.settings import settings
-import math
 import functools
-
+import math
 from collections import Counter
+from typing import TYPE_CHECKING
 
-from qdrant_client import QdrantClient
+from shared.settings import settings
 
-from shared.ingest import get_embedder
+# qdrant_client y shared.ingest (transformers) se cargan solo donde se usan: BM25 y RRF quedan
+# importables con las dependencias mínimas de los tests unitarios
+if TYPE_CHECKING:
+    from qdrant_client import QdrantClient
 
 def dense_search(client: QdrantClient, collection_name: str, query: str, k: int) -> list[dict]:
-    
+
+    from shared.ingest import get_embedder
+
     embedder = get_embedder()
     vector = embedder.encode(query, normalize_embeddings=True).tolist()
     hits = client.query_points(
@@ -107,7 +111,7 @@ class BM25Index:
         query_terms = self._tokenize(query)
         scores = [0.0] * len(self._chunks)
 
-        for i, (term_freqs, doc_len) in enumerate(zip(self._term_freqs, self._doc_len)):
+        for i, (term_freqs, doc_len) in enumerate(zip(self._term_freqs, self._doc_len, strict=True)):
 
             score = 0.0
             for term in query_terms:
