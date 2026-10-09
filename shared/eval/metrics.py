@@ -113,20 +113,28 @@ def mrr(results: dict[str, list[dict]], questions: list[dict], k: int | None = N
     return sum(reciprocal_ranks) / len(reciprocal_ranks) if reciprocal_ranks else 0.0
 
 def groundedness_rate(verdicts: list[bool]) -> float:
-    raise NotImplementedError
+
+    return sum(verdicts) / len(verdicts) if verdicts else 0.0
 
 def hallucination_rate(verdicts: list[bool]) -> float:
-    raise NotImplementedError
+
+    return 1.0 - groundedness_rate(verdicts) if verdicts else 0.0
 
 def percentile(values: list[float], p: float) -> float:
 
+    # interpolación lineal entre los dos vecinos (mismo resultado que np.percentile por defecto);
+    # con n par, la p50 es la mediana
     if not values:
         return 0.0
 
     ordered = sorted(values)
-    idx = min(len(ordered) - 1, max(0, round(p / 100 * (len(ordered) - 1))))
+    k = (len(ordered) - 1) * (p / 100)
+    f, c = int(k), min(int(k) + 1, len(ordered) - 1)
 
-    return ordered[idx]
+    if f == c:  # freno en el percentil 100
+        return ordered[f]
+
+    return ordered[f] + (ordered[c] - ordered[f]) * (k - f)
 
 def latency_summary(latencies_ms: list[float]) -> dict:
 

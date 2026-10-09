@@ -2,4 +2,6 @@
 rapidfuzz>=3.14
 pydantic-settings>=2.14
 pytest>=8.0
+pytest-cov>=7.0
 ruff==0.16.10
+langchain-text-splitters==1.1.2

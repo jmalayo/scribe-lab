@@ -7,14 +7,16 @@ import re
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import numpy as np
-import requests
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from qdrant_client import QdrantClient, models
-from transformers import AutoConfig, AutoTokenizer
 
 from shared.settings import settings
+
+# numpy, requests, qdrant_client y transformers se cargan solo donde se usan: el chunking, la
+# carga del corpus y corpus_hash quedan importables con las dependencias mínimas de los tests
+if TYPE_CHECKING:
+    from qdrant_client import QdrantClient
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +163,9 @@ def chunk_documents(
 class RemoteEmbedder:
 
     def __init__(self, url: str, model_name: str):
+        import requests
+        from transformers import AutoConfig, AutoTokenizer
+
         self._url = url.rstrip("/")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.max_seq_length = requests.get(f"{self._url}/info").json()["max_input_length"]
@@ -172,6 +177,8 @@ class RemoteEmbedder:
     _MAX_CLIENT_BATCH = 32
 
     def encode(self, texts, normalize_embeddings=False):
+        import numpy as np
+        import requests
 
         single = isinstance(texts, str)
         inputs = [texts] if single else list(texts)
@@ -247,6 +254,7 @@ def get_current_config(client: QdrantClient, collection_name: str) -> dict | Non
     }
 
 def build_qdrant_client(local_path: str | None = None) -> QdrantClient:
+    from qdrant_client import QdrantClient
 
     if settings.qdrant_mode == "server":
 
@@ -267,6 +275,8 @@ def index_chunks(
     config: dict,
     batch_size: int = 64,
 ) -> int:
+
+    from qdrant_client import models
 
     embedder = get_embedder()
     dim = embedder.get_dimension()

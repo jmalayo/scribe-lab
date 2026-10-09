@@ -72,15 +72,18 @@ Top-10 congelado por config, evaluado con cada criterio. `recall@5 / mrr@10` sob
 - **La mejora en la config ganadora viene del ground truth, no del criterio.** Comparando `in_gold_mlflow` contra `in_gold_actualizado` en `cs284_ov25` (de `0.441` a `0.559`, 4 preguntas más en el top-5), `q001` sube de rank 6 a 2 (fila de tabla agregada a sus `gold_spans` en `2066799`), `q002` de 7 a 2, `q027` entra en rank 1 y `q029` en rank 4 (gold spans corregidos, ver data quality). Con el ground truth auditado, `in_gold_actualizado` y `fuzzy_actual` coinciden en las tres configs de 284.
 - **`fuzzy_actual` aporta robustez, no recall** — no infla con truncamientos y tolera la diferencia de redacción que queda en `cs256_ov0/ov25`, donde `q028` acierta con la misma fórmula (`-2.276·kernel + 55.55`) en una segunda ocurrencia del documento redactada distinto.
 
-En la config ganadora las curvas de recall de `in_gold_actualizado`, `fuzzy_sin_guardas` y `fuzzy_actual` coinciden en todos los `k`, y solo `in_gold_mlflow` queda por debajo — la diferencia en esa config es del ground truth.
+En la config ganadora, `in_gold_actualizado`, `fuzzy_sin_guardas` y `fuzzy_actual` dan el mismo recall en todos los `k` medidos, y solo `in_gold_mlflow` queda por debajo: la diferencia en esa config es del ground truth ([matcher_comparison.csv](../../experiments/chunking/results/matcher_comparison.csv), `cs284_ov25`).
 
-![Curvas de recall por criterio en cs284_ov25](../../experiments/chunking/results/recall_curves_cs284_ov25.png)
+| Criterio | `recall@1` | `recall@3` | `recall@5` | `recall@10` | `mrr@10` |
+|---|---|---|---|---|---|
+| `in_gold_mlflow` | 0.235 | 0.382 | 0.441 | 0.618 | 0.336 |
+| `in_gold_actualizado`, `fuzzy_sin_guardas`, `fuzzy_actual` | 0.265 | 0.471 | 0.559 | 0.706 | 0.397 |
 
 En el barrido completo se ve dónde divergen. `fuzzy_sin_guardas` se separa del resto en las configs de 128 (chunks cortos, más truncamientos) y en `cs284_ov0/ov10`.
 
 ![MRR@10 y Recall@10 por configuración y criterio](../../experiments/chunking/results/heatmaps_criterios.png)
 
-La corrida oficial del experimento con `fuzzy_actual` da los mismos números que la columna `fuzzy_actual` — experimento MLflow `exp_chunking_dynamic_tables`, corridas del 2026-10-05, con `run_id` por config en [EXP_CHUNKING_REPORT.md](../../experiments/chunking/EXP_CHUNKING_REPORT.md#-resultado-vigente-fase-3-con-fuzzy_actual-top-10).
+La corrida oficial del experimento con `fuzzy_actual` da los mismos números que la columna `fuzzy_actual` — experimento MLflow `exp_chunking_dynamic_tables`, corridas del 2026-10-05, con el barrido completo en la [fase 4 del experimento de chunking](../../experiments/chunking/PHASES.md).
 
 ## Data quality del ground truth
 
@@ -98,17 +101,23 @@ Después de la corrección, los 45 spans de las 34 preguntas son literales (`tes
 
 > **Impacto en grounding** — el `expected_answer` de `q012` todavía afirma que el cambio de SR afecta `compute_lra()`, algo que el corpus ya no respalda. No influye en `recall@k` (solo se usan los `gold_spans`), pero sí en las métricas de generación que comparen respuestas contra `expected_answer` (groundedness, answer correctness).
 
+## Latencias (p50 / p95)
+
+`percentile()` (`shared/eval/metrics.py`) interpola linealmente entre los dos valores vecinos de la posición `k = (n − 1) · p / 100`, igual que `np.percentile` por defecto. Lo usan `latency_summary()` (los `p50_ms`/`p95_ms` de cada run en MLflow) y `experiments/evaluation/generative/measure_resources.py`.
+
+> **Cambio del 2026-10-08** — antes tomaba el valor observado en `round(k)`, con el redondeo al par de Python. Con `n` par (las 34 preguntas) su p50 no era la mediana: en `[10, 20, 30, 40]` daba `30` en vez de `25`. Las latencias registradas antes de esa fecha (MLflow, `results.json` y reportes) usan el método anterior y no se recalcularon, porque no se guardaron las latencias por pregunta. La diferencia es de décimas de ms y ninguna decisión del proyecto se tomó por latencia.
+
 ## Testing + CI
 
 Los tests unitarios corren con [`ci.yml`](../../.github/workflows/ci.yml) en cada push, sin dependencias pesadas. Los casos sintéticos y los reales van en archivos separados.
 
 - [`tests/unit/test_chunk_correct_synthetic.py`](../../tests/unit/test_chunk_correct_synthetic.py) — **casos sintéticos**, sin depender del corpus. 6 que deben ser acierto (mismo dato con otro formato: espacios, negrita, backticks, typo, fila de tabla con otro padding) y 8 que no (número cambiado, números invertidos con y sin los correctos en otra oración, número faltante, truncado al inicio y al final, misma estructura con otro modelo, documento equivocado).
 - [`tests/unit/test_chunk_correct_real.py`](../../tests/unit/test_chunk_correct_real.py) — **tests de regresión** con chunks reales ([`real_chunks.json`](../../tests/fixtures/real_chunks.json)) de `q002`, `q014` y `q028` (deben ser acierto) y el truncado de `q011` (debe ser rechazo).
-- [`tests/unit/test_metrics.py`](../../tests/unit/test_metrics.py) — `_find_numbers`, `recall_at_k` y `mrr` sobre rankings calculables a mano.
+- [`tests/unit/test_metrics.py`](../../tests/unit/test_metrics.py) — `_find_numbers`, `recall_at_k`, `mrr`, `percentile`, `latency_summary`, `bootstrap_ci` y las tasas de groundedness sobre valores calculables a mano.
 
 Contra las versiones anteriores del criterio, `fuzzy_sin_guardas` falla los 7 sintéticos de dato alterado y el real `q011`, y el `in` estricto falla los sintéticos de backticks y typo y los reales `q002`, `q014` y `q028`. Una regresión en cualquiera de las dos direcciones rompe el CI.
 - [`tests/data/test_gold_spans.py`](../../tests/data/test_gold_spans.py) — **data quality check** que exige que todo gold span sea literal en su fuente y, si falla, lista cuáles. Detecta el drift del corpus automáticamente. Necesita el corpus (`shared/corpus/`, fuera del repo), por eso corre localmente y no en CI.
 
-Para reproducir la comparación de criterios, `python -m experiments.chunking.results.compare_matchers` (requiere Qdrant y el embedder levantados), y para regenerar los gráficos a partir del CSV, `python -m experiments.chunking.results.plot_matchers`.
+Para reproducir la comparación de criterios, `python -m experiments.chunking.results.compare_matchers` (requiere Qdrant y el embedder levantados).
 
 > Los resultados de hybrid search y reranking (`experiments/hybrid-search/results/results.json`, `experiments/reranking/results/results.json`) se calcularon con el criterio estricto y el ground truth anterior a esta auditoría.

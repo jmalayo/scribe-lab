@@ -21,4 +21,6 @@ jobs:
 
       - run: ruff check .
 
-      - run: pytest tests/unit -v
+      - run: pytest tests/unit -v --cov=shared --cov-report=term-missing
+
+      - run: coverage report --include=shared/eval/metrics.py,shared/retrieval.py --fail-under=80
