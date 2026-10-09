@@ -2,7 +2,6 @@ import json
 import os
 import re
 import resource
-import statistics
 import subprocess
 import sys
 import threading
@@ -15,6 +14,8 @@ import requests
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 os.chdir(REPO_ROOT)
+
+from shared.eval.metrics import percentile
 
 OUT_DIR = Path(__file__).resolve().parent
 ANSWERS = REPO_ROOT / "experiments/evaluation/benchmark-models/results/exp_7/llama31_base/base_answers.csv"
@@ -81,8 +82,8 @@ def row(component, model, device, latencies, load_s, **extra) -> dict:
     lat = sorted(latencies)
     return {
         "component": component, "model": model, "device": device, "n_items": len(lat),
-        "load_s": round(load_s, 2), "p50_s": round(statistics.median(lat), 2),
-        "p95_s": round(lat[min(len(lat) - 1, round(0.95 * (len(lat) - 1)))], 2),
+        "load_s": round(load_s, 2), "p50_s": round(percentile(lat, 50), 2),
+        "p95_s": round(percentile(lat, 95), 2),
         "max_s": round(lat[-1], 2), "total_s": round(sum(lat), 1), **extra,
     }
 

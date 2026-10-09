@@ -16,6 +16,7 @@ from experiments.reranking.run import (
     base_search,
 )
 from shared.eval.data import load_questions
+from shared.eval.judge import parse_verdict
 from shared.eval.metrics import (
     bootstrap_ci,
     groundedness_rate,
@@ -108,9 +109,11 @@ def main():
         answer = generate(ANSWER_PROMPT.format(context=context_text, question=q["question"]))
         gen_latencies.append((time.perf_counter() - t0) * 1000)
 
-        grounded = generate(GROUNDEDNESS_PROMPT.format(context=context_text, answer=answer))
-        
-        relevant = generate(RELEVANCE_PROMPT.format(question=q["question"], answer=answer))
+        grounded_raw = generate(GROUNDEDNESS_PROMPT.format(context=context_text, answer=answer))
+        grounded, _ = parse_verdict(grounded_raw)
+
+        relevant_raw = generate(RELEVANCE_PROMPT.format(question=q["question"], answer=answer))
+        relevant, _ = parse_verdict(relevant_raw)
 
         grounded_verdicts.append(grounded)
         relevant_verdicts.append(relevant)
@@ -120,7 +123,9 @@ def main():
                 "question": q["question"],
                 "answer": answer,
                 "grounded": grounded,
+                "grounded_raw": grounded_raw,
                 "relevant": relevant,
+                "relevant_raw": relevant_raw,
             }
         )
 
