@@ -2,7 +2,7 @@
 
 Recorrido completo del [experimento de reranking](./README.md), con lo que se descartó en cada paso y por qué. Los análisis con números que respaldan las decisiones están en [ANALYSIS.md](./ANALYSIS.md).
 
-Todas las fases comparan las mismas dos variantes sobre el set de 34 preguntas con gold spans: el pool de candidatos de `hybrid_rrf` tal cual (**baseline**) y ese mismo pool reordenado por un cross-encoder (**reranked**).
+Todas las fases comparan las mismas dos variantes sobre el set de 34 preguntas con gold spans: el pool de candidatos del retriever base tal cual (**baseline**: `hybrid_rrf` en las fases 1 a 4, `dense` en la 5) y ese mismo pool reordenado por un cross-encoder (**reranked**).
 
 
 | Fase  | Chunking  | Chunks finales | Cross-encoder            | Métrica de decisión | Estado                                     |
@@ -10,7 +10,8 @@ Todas las fases comparan las mismas dos variantes sobre el set de 34 preguntas c
 | 1     | `512/25%` | 5              | `ms-marco-MiniLM-L-6-v2` | `recall@5`          | Descartada: chunking inválido              |
 | 2     | `284/25%` | 5              | `ms-marco-MiniLM-L-6-v2` | `recall@5`          | Reemplazada por el paso a top-10           |
 | 3     | `284/25%` | 10             | `ms-marco-MiniLM-L-6-v2` | `recall@10`         | Reemplazada por el cambio de cross-encoder |
-| **4** | `284/25%` | 10             | `bge-reranker-v2-m3`     | `recall@10`         | **Vigente**                                |
+| 4     | `284/25%` | 10             | `bge-reranker-v2-m3`     | `recall@10`         | Reemplazada por el cambio de retriever base |
+| **5** | `284/25%` | 10             | `bge-reranker-v2-m3` sobre `dense` | `recall@10` | **Vigente: sin reranker**          |
 
 
 

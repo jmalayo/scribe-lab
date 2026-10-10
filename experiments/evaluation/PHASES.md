@@ -140,4 +140,4 @@ Después se agregó el NLI: `nli_predictor` carga mDeBERTa con su commit fijo y 
 
 ### Juez de relevancia `qwen3:8b`
 
-`generative/relevance_qwen.py` juzga las 34 respuestas de `exp_7` en modo razonamiento y en modo JSON forzado, con el prompt y el esquema de la medición de consumo, y guarda veredicto, motivo y respuesta cruda por caso. Resultados en [ANALYSIS.md §8](./ANALYSIS.md).
+`generative/relevance_qwen.py` juzga las 34 respuestas de `exp_7` en modo razonamiento y en modo JSON forzado, con `prompt_v2()` de [prompts.py](./prompts.py) (el prompt y el esquema de la medición de consumo), y guarda veredicto, motivo y respuesta cruda por caso. Resultados en [ANALYSIS.md §8](./ANALYSIS.md).

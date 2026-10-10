@@ -30,7 +30,7 @@ Chunking y retriever base se leen de MLflow con `get_best_run` (por `recall@10`,
 
 - `bge-reranker-v2-m3` **reemplazó a** `cross-encoder/ms-marco-MiniLM-L-6-v2` el 2026-10-08. Con 34 preguntas no hay diferencia de calidad detectable entre los dos. `bge` es multilingüe y ordena mejor los primeros puestos, a cambio de ~12× más latencia de rerank. Números y pruebas en [ANALYSIS.md §1](./ANALYSIS.md).
 - **El reranker se dejó de usar el 2026-10-09.** Sobre `dense` pierde `q003` y `q018`, que `dense` tenía en el puesto 10 y el reranker saca del top-10, y gana `q022`, que sube del puesto 19 del pool al 2. Neto: una pregunta menos en `recall@10` (McNemar exacto 2/1, p=1.0, sin diferencia significativa). A cambio, mejora `recall@5` (0.618 → 0.706) y `mrr@10` (0.456 → 0.515), y cuesta ~183 ms más por pregunta. Se aplicó la regla (`recall@10` primero) sin excepción.
-- **La capa de abstención usaba el score de este reranker** (umbral provisional 0.05, [experimento N.º 4](../evaluation/README.md)). Sin reranker, ese score no existe en el pipeline: la abstención tiene que pasar a la similitud de `dense`, con un umbral nuevo. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
+- **La capa de abstención usaba el score de este reranker** (umbral provisional 0.05, [experimento N.º 4](../evaluation/README.md)). Sin reranker, ese score no existe en el pipeline: la abstención tiene que pasar a la similitud de `dense`, con un umbral nuevo. Desde el 2026-10-10 el score de cada chunk se guarda en `base_chunks.csv`, así que calibrarlo no requiere volver a recuperar. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - `[experiments/evaluation/run.py](../evaluation/run.py)` importa `POOL_SIZE`, `TOP_K`, el chunking y el método base de [run.py](./run.py), y lee `USE_RERANKER` de MLflow para armar el contexto del LLM: hoy, los 10 primeros de `dense`. Las respuestas de `exp_7` y sus etiquetas humanas ([experimento N.º 4](../evaluation/README.md)) se generaron con el pipeline anterior (`hybrid_rrf` + `ms-marco`).
 - **Barrido de `POOL_SIZE`**, separando la profundidad de cada búsqueda antes de fusionar del tamaño del pool del reranker. Solo tiene sentido si el reranker vuelve al pipeline. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **Re-comparar `bge` contra `ms-marco`** con la regla de desempate fijada de antemano y más preguntas. La comparación de la fase 4 se hizo sobre `hybrid_rrf` y con los gold spans anteriores. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
@@ -47,6 +47,6 @@ Re-indexa la colección `exp_reranking`, corre las dos variantes y registra los 
 
 ## Documentos
 
-- [PHASES.md](./PHASES.md) — las 4 fases del experimento, con los intentos descartados y por qué.
+- [PHASES.md](./PHASES.md) — las 5 fases del experimento, con los intentos descartados y por qué.
 - [ANALYSIS.md](./ANALYSIS.md) — pruebas pareadas y análisis con números detrás de cada decisión.
 

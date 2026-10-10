@@ -85,6 +85,8 @@ En el barrido completo se ve dónde divergen. `fuzzy_sin_guardas` se separa del 
 
 La corrida oficial del experimento con `fuzzy_actual` da los mismos números que la columna `fuzzy_actual` — experimento MLflow `exp_chunking_dynamic_tables`, corridas del 2026-10-05, con el barrido completo en la [fase 4 del experimento de chunking](../../experiments/chunking/PHASES.md).
 
+> **Ground truth de esta comparación** — se hizo antes de que `q033` y `q034` tuvieran gold spans (2026-10-09), así que su techo era 29/34. Con los gold spans nuevos, la fase 5 del experimento de chunking re-barrió las configs con `fuzzy_actual`: `cs284_ov25` sigue ganando y sube a `recall@10=0.765`, `mrr@10=0.456`. La comparación de criterios no se repitió, porque los gold spans nuevos son literales y no cambian cómo se comporta cada criterio.
+
 ## Data quality del ground truth
 
 Un gold span tiene que ser texto literal de su fuente y contener el núcleo de la respuesta — es la referencia contra la que se mide todo lo demás, y el matching tolerante no debería tapar errores del dato. La auditoría encontró dos tipos de problema en 5 de las 34 preguntas. En 3, el span no aparecía literal en su `source_doc` (`tests/data/test_gold_spans.py`, con el score del fragmento más cercano). En otras 2, el span era literal pero no contenía la respuesta, detectado al analizar por qué su chunk quedaba fuera del top-80 (`python -m tests.data.ranking_report` con `K=100`).
@@ -97,7 +99,7 @@ Un gold span tiene que ser texto literal de su fuente y contener el núcleo de l
 | `q027` | — | **Span mal elegido** — tomaba la aclaración secundaria (*"no media ± 2 errores estándar…"*), que cruzaba el límite del chunk. El pasaje con la respuesta ya salía primero | Reemplazado por el núcleo (*"…es la media de los 5 folds ± 2 veces la desviación estándar…"*) |
 | `q029` | — | **Span mal elegido** — describía cómo se pondera el promedio, no la métrica ni su valor | Reemplazado por dos spans, la frase con `silhouette_score` y la fila de tabla con `0.0085` |
 
-Después de la corrección, los 45 spans de las 34 preguntas son literales (`test_gold_spans.py` en verde).
+Después de la corrección, los 45 spans de las 34 preguntas son literales (`test_gold_spans.py` en verde). Con los de `q033` y `q034` (2026-10-09) son 49, y siguen siendo literales.
 
 > **Impacto en grounding** — el `expected_answer` de `q012` afirmaba que el cambio de SR afecta `compute_lra()`, algo que el corpus ya no respalda. Corregido el 2026-10-09: ahora dice que el paso a 44100 Hz figura como episodio histórico y que el SR vigente es 22050. No influye en `recall@k` (solo se usan los `gold_spans`).
 
@@ -105,7 +107,7 @@ Después de la corrección, los 45 spans de las 34 preguntas son literales (`tes
 
 ## Latencias (p50 / p95)
 
-`percentile()` (`shared/eval/metrics.py`) interpola linealmente entre los dos valores vecinos de la posición `k = (n − 1) · p / 100`, igual que `np.percentile` por defecto. Lo usan `latency_summary()` (los `p50_ms`/`p95_ms` de cada run en MLflow) y `experiments/evaluation/generative/measure_resources.py`.
+`percentile()` (`shared/eval/metrics.py`) interpola linealmente entre los dos valores vecinos de la posición `k = (n − 1) · p / 100`, igual que `np.percentile` por defecto. Lo usan `latency_summary()` (los `p50_ms`/`p95_ms` de cada run en MLflow) y los scripts de `experiments/evaluation/generative/` (`detector_vs_labels.py` y `relevance_qwen.py`).
 
 > **Cambio del 2026-10-08** — antes tomaba el valor observado en `round(k)`, con el redondeo al par de Python. Con `n` par (las 34 preguntas) su p50 no era la mediana: en `[10, 20, 30, 40]` daba `30` en vez de `25`. Las latencias registradas antes de esa fecha (MLflow, `results.json` y reportes) usan el método anterior y no se recalcularon, porque no se guardaron las latencias por pregunta. La diferencia es de décimas de ms y ninguna decisión del proyecto se tomó por latencia.
 
@@ -122,4 +124,4 @@ Contra las versiones anteriores del criterio, `fuzzy_sin_guardas` falla los 7 si
 
 Para reproducir la comparación de criterios, `python -m experiments.chunking.results.compare_matchers` (requiere Qdrant y el embedder levantados).
 
-> Los resultados de hybrid search y reranking (`experiments/hybrid-search/results/results.json`, `experiments/reranking/results/results.json`) se calcularon con el criterio estricto y el ground truth anterior a esta auditoría.
+> Los resultados de hybrid search y reranking (`experiments/hybrid-search/results/results.json`, `experiments/reranking/results/results.json`) se recalcularon con `fuzzy_actual` y el ground truth auditado el 2026-10-06, y de nuevo el 2026-10-09 con los gold spans de `q033` y `q034`.

@@ -41,5 +41,5 @@ Calibra los tamaños contra el embedder, indexa cada config del barrido en `exp_
 
 ## Documentos
 
-- [PHASES.md](./PHASES.md) — las 4 fases del experimento: tamaños fijos, barrido dinámico, tablas separadas y criterio `fuzzy_actual`, con los intentos descartados y los fixes.
+- [PHASES.md](./PHASES.md) — las 5 fases del experimento: tamaños fijos, barrido dinámico, tablas separadas, criterio `fuzzy_actual` y gold spans de `q033` y `q034`, con los intentos descartados y los fixes.
 - [ANALYSIS.md](./ANALYSIS.md) — análisis con números detrás de cada decisión: truncación, límite de tokens, tablas, criterio de acierto y comparación entre fases.

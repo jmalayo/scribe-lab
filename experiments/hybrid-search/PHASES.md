@@ -8,7 +8,8 @@ Todas las fases comparan tres métodos de recuperación sobre el mismo set de 34
 |---|---|---|---|---|---|
 | 1 | `512/25%` (fase 1 del experimento N.º 1) | Estricto | `recall@5` | `hybrid_rrf` | Descartada: chunking inválido por truncación |
 | 2 | `284/25%` | `fuzzy_actual` | `recall@5` | `hybrid_rrf` | Reemplazada por el paso a top-10 |
-| **3** | `284/25%` | `fuzzy_actual` | `recall@10`, desempate `mrr@10` | `hybrid_rrf` | **Vigente** |
+| 3 | `284/25%` | `fuzzy_actual` | `recall@10`, desempate `mrr@10` | `hybrid_rrf` | Reemplazada por los gold spans de `q033` y `q034` |
+| **4** | `284/25%` | `fuzzy_actual`, gold spans de `q033` y `q034` | `recall@10`, desempate `mrr@10` | `dense` | **Vigente** |
 
 ## Fase 1 — corrida original (chunking `512/25%`)
 

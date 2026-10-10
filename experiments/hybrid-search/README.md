@@ -43,5 +43,5 @@ Reusa o re-indexa `exp_hybrid_search__<modelo>`, corre los tres métodos y regis
 
 ## Documentos
 
-- [PHASES.md](./PHASES.md) — las 3 fases del experimento y por qué se reemplazó cada una.
+- [PHASES.md](./PHASES.md) — las 4 fases del experimento y por qué se reemplazó cada una.
 - [ANALYSIS.md](./ANALYSIS.md) — pruebas pareadas por pregunta entre los tres métodos, latencia y consistencia con el experimento de chunking.

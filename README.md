@@ -12,7 +12,7 @@ Fase de evaluación — módulos independientes, cada uno con su propio objetivo
 - **El `recall@k` de los experimentos 1 a 3 se calcula sobre las 34 preguntas, con un techo de 31/34 = 0.912.** `q005`, `q021` y `q032` no tienen respuesta en el corpus. `q033` y `q034` tienen gold spans desde el 2026-10-09, y los tres experimentos se recalcularon. Detalle en `shared/eval/EVAL_METHODOLOGY.md`, sección "Data quality del ground truth".
 - **Pipeline de retrieval vigente (2026-10-09): chunking `284/25%` → `dense` top-10, sin reranker.** Con los gold spans nuevos, la regla de decisión (`recall@10`, desempate por `mrr@10`) eligió `dense` sobre `hybrid_rrf` y descartó el reranker. Ninguna de las dos diferencias es significativa con 34 preguntas.
 - **Versiones fijadas:** Qdrant `v1.19.1` en `docker-compose.yml` (la versión con la que se generaron todos los resultados) y `qdrant-client>=1.19,<1.20`. El juez LLM configurado en `shared/settings.py` es `qwen3:8b`; DeepSeek queda solo en los scripts que reproducen `exp_5` y `exp_6`.
-- **Capas anti-alucinación en línea** (`shared/eval/grounding.py`): LettuceDetect por oración, NLI (mDeBERTa) por oración × chunk, chequeo de cifras contra el contexto y abstención por score del reranker. Están implementadas y medidas contra la etiqueta humana, sin calibrar: la combinación encuentra 14 de 17 oraciones problemáticas con precisión 0.30, y tarda 15.9 s por pregunta en CPU (p50). Resultados y tiempos en el README del experimento N.º 4.
+- **Capas anti-alucinación en línea** (`shared/eval/grounding.py`): LettuceDetect por oración, NLI (mDeBERTa) por oración × chunk, chequeo de cifras contra el contexto y abstención por score de recuperación. Están implementadas y medidas contra la etiqueta humana, sin calibrar: la combinación encuentra 14 de 17 oraciones problemáticas con precisión 0.30, y tarda 15.9 s por pregunta en CPU con el NLI en el host (p50); el contenedor `nli` es varias veces más rápido. La abstención se mide con el score guardado junto a cada chunk (`base_chunks.csv`): las preguntas sin respuesta y con respuesta se solapan, así que no hay umbral adoptado. Resultados y tiempos en el README del experimento N.º 4.
 
 ## Stack
 
@@ -29,11 +29,11 @@ Todos los servicios corren vía `docker-compose up` y se reutilizan entre experi
 
 ```bash
 pip install -r requirements.txt
-pre-commit install   # activa `ruff check` antes de cada commit (el gancho es local, no se versiona)
+pre-commit install   # activa `ruff check` antes de cada commit y los tests unitarios antes de cada push (los ganchos son locales, no se versionan)
 pytest tests/unit --cov=shared --cov-report=term-missing
 ```
 
-Las reglas de `ruff` están en `ruff.toml`. El CI (`.github/workflows/ci.yml`) corre en cada push `ruff check .` y los tests unitarios con cobertura, y falla si `shared/eval/metrics.py` o `shared/retrieval.py` bajan de 80 %. Los tests unitarios no usan red ni modelos: Qdrant, el embedder y el cross-encoder se reemplazan por dobles.
+Las reglas de `ruff` están en `ruff.toml`. El CI (`.github/workflows/ci.yml`) corre en cada push `ruff check .` y los tests unitarios con cobertura, y falla si `shared/eval/metrics.py` o `shared/retrieval.py` bajan de 80 %. Los tests unitarios no usan red ni modelos: Qdrant, el embedder y el cross-encoder se reemplazan por dobles. El gancho de pre-push (`.pre-commit-config.yaml`) corre lo mismo que el CI, salvo `ruff`, que ya se verifica al hacer commit: `pytest tests/unit` con cobertura y el mínimo de 80 %. Si algo falla, el push se cancela antes de subir nada. Usa el `python` del `PATH`, así que hay que hacer el push con el entorno virtual activado; sin él, el gancho falla y el push también se cancela.
 
 ### Modelo de embeddings (descarga previa requerida)
 
@@ -47,17 +47,32 @@ huggingface-cli download sentence-transformers/paraphrase-multilingual-MiniLM-L1
 
 **Problema:** sin `--include`, el comando descarga *todos* los formatos del repo (pytorch, tensorflow, onnx x6, openvino x2) — **4.4 GB** — cuando TEI solo usa el safetensors + tokenizer. Con el filtro, baja a **~470 MB**.
 
-## Matemática usada en la evaluación
+## Matemática usada en el proyecto
 
-Todo vive en `shared/eval/metrics.py` (métricas) y `shared/retrieval.py` (scoring).
+Recuperación en `shared/retrieval.py`, métricas en `shared/eval/metrics.py`, verificación de respuestas en `shared/eval/grounding.py` y `detector/`. Cada técnica indica qué pregunta responde.
 
+**Recuperación (qué chunks recibe el LLM)**
+
+- **Similitud coseno** (Qdrant, `Distance.COSINE` en `shared/ingest.py`) — ¿qué tan cerca en significado están la pregunta y un chunk? Mide el ángulo entre sus vectores de embeddings, sin importar su largo. Solo compara vectores del mismo modelo de embeddings.
+- **BM25 / Okapi BM25** (`BM25Index`) — ¿qué chunks comparten las palabras exactas de la pregunta? El término `log(1 + (n - freq + 0.5) / (freq + 0.5))` es el **IDF (Inverse Document Frequency)**: pesa más los términos raros del corpus. `k1 = 1.5` satura la repetición de un término y `b = 0.75` penaliza los chunks largos.
+- **RRF / Reciprocal Rank Fusion** (`reciprocal_rank_fusion`) — ¿cómo combinar dos rankings cuyos scores no son comparables (coseno contra BM25)? Suma `1/(k+rank+1)` por lista, usando solo la posición (ver `experiments/hybrid-search/README.md`).
+- **Cross-encoder reranking** (`rerank`) — a diferencia de dense/BM25, que puntúan pregunta y chunk por separado, el cross-encoder procesa el par `(pregunta, chunk)` junto en un solo forward pass y devuelve un score de relevancia. Es más caro por candidato y más preciso para reordenar un pool reducido. `ms-marco` devuelve un **logit** (sin acotar, solo sirve para ordenar), no una probabilidad. El pipeline vigente no lo usa (experimento N.º 3).
+
+**Verificación de respuestas (qué oraciones no tienen sustento)**
+
+- **NLI, clasificación de pares** (`detector/nli_app.py`, `nli_scores`) — ¿el chunk (premisa) respalda, contradice o no dice nada sobre la oración (hipótesis)? mDeBERTa clasifica cada par en `entailment`, `neutral` o `contradiction`. Por oración se toma la mayor implicación y la mayor contradicción entre los 10 chunks.
+- **Softmax** (`logits.softmax(-1)`) — convierte los tres puntajes crudos del NLI en probabilidades que suman 1 entre clases excluyentes.
+- **Clasificación por token** (LettuceDetect, `sentence_scores`) — ¿qué tramo de la respuesta parece inventado? El modelo da una probabilidad por token con su rango de caracteres, y la oración toma la probabilidad más alta de sus tokens.
+
+**Evaluación (qué tan bien funciona cada pieza)**
+
+- **Coincidencia difusa de cadenas** (`rapidfuzz.fuzz.partial_ratio_alignment`) — ¿el gold span aparece en el chunk aunque difieran espacios, saltos de línea o cortes? Similitud de Levenshtein ≥ 0.8 y cobertura del span ≥ 0.9 (`shared/eval/EVAL_METHODOLOGY.md`).
 - **Recall@k / MRR@k** — métricas estándar de IR: si el chunk correcto aparece entre los primeros k resultados (recall), y en qué posición (MRR, recíproco del rank).
-- **Bootstrap CI** (`bootstrap_ci`) — remuestreo con reemplazo (1000 veces) sobre los aciertos por pregunta para estimar un intervalo de confianza del 95% del recall, sin asumir una distribución normal.
-- **BM25 / Okapi BM25** (`BM25Index`) — el término `log(1 + (n - freq + 0.5) / (freq + 0.5))` es el **IDF (Inverse Document Frequency)** de la fórmula Okapi BM25: penaliza términos que aparecen en muchos documentos, con logaritmo para que el efecto se aplane a medida que la frecuencia crece.
-- **RRF / Reciprocal Rank Fusion** (`reciprocal_rank_fusion`) — combina rankings distintos sumando `1/(k+rank+1)` por lista, en vez de sumar scores en escalas distintas (ver `experiments/hybrid-search/README.md`).
-- **Cross-encoder reranking** (`rerank`) — a diferencia de dense/BM25, que puntúan pregunta y chunk por separado, el cross-encoder (`BAAI/bge-reranker-v2-m3`, multilingüe) procesa el par `(pregunta, chunk)` junto en un solo forward pass y devuelve un score de relevancia directo — más caro por candidato, pero más preciso para reordenar un pool ya reducido.
-
-
+- **Precisión y recall de un detector** (`detection` en `detector_vs_labels.py`) — de las oraciones que marca, ¿cuántas tenían problema? Y de las que tenían problema, ¿cuántas marca? Se calculan contra la etiqueta humana por oración.
+- **AUROC** (`auroc` en `detector_vs_labels.py`) — ¿qué tan bien ordena un score los positivos por encima de los negativos, sin elegir umbral? Es la proporción de pares (positivo, negativo) bien ordenados: 0.5 es azar y 1.0 es separación perfecta.
+- **Bootstrap CI** (`bootstrap_ci`) — remuestreo con reemplazo (1000 veces) sobre los aciertos por pregunta para estimar un intervalo de confianza del 95 %, sin asumir una distribución normal.
+- **McNemar exacto** (en los `ANALYSIS.md` de hybrid-search y reranking) — ¿la diferencia entre dos métodos sobre las mismas preguntas es real o azar? Solo cuentan las preguntas donde discrepan, y su reparto se contrasta con una binomial al 50 %.
+- **Regla de decisión fijada de antemano** (`get_best_run` en `shared/tracking.py`) — `recall@10` con desempate por `mrr@10`, escrita antes de ver los resultados para no elegir la métrica que favorece al método preferido.
 
 ## Experimentos realizados
 
@@ -75,6 +90,6 @@ La carpeta se renombró de `hybrid-serach` a `hybrid-search` (typo corregido) y 
 - `experiments/hybrid-search/` — experimento N.º 2: dense vs. BM25 vs. fusión híbrida (RRF).
 - `experiments/reranking/` — experimento N.º 3: cross-encoder sobre el mejor retriever de la etapa anterior.
 - `experiments/evaluation/` — experimento N.º 4: evaluación de respuestas (jueces LLM en la fase 1, verificación por oración contra etiquetas humanas en `generative/`).
-- `detector/` — imagen del servicio LettuceDetect (FastAPI, versiones fijas, arranque offline).
-- `tests/` — `unit/` (métricas, BM25/RRF, ingesta, parseo del juez; los corre el CI) y `data/` (verifica que los gold spans sean literales en el corpus, que no se versiona: corre solo en local).
+- `detector/` — imagen de los servicios LettuceDetect (`app.py`) y NLI (`nli_app.py`): FastAPI, versiones fijas, arranque offline.
+- `tests/` — `unit/` (métricas, BM25/RRF, ingesta, parseo del juez, capas de grounding y carga de respuestas y chunks; los corre el CI) y `data/` (verifica que los gold spans sean literales en el corpus, que no se versiona: corre solo en local).
 

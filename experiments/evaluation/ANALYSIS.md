@@ -87,7 +87,7 @@ El contexto más largo usa menos de un tercio de la ventana de 4096 tokens, así
 
 ## 4. Consumo medido
 
-Script: `experiments/evaluation/generative/measure_resources.py` (corrida del 2026-10-07).  
+Script: `experiments/evaluation/generative/measure_resources.py` (corrida del 2026-10-07; el script se retiró el 2026-10-09 y su resultado queda en el CSV de abajo).  
 Resultado: [resources_summary.csv](./generative/resources_summary.csv). Las 34 respuestas de `exp_7`, sus 67 oraciones y contextos de 10 chunks. Latencias por respuesta, en segundos, con el cálculo de percentil anterior al 2026-10-08 ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md), sección "Latencias").
 
 ```
@@ -145,7 +145,7 @@ Por respuesta: 1 de las 14 con algún problema queda marcada (`q007`), y ninguna
 
 **Lectura.** La mediana de las oraciones problemáticas (0.0025 y 0.0039) está apenas por encima de la de las soportadas (0.0007), y el máximo de las `contradice` (0.0448) queda por debajo del de las soportadas (0.0608). El AUROC es 0.736: el orden tiene algo de señal, pero bajar el umbral no alcanza. Con un umbral apenas sobre 0.0608 se agregaría `q016` (0.298) sin falsas alarmas, y el resto de las positivas seguiría sin separarse. Ese umbral se elegiría mirando estos mismos datos, así que no se adopta. Ninguna de las 4 `contradice` pasa de 0.045.
 
-**Abstención** (score máximo del cross-encoder `bge` sobre los 10 chunks del retrieval vigente; "sin respuesta" = `contexto_suficiente = n.a.` en `labels_answers.csv`):
+**Abstención, primera medición** (score máximo del cross-encoder `bge` sobre los 10 chunks de una segunda recuperación con `hybrid_rrf` + `bge`, que no es el contexto que vio el LLM; "sin respuesta" = `contexto_suficiente = n.a.` en `labels_answers.csv`):
 
 | Pregunta | Sin respuesta en el corpus | Score máximo |
 |---|---|---|
@@ -156,6 +156,18 @@ Por respuesta: 1 de las 14 con algún problema queda marcada (`q007`), y ninguna
 | `q005` | sí | 0.928 |
 
 Con cualquier umbral entre 0.019 y 0.130 se abstiene en 2 de las 4 sin abstenciones falsas. El provisional es 0.05. `q005` pregunta por Qwen2-Audio, que no está en el corpus, pero el reranker encuentra chunks del mismo tema con score alto: para ese caso la abstención tiene que venir del LLM. Con 4 preguntas sin respuesta, el umbral no está calibrado.
+
+**Abstención con el contexto que vio el LLM** (2026-10-10). `base_chunks.csv` guarda el score de cada chunk, y `abstention_scores()` toma el máximo por pregunta sin volver a recuperar. Para `exp_7`, el score se recalculó con el pipeline que generó esas respuestas (`hybrid_rrf`, pool de 20, `ms-marco`), que reprodujo los 340 chunks en el mismo orden. Es el logit crudo de `ms-marco`, no una probabilidad:
+
+| Pregunta | Sin respuesta en el corpus | Score máximo |
+|---|---|---|
+| `q032` | sí | −1.031 |
+| `q006` | no | −0.776 (mínimo de las 30 con respuesta) |
+| `q021` | sí | 0.314 |
+| `q004` | sí | 1.491 |
+| `q005` | sí | 2.625 |
+
+Máximo de las 30 con respuesta: 6.890. Solo un corte entre −1.031 y −0.776 evita abstenciones falsas, y abstiene únicamente en `q032`. Con este score, `q021` deja de separarse. No se adopta umbral.
 
 ## 7. NLI contra la etiqueta humana y tiempo del módulo
 
@@ -215,7 +227,7 @@ Script: `generative/relevance_qwen.py`. Salida: `generative/llama_3_1_8_B/releva
 | JSON forzado (`think=False`, `format`) | 0 | 0.971 (0.912–1.000) | `q032` | 0.95 s | 1.23 s | 1.33 s | 32.9 s |
 | Razonamiento (`think=True`) | 0 | 0.912 (0.794–1.000) | `q018`, `q030`, `q032` | 4.42 s | 6.05 s | 33.18 s | 179.7 s |
 
-El máximo de 33.18 s del modo con razonamiento es `q001`, la primera llamada, que incluye la carga del modelo en la GPU.
+El máximo de 33.18 s del modo con razonamiento es `q001`, la primera llamada, que incluye la carga del modelo en la GPU. La forzaba `unload_models()`, que descargaba todos los modelos de Ollama antes de juzgar; se quitó del script el 2026-10-10, porque compose ya mantiene un solo modelo cargado (`OLLAMA_MAX_LOADED_MODELS=1`). Los acuerdos no dependen de eso.
 
 **Desacuerdos:**
 
