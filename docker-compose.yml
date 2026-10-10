@@ -1,6 +1,6 @@
 services:
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.19.1
     ports:
       - "6333:6333"
     volumes:
@@ -65,6 +65,30 @@ services:
     environment:
       OLLAMA_HOST: "ollama:11434"
 
+  ollama-pull-qwen:
+    restart: no
+    image: ollama/ollama:latest
+    container_name: qwen-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama"]
+    command: ["pull", "qwen3:8b"]
+    environment:
+      OLLAMA_HOST: "ollama:11434"
+
+  ollama-pull-llama31:
+    restart: no
+    image: ollama/ollama:latest
+    container_name: llama31-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama"]
+    command: ["pull", "llama3.1:8b-instruct-q4_K_M"]
+    environment:
+      OLLAMA_HOST: "ollama:11434"
+
   detector:
     restart: "no"
     build:
@@ -72,7 +96,7 @@ services:
     image: rag-lettuce-detector:es-v1
     profiles: ["eval"]
     ports:
-      - "8100:8000"
+      - "1011:8000"
     mem_limit: 3g
     volumes:
       - detector_models:/models
@@ -81,6 +105,24 @@ services:
       - LANG_CODE=es
       - HF_HUB_OFFLINE=${DETECTOR_OFFLINE:-0}
       - LETTUCE_REVISION=7698129a608994d734762a116f6ed770f27a7d24
+      - OMP_NUM_THREADS=4
+
+  nli:
+    restart: "no"
+    build:
+      context: "./detector"
+    image: rag-lettuce-detector:es-v1
+    profiles: ["nli"]
+    command: ["uvicorn", "nli_app:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "1012:8000"
+    mem_limit: 3g
+    volumes:
+      - detector_models:/models
+    environment:
+      - MODEL_ID=MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+      - NLI_REVISION=b5113eb38ab63efdd7f280f8c144ea8b13f978ce
+      - HF_HUB_OFFLINE=${DETECTOR_OFFLINE:-0}
       - OMP_NUM_THREADS=4
 
   mlflow-server:

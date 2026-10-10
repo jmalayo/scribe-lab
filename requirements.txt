@@ -3,7 +3,7 @@ pydantic-settings>=2.14
 requests>=2.34
 numpy>=2.5
 mlflow==3.15.2
-qdrant-client>=1.19
+qdrant-client>=1.19,<1.20  # servidor fijado en qdrant/qdrant:v1.19.1 (docker-compose.yml)
 langchain-text-splitters==1.1.2
 rapidfuzz>=3.14
 pandas>=2.3

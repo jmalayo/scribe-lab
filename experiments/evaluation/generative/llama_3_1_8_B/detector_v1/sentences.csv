@@ -1,0 +1,68 @@
+id;oracion_idx;humano_sustento;lettuce_score;numeros_sin_sustento;oracion
+q001;0;contradice;0.0054;;Según el contexto, el 73.9% de accuracy de Random Forest sigue siendo válido según el estado actual del proyecto, ya que se menciona en el archivo `music-tagger/music-tagger-benchmark.md` como el mejor resultado histórico, sin cambiar ninguna feature de DSP.
+q002;0;soportada;0.0039;;"En el documento ""tagger-music-genesis.md"", se reporta que el kernel_size=9 fue rechazado tras validación estadística rigurosa, con Spearman=0.86 y un desvío relativo medio de 57.3%."
+q002;1;soportada;0.0201;;"En el documento ""music-tagger-benchmark.md"", se reporta que el kernel_size=9 no pasa el umbral seguro, con un desvío medio de 37.5% y un sesgo de +35.3%."
+q002;2;no_soportada;0.0015;;"La validación en ""music-tagger-benchmark.md"" merece más confianza, ya que se basa en una evaluación más exhaustiva y detallada."
+q003;0;no_soportada;0.0076;;El hallazgo completo del proyecto que aparece en music-tagger-benchmark.md pero no se menciona en absoluto en tagger-music-genesis.md es el aumento real observado en el tiempo de ejecución del modelo, que fue de 7384-8276 segundos, lo que superó la estimación corregida.
+q004;0;soportada;0.0001;;No hay información sobre el balanced accuracy del sistema de prototipos few-shot usando k=5 canciones de soporte por categoría.
+q005;0;no_soportada;0.0027;;El modelo Random Forest en el modelo Qwen2-Audio obtuvo una accuracy de 48.9 % ± 13.3 de balanced accuracy (5-fold) sobre el dataset de 96 canciones.
+q006;0;no_soportada;0.0025;;La justificación estadística para eliminar `perc_ratio` se describe como 'débil' porque los intervalos de confianza se solapan, lo que significa que la diferencia entre los resultados con y sin `perc_ratio` no es estadísticamente distinguible del ruido de muestreo.
+q006;1;soportada;0.0005;;Esto sugiere que la decisión de eliminar `perc_ratio` no está respaldada por una evidencia estadística sólida.
+q007;0;no_soportada;0.8186;;La extracción de las 96 canciones sin HPSS tarda ~3.4 minutos, mientras que con HPSS restaurado tarda ~5 minutos.
+q007;1;no_soportada;0.7624;1.5;La corrida con HPSS restaurado (16 workers, con warm-up) tarda ~1.5 minutos más que la corrida sin HPSS.
+q008;0;soportada;0.0019;;La desviación estándar de balanced accuracy es amplia debido al tamaño pequeño de la muestra, específicamente porque `baja-contemplativa` (n=9) reparte solo ~2 ejemplos por fold de los 5.
+q009;0;soportada;0.0188;;En la matriz de confusión, `baja-contemplativa` tiene un recall del 100% pero una precisión del 56.2%, mientras que `baja-ritmica` tiene una precisión del 92.9% pero un recall del 61.9%.
+q009;1;soportada;0.0006;;Esto muestra un patrón inverso, donde `baja-ritmica` tiene una precisión alta pero un recall bajo, y `baja-contemplativa` tiene un recall alto pero una precisión baja.
+q009;2;contradice;0.0448;;Esto revela que el modelo tiende a clasificar incorrectamente las canciones de `baja-contemplativa` como otras categorías.
+q010;0;no_soportada;0.0155;;La evidencia concreta que respalda migrar hacia embeddings MERT es la baja precisión del modelo en la tarea de etiquetado de música, con un alcance actual del ~70-80% de balanced accuracy.
+q010;1;soportada;0.0012;;Además, la multimodalidad por género y la concentración de importancia en tres features de timbre (que concentran el 53% de la importancia del modelo) también son argumentos a favor de la migración.
+q011;0;soportada;0.0005;;Según el documento, `alta-ritmica` y `baja-ritmica` se confunden con `incrementable-decreciente` en el espacio de embeddings MERT.
+q011;1;soportada;0.0003;;Esto ocurre porque la distancia promedio hacia `incrementable-decreciente` es menor que la distancia intra-categoría para ambas categorías.
+q012;0;soportada;0.0004;;No hay interacción documentada entre `fold_tempo()` y el cambio de sample rate de 22050 a 44100 Hz.
+q013;0;soportada;0.0001;;La contención de CPU en el benchmark de workers sugiere que, con HPSS presente, más workers puede ganar y la contención de CPU no llega a comerse la ganancia del paralelismo.
+q013;1;contradice;0.0023;;En producción, la conclusión final es que 16 workers es el más rápido, incluso con tareas individuales pesadas.
+q013;2;soportada;0.001;;Esto contradice la suposición inicial de que 3 workers era el punto óptimo.
+q014;0;soportada;0.001;;La extrapolación por muestra es inestable con HPSS, pero estable sin HPSS.
+q014;1;soportada;0.0017;;Con HPSS, una muestra de 28 canciones subestima el costo real a escala de 96 en 37-54 %.
+q015;0;soportada;0.0092;;La feature que ocupa el primer puesto de importancia en el Random Forest una vez reincorporado `perc_ratio` es `cent_n_mediana` con una importancia de **0.154**.
+q015;1;contradice;0.0008;;Las tres features de timbre (`cent`, `flat`, `zcr`) suman **0.434** de la importancia total, lo que significa que `cent_n_mediana` tiene una importancia ligeramente mayor que la suma de las tres features de timbre.
+q016;0;soportada;0.0031;;El repositorio complementario mencionado es **async-music-fetch-engine**.
+q016;1;no_soportada;0.2984;;No se menciona una relación directa con el pipeline de intensidad/ritmo, pero se puede inferir que es una herramienta relacionada con la extracción de datos musicales, que podría ser utilizada en el pipeline.
+q017;0;soportada;0.0001;;La calibración global de rangos DSP resulta problemática para este dataset debido a su alto costo e impredecibilidad, ya que cada iteración de calibración requiere re-extraer el dataset completo.
+q017;1;no_soportada;0.0006;;Además, la calibración global produce un punto ciego real, sacrificando la clase minoritaria para afinar mejor la clase mayoritaria.
+q017;2;no_soportada;0.0021;;Esto se traduce en una baja balanced accuracy, especialmente en el caso de la clase minoritaria.
+q018;0;no_soportada;0.0001;;No, no se confirma una curva de aprendizaje que agregar más canciones mejore el accuracy.
+q018;1;soportada;0.0003;;La curva de aprendizaje mezcla clases proporcionalmente al subsamplear, lo que impide determinar si agregar más ejemplos de las clases minoritarias ayudaría.
+q019;0;soportada;0.0024;;Según el contexto, cambiar SR de 22050 a 44100 sin ajustar n_fft/hop_length inicialmente redujo a la mitad la ventana temporal real y descalibró las constantes LO/HI.
+q019;1;soportada;0.0002;;Sin embargo, no se pudo determinar si este cambio se aplicó de forma permanente o si se revirtió después.
+q019;2;soportada;0.0007;;Actualmente, el SR vigente es 22050.
+q020;0;no_soportada;0.0005;;El accuracy reportado bajó de 128 canciones etiquetadas a 81 en una corrida intermedia debido a que el esquema de columnas del dataset re-etiquetado fue diferente.
+q020;1;no_soportada;0.0011;;Esto provocó que el modelo tuviera un rendimiento menor, con una balanced accuracy de solo ~35-50% para árbol/RF, muy por debajo del 73.9% histórico.
+q021;0;soportada;0.0017;;No hay información en el contexto sobre cómo se diseñó la estrategia para minimizar cuántas canciones debe etiquetar un usuario nuevo del producto.
+q022;0;soportada;0.0007;;La transformación sqrt se aplicó en vez de la normalización lineal a `dyn_spread` debido a la ley de potencia de Stevens, que establece que el loudness percibido es aproximadamente proporcional a la amplitud elevada a ~0.6.
+q022;1;soportada;0.0;;La raíz cuadrada es una aproximación cercana a ese exponente real, lo que da más resolución a diferencias sutiles de dinámica que una escala lineal.
+q023;0;soportada;0.0034;;El Loudness Range (LRA) se calcula como la diferencia entre los percentiles 10 y 95 de los bloques restantes después de aplicar el gating absoluto y relativo.
+q023;1;soportada;0.0002;;El gating absoluto descarta bloques por debajo de -70 LUFS, mientras que el gating relativo descarta bloques 20 LU por debajo del promedio ya gateado.
+q024;0;soportada;0.0002;;La correlación de Spearman se usó porque mide si el orden relativo entre segmentos se conserva, no el valor absoluto, lo cual es relevante para la calibración por percentiles y los cortes del árbol.
+q024;1;soportada;0.0095;;El umbral fijado fue Spearman ≥ 0.98.
+q025;0;soportada;0.0001;;Los rangos LO/HI de normalización de cada feature fueron calibrados usando el método de percentiles p5/p95, calculados sobre la distribución real de cada feature cruda, medidos sobre el dataset completo por segmento.
+q025;1;soportada;0.0012;;Esto se hizo sobre un dataset de 1015 segmentos.
+q026;0;soportada;0.0014;;La fórmula que define balanced accuracy en este proyecto es el promedio simple del recall por categoría.
+q026;1;soportada;0.0006;;Se prefirió sobre accuracy global porque optimizar accuracy global sobre clases desbalanceadas produce un punto ciego real, sacrificando por completo la clase minoritaria para afinar mejor la clase mayoritaria.
+q027;0;soportada;0.0004;;El intervalo de confianza se calculó como la media de los 5 folds ± 2 veces la desviación estándar de esos mismos 5 folds.
+q027;1;soportada;0.0002;;Esto se hizo para evitar dividir por √5 y obtener un intervalo más amplio.
+q027;2;soportada;0.0;;Los intervalos se solapan en ambos modelos, lo que significa que la diferencia no es estadísticamente distinguible del ruido de muestreo.
+q028;0;soportada;0.0001;;Se utilizó la extrapolación lineal para predecir el desvío esperado en kernel_size=31.
+q028;1;soportada;0.0608;;La recta de ajuste lineal se calculó a partir de los 3 puntos de sesgo medidos con kernel_size 17, 11 y 9.
+q028;2;soportada;0.0002;;El resultado de la extrapolación fue un desvío de -15.0 %, que es cercano a 0 % dentro de la imprecisión esperable.
+q029;0;soportada;0.0017;;La métrica usada fue el Silhouette score, calculado sobre las 768 dimensiones crudas del embedding, no sobre la proyección 2D.
+q029;1;soportada;0.0016;;El valor del Silhouette score fue de 0.0085.
+q030;0;soportada;0.0003;;"No se proporciona una relación matemática explícita en el contexto para explicar por qué el ""margen"" (overhead) crece más rápido que linealmente con la cantidad de workers en el benchmark de paralelismo."
+q031;0;soportada;0.0006;;La transformación matemática aplicada a `dyn_spread` antes de normalizar fue la raíz cuadrada.
+q031;1;soportada;0.0003;;Esta transformación se basa en el principio de percepción de la ley de potencia de Stevens, que establece que el ruido percibido es aproximadamente proporcional a la amplitud elevada a ~0.6.
+q031;2;soportada;0.0001;;La raíz cuadrada es una aproximación cercana a ese exponente real.
+q032;0;no_aplica;0.1428;;No lo sé según el contexto proporcionado.
+q033;0;soportada;0.0033;;"El bug de logit_scale de CLAP ilustra el patrón general de riesgo de ""fallo silencioso"", donde un fallo puede ocurrir sin errores visibles, pero afectar la precisión de los resultados."
+q034;0;soportada;0.0057;;La diferencia concreta que se midió fue la escala de logit (`logit_scale`) entre el checkpoint CLAP degenerado y el que sí discrimina.
+q034;1;soportada;0.0008;;El checkpoint degenerado tenía una escala de logit de aproximadamente 1.03, mientras que el que sí discrimina tenía una escala de logit de 18.66.
+q034;2;soportada;0.0047;;Se validó el nuevo checkpoint exigiendo que su escala de logit fuera mayor o igual a 10.

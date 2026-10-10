@@ -2,7 +2,7 @@
 
 Recorrido completo del [experimento de reranking](./README.md), con lo que se descartó en cada paso y por qué. Los análisis con números que respaldan las decisiones están en [ANALYSIS.md](./ANALYSIS.md).
 
-Todas las fases comparan las mismas dos variantes sobre el set de 34 preguntas con gold spans: el pool de candidatos de `hybrid_rrf` tal cual (**baseline**) y ese mismo pool reordenado por un cross-encoder (**reranked**).
+Todas las fases comparan las mismas dos variantes sobre el set de 34 preguntas con gold spans: el pool de candidatos del retriever base tal cual (**baseline**: `hybrid_rrf` en las fases 1 a 4, `dense` en la 5) y ese mismo pool reordenado por un cross-encoder (**reranked**).
 
 
 | Fase  | Chunking  | Chunks finales | Cross-encoder            | Métrica de decisión | Estado                                     |
@@ -10,7 +10,8 @@ Todas las fases comparan las mismas dos variantes sobre el set de 34 preguntas c
 | 1     | `512/25%` | 5              | `ms-marco-MiniLM-L-6-v2` | `recall@5`          | Descartada: chunking inválido              |
 | 2     | `284/25%` | 5              | `ms-marco-MiniLM-L-6-v2` | `recall@5`          | Reemplazada por el paso a top-10           |
 | 3     | `284/25%` | 10             | `ms-marco-MiniLM-L-6-v2` | `recall@10`         | Reemplazada por el cambio de cross-encoder |
-| **4** | `284/25%` | 10             | `bge-reranker-v2-m3`     | `recall@10`         | **Vigente**                                |
+| 4     | `284/25%` | 10             | `bge-reranker-v2-m3`     | `recall@10`         | Reemplazada por el cambio de retriever base |
+| **5** | `284/25%` | 10             | `bge-reranker-v2-m3` sobre `dense` | `recall@10` | **Vigente: sin reranker**          |
 
 
 
@@ -52,7 +53,7 @@ Con 10 chunks finales, el reranker llega al techo del pool: todo chunk correcto 
 
 El costo del cross-encoder no cambia respecto de top-5: siempre puntúa los mismos 20 candidatos. Lo que cambia con top-10 es el contexto que recibe el LLM.
 
-## Fase 4 — cambio a `bge-reranker-v2-m3` (vigente)
+## Fase 4 — cambio a `bge-reranker-v2-m3`
 
 Experimento MLflow: `rag-system-eval-reranking` (corridas del 2026-10-07, ambas en GPU, misma colección `exp_reranking` y mismo pool de 20 candidatos). Se re-corrió `ms-marco` para comparar en las mismas condiciones y reprodujo la fase 3. Runs: `ms-marco` `8da4d06d905548fda62c481b96f0136a`, `bge` `74ecd2e1922645b1876b470f09c3d9db`.
 
@@ -64,3 +65,15 @@ bge reranked:      recall@10=0.706 mrr@10=0.456 recall@5=0.676 CI95=[0.5294, 0.8
 `ms-marco` está entrenado solo en inglés y el corpus está en español, así que se probó un cross-encoder multilingüe. `bge` pierde `q018` en `recall@10`, pero sube el chunk correcto en 9 preguntas. Las pruebas pareadas no encuentran diferencia de calidad, y el desempate por métricas secundarias e idioma favorece a `bge` ([ANALYSIS.md §1](./ANALYSIS.md)). Decidido el 2026-10-08.
 
 En [results.json](./results/results.json), el `mean_ms=4728.7` de `bge` está inflado por la descarga del modelo en la primera llamada. p50 y p95 no se ven afectados. Las p50/p95 de todas las fases se registraron con el cálculo de percentil anterior al 2026-10-08 ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md), sección "Latencias").
+
+## Fase 5 — Gold spans de `q033` y `q034`, retriever base `dense` (vigente)
+
+Con los gold spans nuevos de `q033` y `q034` (2026-10-09), el mejor método de hybrid search pasó a ser `dense`, así que el reranker se midió sobre los 20 candidatos de `dense`.
+
+```
+sin reranker (dense, top-10): recall@10=0.765 recall@5=0.618 mrr@10=0.456 p50=13.1ms  p95=17.8ms
+con bge-reranker-v2-m3:       recall@10=0.735 recall@5=0.706 mrr@10=0.515 p50=196.3ms p95=231.7ms
+```
+
+**Resultado:** el reranker no se adopta. Pierde `q003` y `q018` (puesto 10 en `dense`, fuera del top-10 después del rerank) y gana `q022` (puesto 19 del pool → 2). McNemar exacto 2/1, p=1.0. Mejora `recall@5` y `mrr@10`, pero la regla decide por `recall@10`, y se aplicó sin excepción (decisión del 2026-10-09). Runs: sin reranker `28f9ad010c544fad91f242e970908464`, con reranker `e790936b763a4051afea75c6d7cdf2cf`.
+

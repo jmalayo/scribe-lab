@@ -3,10 +3,10 @@
 **Estado vigente:** el corpus se corta en chunks de `chunk_size=284` caracteres con `overlap=25%` (`chunk_overlap=71`). Las tablas markdown se sacan del texto embebido y viajan completas en el payload del chunk. Sobre las 34 preguntas con gold spans, con búsqueda densa:
 
 ```
-chunk_size=284 overlap=25% -> recall@10=0.706 recall@5=0.559 mrr@10=0.397 CI95=[0.5588, 0.8529]
+chunk_size=284 overlap=25% -> recall@10=0.765 recall@5=0.618 mrr@10=0.456 CI95=[0.6176, 0.8824]
 ```
 
-Experimento MLflow `exp_chunking_dynamic_tables`, corrida del 2026-10-06 (run `332b6b735b4e4b9791a6cff2f5b7b17f`). La config está también en [best_config.json](./results/best_config.json).
+Experimento MLflow `exp_chunking_dynamic_tables`, corrida del 2026-10-09 (run `1e5ab5400558438bb3aa51ca291218ff`). La config está también en [best_config.json](./results/best_config.json).
 
 ## Qué se usa
 
@@ -26,7 +26,9 @@ Por cada config del barrido (3 tamaños × 3 overlaps), el corpus se trocea y se
 
 - **`284/25%` es la config que leen los experimentos siguientes**, con `get_best_run("exp_chunking_dynamic_tables")` por `recall@10` y desempate por `mrr@10`: [hybrid search](../hybrid-search/README.md), [reranking](../reranking/README.md) y la generación de [evaluación](../evaluation/README.md).
 - **Ningún chunk de la config vigente se trunca antes del embedding**, y cada una de las 10 tablas del corpus queda adjunta a un solo chunk. Con chunks chicos (`128/32`) una tabla se adjunta dos veces ([ANALYSIS.md §3](./ANALYSIS.md)).
-- **`tagger-music-genesis.md` abre un bloque `---` que no cierra.** Por eso su encabezado (`## source`, `fetched_at`, `library`) se indexa como contenido.
+- **`tagger-music-genesis.md` abre un bloque `---` que no cierra.** Por eso su encabezado (`## source`, `fetched_at`, `library`) se indexa como contenido. Corregirlo cambia la indexación y obliga a recalcular otra vez los tres experimentos de retrieval. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
+- **`q033` y `q034` tienen gold spans desde el 2026-10-09** (estaban marcadas "no encontrado en el corpus"). Con el barrido recalculado, `284/25%` sigue ganando: `recall@10` pasa de 0.706 a 0.765 y `mrr@10` de 0.397 a 0.456, porque las dos preguntas aciertan en el puesto 1. El techo del `recall@k` pasa de 29/34 = 0.853 a 31/34 = 0.912: `q005`, `q021` y `q032` no tienen respuesta en el corpus. Detalle en `shared/eval/EVAL_METHODOLOGY.md`, sección "Data quality del ground truth", y en [PHASES.md](./PHASES.md), fase 5.
+- **Fase 4 de chunking** (cortar con `keep_separator="end"`, repetir el título de sección en cada chunk y unir los chunks residuales chicos): la mejora esperada es marginal. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 
 ## Reproducir
 
@@ -39,5 +41,5 @@ Calibra los tamaños contra el embedder, indexa cada config del barrido en `exp_
 
 ## Documentos
 
-- [PHASES.md](./PHASES.md) — las 4 fases del experimento: tamaños fijos, barrido dinámico, tablas separadas y criterio `fuzzy_actual`, con los intentos descartados y los fixes.
+- [PHASES.md](./PHASES.md) — las 5 fases del experimento: tamaños fijos, barrido dinámico, tablas separadas, criterio `fuzzy_actual` y gold spans de `q033` y `q034`, con los intentos descartados y los fixes.
 - [ANALYSIS.md](./ANALYSIS.md) — análisis con números detrás de cada decisión: truncación, límite de tokens, tablas, criterio de acierto y comparación entre fases.

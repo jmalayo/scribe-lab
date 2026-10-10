@@ -10,7 +10,7 @@ sys.path.insert(0, str(REPO_ROOT))
 os.chdir(REPO_ROOT)
 
 from experiments.chunking.run import get_tables_from_docs
-from experiments.evaluation.prompts import ANSWER_PROMPT
+from experiments.evaluation.prompts import prompt_v1
 from experiments.evaluation.run import (
     BEST_CHUNKING,
     BEST_METHOD,
@@ -32,7 +32,8 @@ from shared.retrieval import BM25Index, fetch_all_chunks
 from shared.settings import settings
 
 OUT_DIR = Path(__file__).resolve().parent
-GENERATOR = "llama3.1:8b-instruct-q4_K_M"
+GENERATOR = settings.llm_model_answer
+ANSWER_PROMPT, _, _ = prompt_v1()
 NUM_CTX = 4096  # el mismo que fija shared/llm.py
 
 def prompt_tokens(prompt: str) -> int:

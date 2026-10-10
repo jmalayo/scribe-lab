@@ -1,0 +1,273 @@
+id;modo;valido;qwen_relevante;qwen_motivo;latencia_s;eval_count;respuesta_cruda;humano_relevancia;humano_abstencion
+q001;think;True;True;La respuesta aborda directamente la pregunta al afirmar que el 73.9% de accuracy sigue siendo válido según el estado actual del proyecto, basándose en la mencionada en el archivo `music-tagger-benchmark.md` y la ausencia de cambios en las features de DSP.;33.18;391;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al afirmar que el 73.9% de accuracy sigue siendo válido según el estado actual del proyecto, basándose en la mencionada en el archivo `music-tagger-benchmark.md` y la ausencia de cambios en las features de DSP.""
+}";si;no_aplica
+q002;think;True;True;"La respuesta menciona explícitamente los números reportados en ambos documentos (Spearman=0.86 y desvío relativo medio de 57.3% en el primer documento; desvío medio de 37.5% y sesgo de +35.3% en el segundo) y evalúa su confiabilidad, respondiendo directamente a la pregunta.";4.03;277;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta menciona explícitamente los números reportados en ambos documentos (Spearman=0.86 y desvío relativo medio de 57.3% en el primer documento; desvío medio de 37.5% y sesgo de +35.3% en el segundo) y evalúa su confiabilidad, respondiendo directamente a la pregunta.""
+}";si;no_aplica
+q003;think;True;True;La respuesta identifica explícitamente un hallazgo específico (aumento del tiempo de ejecución) que se menciona en music-tagger-benchmark.md y afirma que no está presente en tagger-music-genesis.md, lo cual responde directamente a la pregunta.;4.79;344;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta identifica explícitamente un hallazgo específico (aumento del tiempo de ejecución) que se menciona en music-tagger-benchmark.md y afirma que no está presente en tagger-music-genesis.md, lo cual responde directamente a la pregunta.""
+}";si;no_aplica
+q004;think;True;True;La respuesta indica directamente que no hay información disponible sobre el balanced accuracy del sistema mencionado, lo cual aborda la pregunta sin importar si es correcta o no.;4.41;313;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta indica directamente que no hay información disponible sobre el balanced accuracy del sistema mencionado, lo cual aborda la pregunta sin importar si es correcta o no.""
+}";si;correcta
+q005;think;True;True;La respuesta menciona explícitamente la accuracy del modelo Qwen2-Audio (48.9% ±13.3 de balanced accuracy) evaluado en el dataset de 96 canciones, respondiendo directamente a la pregunta.;4.3;305;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta menciona explícitamente la accuracy del modelo Qwen2-Audio (48.9% ±13.3 de balanced accuracy) evaluado en el dataset de 96 canciones, respondiendo directamente a la pregunta.""
+}";si;no_aplica
+q006;think;True;True;La respuesta explica que la justificación estadística se considera 'débil' debido a la superposición de intervalos de confianza, lo cual indica que la diferencia entre resultados con y sin 'perc_ratio' no es estadísticamente significativa, abordando directamente la pregunta sobre la contradicción entre la justificación estadística y la decisión final.;3.48;245;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta explica que la justificación estadística se considera 'débil' debido a la superposición de intervalos de confianza, lo cual indica que la diferencia entre resultados con y sin 'perc_ratio' no es estadísticamente significativa, abordando directamente la pregunta sobre la contradicción entre la justificación estadística y la decisión final.""
+}";si;no_aplica
+q007;think;True;True;La respuesta proporciona los tiempos de extracción (3.4 minutos sin HPSS vs. 5 minutos con HPSS restaurado) y calcula la diferencia (1.5 minutos adicionales con HPSS), lo que directamente responde a la pregunta sobre cuánto más rápida es la extracción sin HPSS.;4.56;329;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta proporciona los tiempos de extracción (3.4 minutos sin HPSS vs. 5 minutos con HPSS restaurado) y calcula la diferencia (1.5 minutos adicionales con HPSS), lo que directamente responde a la pregunta sobre cuánto más rápida es la extracción sin HPSS.""
+}";si;no_aplica
+q008;think;True;True;La respuesta aborda la pregunta al vincular la alta desviación estándar con el tamaño reducido de la muestra (n=9) y la distribución desigual de ejemplos por fold, lo cual explica la variabilidad en los resultados de balanced accuracy.;6.26;452;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda la pregunta al vincular la alta desviación estándar con el tamaño reducido de la muestra (n=9) y la distribución desigual de ejemplos por fold, lo cual explica la variabilidad en los resultados de balanced accuracy.""
+}";si;no_aplica
+q009;think;True;True;La respuesta aborda directamente la comparación de recall y precisión entre las dos categorías, identifica el patrón inverso y explica el comportamiento del modelo, respondiendo así a la pregunta planteada.;4.96;354;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la comparación de recall y precisión entre las dos categorías, identifica el patrón inverso y explica el comportamiento del modelo, respondiendo así a la pregunta planteada.""
+}";si;no_aplica
+q010;think;True;True;La respuesta menciona evidencia específica (precisión baja en tareas de etiquetado y importancia de características de timbre) que respalda la migración a embeddings MERT, abordando directamente la pregunta incluso si los detalles técnicos no están completamente validados.;3.91;282;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta menciona evidencia específica (precisión baja en tareas de etiquetado y importancia de características de timbre) que respalda la migración a embeddings MERT, abordando directamente la pregunta incluso si los detalles técnicos no están completamente validados.""
+}";si;no_aplica
+q011;think;True;True;La respuesta menciona explícitamente la categoría con la que se confunden (incrementable-decreciente) y explica la razón (diferencia de distancias promedio), lo cual responde directamente a la pregunta.;3.57;257;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta menciona explícitamente la categoría con la que se confunden (incrementable-decreciente) y explica la razón (diferencia de distancias promedio), lo cual responde directamente a la pregunta.""
+}";si;no_aplica
+q012;think;True;True;La respuesta aborda directamente la pregunta al afirmar que no existe interacción documentada entre `fold_tempo()` y el cambio de sample rate, sin importar su veracidad.;3.19;232;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al afirmar que no existe interacción documentada entre `fold_tempo()` y el cambio de sample rate, sin importar su veracidad.""
+}";si;no_aplica
+q013;think;True;True;La respuesta explora cómo la contención de CPU en el benchmark influye en la decisión de configurar N_WORKERS en producción, estableciendo una relación directa entre el resultado del benchmark y la conclusión final.;3.74;269;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta explora cómo la contención de CPU en el benchmark influye en la decisión de configurar N_WORKERS en producción, estableciendo una relación directa entre el resultado del benchmark y la conclusión final.""
+}";si;no_aplica
+q014;think;True;True;La respuesta aborda directamente la pregunta al comparar la estabilidad de la extrapolación con y sin HPSS, y proporciona información específica sobre el impacto de la muestra pequeña en el costo real.;3.46;254;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al comparar la estabilidad de la extrapolación con y sin HPSS, y proporciona información específica sobre el impacto de la muestra pequeña en el costo real.""
+}";si;no_aplica
+q015;think;True;True;La respuesta aborda directamente la pregunta al identificar la feature más importante (cent_n_mediana) y comparar su importancia con la suma de las tres features de timbre, respondiendo ambos aspectos solicitados.;4.02;291;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al identificar la feature más importante (cent_n_mediana) y comparar su importancia con la suma de las tres features de timbre, respondiendo ambos aspectos solicitados.""
+}";si;no_aplica
+q016;think;True;True;La respuesta identifica el repositorio complementario mencionado ('async-music-fetch-engine') y aborda la relación con el pipeline de intensidad/ritmo, aunque indique que la conexión no es directa. Esto responde a ambos aspectos de la pregunta.;3.27;239;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta identifica el repositorio complementario mencionado ('async-music-fetch-engine') y aborda la relación con el pipeline de intensidad/ritmo, aunque indique que la conexión no es directa. Esto responde a ambos aspectos de la pregunta.""
+}";si;no_aplica
+q017;think;True;True;La respuesta aborda la pregunta al mencionar factores como el costo, la impredecibilidad y el impacto en la balanced accuracy, que son razones válidas para la problemática de la calibración global.;4.7;341;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda la pregunta al mencionar factores como el costo, la impredecibilidad y el impacto en la balanced accuracy, que son razones válidas para la problemática de la calibración global.""
+}";si;no_aplica
+q018;think;True;False;La respuesta se centra en la metodología de la curva de aprendizaje y la mezcla de clases, pero no aborda directamente si agregar más canciones (ejemplos) mejora el accuracy. No responde claramente a la pregunta específica sobre el impacto de aumentar la cantidad de datos.;4.94;364;"{
+  ""relevante"": false,
+  ""motivo"": ""La respuesta se centra en la metodología de la curva de aprendizaje y la mezcla de clases, pero no aborda directamente si agregar más canciones (ejemplos) mejora el accuracy. No responde claramente a la pregunta específica sobre el impacto de aumentar la cantidad de datos.""
+}";si;no_aplica
+q019;think;True;True;La respuesta aborda directamente la pregunta al describir los efectos del cambio de SR (reducción de la ventana temporal y descalibración de constantes) y menciona el estado actual del SR (22050), lo que responde si el cambio sigue vigente o no.;3.95;288;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al describir los efectos del cambio de SR (reducción de la ventana temporal y descalibración de constantes) y menciona el estado actual del SR (22050), lo que responde si el cambio sigue vigente o no.""
+}";si;no_aplica
+q020;think;True;True;La respuesta menciona que el cambio en el esquema de columnas del dataset re-etiquetado afectó el rendimiento del modelo, lo que explica la disminución del accuracy reportado. Aunque no detalla exactamente cómo los números de canciones (128 a 81) se relacionan directamente con el esquema de columnas, aborda la pregunta al identificar un factor externo (estructura del dataset) como causa principal del cambio en el accuracy.;5.24;380;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta menciona que el cambio en el esquema de columnas del dataset re-etiquetado afectó el rendimiento del modelo, lo que explica la disminución del accuracy reportado. Aunque no detalla exactamente cómo los números de canciones (128 a 81) se relacionan directamente con el esquema de columnas, aborda la pregunta al identificar un factor externo (estructura del dataset) como causa principal del cambio en el accuracy.""
+}";si;no_aplica
+q021;think;True;True;La respuesta aborda la pregunta al señalar que no hay información disponible en el contexto sobre el diseño de la estrategia, lo cual responde directamente a la pregunta sin necesidad de adivinar o suponer datos adicionales.;3.6;258;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda la pregunta al señalar que no hay información disponible en el contexto sobre el diseño de la estrategia, lo cual responde directamente a la pregunta sin necesidad de adivinar o suponer datos adicionales.""
+}";si;correcta
+q022;think;True;True;La respuesta aborda directamente la pregunta al explicar que la transformación sqrt fue elegida en lugar de la normalización lineal debido a la ley de potencia de Stevens, que relaciona la percepción de intensidad con un exponente cercano a 0.6, lo que justifica la elección de una transformación no lineal para mejorar la resolución de diferencias dinámicas.;5.18;365;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar que la transformación sqrt fue elegida en lugar de la normalización lineal debido a la ley de potencia de Stevens, que relaciona la percepción de intensidad con un exponente cercano a 0.6, lo que justifica la elección de una transformación no lineal para mejorar la resolución de diferencias dinámicas.""
+}";si;no_aplica
+q023;think;True;True;La respuesta aborda directamente la pregunta al explicar cómo se calcula el LRA (diferencia entre percentiles 10 y 95) y menciona los tipos de gating (absoluto y relativo) aplicados, aunque con algunos detalles técnicos que podrían requerir precisión adicional.;5.8;422;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar cómo se calcula el LRA (diferencia entre percentiles 10 y 95) y menciona los tipos de gating (absoluto y relativo) aplicados, aunque con algunos detalles técnicos que podrían requerir precisión adicional.""
+}";si;no_aplica
+q024;think;True;True;La respuesta aborda ambas partes de la pregunta: explica por qué se eligió Spearman (relación de orden vs. valores absolutos) y menciona el umbral específico (≥0.98).;3.99;290;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda ambas partes de la pregunta: explica por qué se eligió Spearman (relación de orden vs. valores absolutos) y menciona el umbral específico (≥0.98).""
+}";si;no_aplica
+q025;think;True;True;La respuesta menciona claramente el método estadístico utilizado (percentiles p5/p95) y la cantidad de datos (1015 segmentos), lo cual aborda directamente la pregunta.;5.35;386;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta menciona claramente el método estadístico utilizado (percentiles p5/p95) y la cantidad de datos (1015 segmentos), lo cual aborda directamente la pregunta.""
+}";si;no_aplica
+q026;think;True;True;La respuesta aborda ambas partes de la pregunta: define la fórmula de balanced accuracy como el promedio de recall por categoría y explica la preferencia por sobre accuracy global en contextos de clases desbalanceadas, aunque el término 'punto ciego real' podría ser más preciso como 'paradoja de la precisión' o 'sesgo en la precisión'.;5.13;371;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda ambas partes de la pregunta: define la fórmula de balanced accuracy como el promedio de recall por categoría y explica la preferencia por sobre accuracy global en contextos de clases desbalanceadas, aunque el término 'punto ciego real' podría ser más preciso como 'paradoja de la precisión' o 'sesgo en la precisión'.""
+}";si;no_aplica
+q027;think;True;True;La respuesta explica cómo se calculó el intervalo de confianza (media ± 2 veces la desviación estándar de los 5 folds) y menciona el propósito de evitar dividir por √5, lo cual responde directamente a la pregunta sobre el método de cálculo.;5.05;366;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta explica cómo se calculó el intervalo de confianza (media ± 2 veces la desviación estándar de los 5 folds) y menciona el propósito de evitar dividir por √5, lo cual responde directamente a la pregunta sobre el método de cálculo.""
+}";si;no_aplica
+q028;think;True;True;La respuesta menciona claramente el método utilizado (extrapolación lineal) y el resultado obtenido (-15.0 %), lo cual aborda directamente ambas partes de la pregunta.;3.4;245;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta menciona claramente el método utilizado (extrapolación lineal) y el resultado obtenido (-15.0 %), lo cual aborda directamente ambas partes de la pregunta.""
+}";si;no_aplica
+q029;think;True;True;La respuesta menciona la métrica (Silhouette score) y el valor (0.0085) que se piden en la pregunta, por lo que aborda directamente la pregunta.;4.55;332;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta menciona la métrica (Silhouette score) y el valor (0.0085) que se piden en la pregunta, por lo que aborda directamente la pregunta.""
+}";si;no_aplica
+q030;think;True;False;La respuesta no proporciona una relación matemática explícita ni aborda la pregunta sobre por qué el overhead crece más rápido que linealmente. En su lugar, afirma que no hay relación matemática en el contexto, lo cual no responde a la pregunta planteada.;4.26;312;"{
+  ""relevante"": false,
+  ""motivo"": ""La respuesta no proporciona una relación matemática explícita ni aborda la pregunta sobre por qué el overhead crece más rápido que linealmente. En su lugar, afirma que no hay relación matemática en el contexto, lo cual no responde a la pregunta planteada.""
+}";si;correcta
+q031;think;True;True;La respuesta aborda directamente las dos partes de la pregunta: identifica la transformación matemática (raíz cuadrada) y menciona el principio de percepción (ley de potencia de Stevens), aunque la precisión del exponente (0.6 vs. el rango típico de 0.3-0.4 en la ley de Stevens) podría ser discutible, la relevancia de la respuesta se mantiene.;5.93;436;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente las dos partes de la pregunta: identifica la transformación matemática (raíz cuadrada) y menciona el principio de percepción (ley de potencia de Stevens), aunque la precisión del exponente (0.6 vs. el rango típico de 0.3-0.4 en la ley de Stevens) podría ser discutible, la relevancia de la respuesta se mantiene.""
+}";si;no_aplica
+q032;think;True;False;La respuesta no proporciona ninguna información sobre por qué Ollama fue descartado, simplemente indica que no se tiene conocimiento sobre el tema según el contexto proporcionado.;4.42;328;"{
+  ""relevante"": false,
+  ""motivo"": ""La respuesta no proporciona ninguna información sobre por qué Ollama fue descartado, simplemente indica que no se tiene conocimiento sobre el tema según el contexto proporcionado.""
+}";si;correcta
+q033;think;True;True;La respuesta menciona explícitamente el patrón de riesgo de 'fallo silencioso' y su aplicabilidad a otras partes del pipeline, lo que responde directamente a la pregunta sobre el patrón general de riesgo ilustrado por el bug de logit_scale en CLAP.;5.29;391;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta menciona explícitamente el patrón de riesgo de 'fallo silencioso' y su aplicabilidad a otras partes del pipeline, lo que responde directamente a la pregunta sobre el patrón general de riesgo ilustrado por el bug de logit_scale en CLAP.""
+}";si;no_aplica
+q034;think;True;True;La respuesta aborda directamente la pregunta al mencionar la escala de logit como la diferencia medida entre los checkpoints y describe la validación mediante un umbral de 10 en la escala de logit.;3.8;275;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al mencionar la escala de logit como la diferencia medida entre los checkpoints y describe la validación mediante un umbral de 10 en la escala de logit.""
+}";si;no_aplica
+q001;json;True;True;La respuesta aborda directamente la pregunta sobre la validez del 73.9% de accuracy de Random Forest como 'mejor resultado histórico' en el contexto del proyecto actual, mencionando que no se han cambiado las features de DSP.;1.04;70;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta sobre la validez del 73.9% de accuracy de Random Forest como 'mejor resultado histórico' en el contexto del proyecto actual, mencionando que no se han cambiado las features de DSP.""
+}";si;no_aplica
+q002;json;True;True;La respuesta aborda directamente la pregunta al identificar los números reportados en cada documento y proporcionar una justificación para determinar cuál validación merece más confianza.;0.78;55;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al identificar los números reportados en cada documento y proporcionar una justificación para determinar cuál validación merece más confianza.""
+}";si;no_aplica
+q003;json;True;True;La respuesta aborda directamente la pregunta al identificar un hallazgo específico que se menciona en music-tagger-benchmark.md pero no en tagger-music-genesis.md, aunque no se proporciona evidencia o contexto adicional para confirmar su precisión.;1.01;73;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al identificar un hallazgo específico que se menciona en music-tagger-benchmark.md pero no en tagger-music-genesis.md, aunque no se proporciona evidencia o contexto adicional para confirmar su precisión.""
+}";si;no_aplica
+q004;json;True;True;La respuesta aborda directamente la pregunta al indicar que no hay información disponible sobre el balanced accuracy del sistema mencionado.;0.62;43;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al indicar que no hay información disponible sobre el balanced accuracy del sistema mencionado.""
+}";si;correcta
+q005;json;True;True;La respuesta proporciona información directa sobre la accuracy del modelo Qwen2-Audio en el dataset de 96 canciones, lo que responde directamente a la pregunta.;0.75;54;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta proporciona información directa sobre la accuracy del modelo Qwen2-Audio en el dataset de 96 canciones, lo que responde directamente a la pregunta.""
+}";si;no_aplica
+q006;json;True;True;La respuesta aborda directamente la pregunta al explicar que la justificación estadística para eliminar `perc_ratio` se describe como 'débil' debido a la superposición de los intervalos de confianza, lo cual indica que la decisión no está respaldada por evidencia estadística sólida.;1.12;81;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar que la justificación estadística para eliminar `perc_ratio` se describe como 'débil' debido a la superposición de los intervalos de confianza, lo cual indica que la decisión no está respaldada por evidencia estadística sólida.""
+}";si;no_aplica
+q007;json;True;True;La respuesta aborda directamente la pregunta al comparar los tiempos de extracción de las 96 canciones con y sin HPSS restaurado, indicando la diferencia en minutos.;0.81;57;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al comparar los tiempos de extracción de las 96 canciones con y sin HPSS restaurado, indicando la diferencia en minutos.""
+}";si;no_aplica
+q008;json;True;True;La respuesta aborda directamente la pregunta al señalar que la desviación estándar es amplia debido al tamaño pequeño de la muestra, específicamente mencionando la clase `baja-contemplativa` con solo 9 ejemplos, lo cual influye en la variabilidad de los resultados.;1.15;81;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al señalar que la desviación estándar es amplia debido al tamaño pequeño de la muestra, específicamente mencionando la clase `baja-contemplativa` con solo 9 ejemplos, lo cual influye en la variabilidad de los resultados.""
+}";si;no_aplica
+q009;json;True;True;La respuesta aborda directamente la pregunta al comparar el recall y la precisión de las dos categorías en la matriz de confusión, identificando el patrón inverso y lo que revela sobre el comportamiento del modelo.;0.95;68;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al comparar el recall y la precisión de las dos categorías en la matriz de confusión, identificando el patrón inverso y lo que revela sobre el comportamiento del modelo.""
+}";si;no_aplica
+q010;json;True;True;La respuesta aborda directamente la pregunta al mencionar evidencia concreta como la baja precisión del modelo y la concentración de importancia en tres features de timbre, que respaldan la migración hacia embeddings MERT.;0.93;67;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al mencionar evidencia concreta como la baja precisión del modelo y la concentración de importancia en tres features de timbre, que respaldan la migración hacia embeddings MERT.""
+}";si;no_aplica
+q011;json;True;True;La respuesta aborda directamente la pregunta al mencionar la categoría con la que se confunden `alta-ritmica` y `baja-ritmica` en el espacio de embeddings MERT, así como la razón según el documento.;0.95;69;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al mencionar la categoría con la que se confunden `alta-ritmica` y `baja-ritmica` en el espacio de embeddings MERT, así como la razón según el documento.""
+}";si;no_aplica
+q012;json;True;True;La respuesta aborda directamente la pregunta al afirmar que no hay interacción documentada entre `fold_tempo()` y el cambio de sample rate de 22050 a 44100 Hz, sin importar la corrección de dicha afirmación.;1.03;75;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al afirmar que no hay interacción documentada entre `fold_tempo()` y el cambio de sample rate de 22050 a 44100 Hz, sin importar la corrección de dicha afirmación.""
+}";si;no_aplica
+q013;json;True;True;La respuesta aborda directamente la pregunta al explicar cómo la contención de CPU en el benchmark de workers influye en la determinación óptima del número de workers en producción.;0.76;55;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar cómo la contención de CPU en el benchmark de workers influye en la determinación óptima del número de workers en producción.""
+}";si;no_aplica
+q014;json;True;True;La respuesta aborda directamente la pregunta al discutir la estabilidad de la extrapolación del costo de extracción al escalar desde una muestra pequeña hacia el dataset completo, tanto con como sin HPSS, y proporciona una estimación numérica de la subestimación con HPSS.;1.07;78;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al discutir la estabilidad de la extrapolación del costo de extracción al escalar desde una muestra pequeña hacia el dataset completo, tanto con como sin HPSS, y proporciona una estimación numérica de la subestimación con HPSS.""
+}";si;no_aplica
+q015;json;True;True;La respuesta aborda directamente la pregunta al identificar la feature de mayor importancia en el Random Forest después de reincorporar `perc_ratio` y compararla con la suma de las tres features de timbre.;0.86;62;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al identificar la feature de mayor importancia en el Random Forest después de reincorporar `perc_ratio` y compararla con la suma de las tres features de timbre.""
+}";si;no_aplica
+q016;json;True;True;La respuesta aborda la pregunta al mencionar el repositorio complementario mencionado en el documento y al intentar establecer una relación con el pipeline de intensidad/ritmo, aunque no sea explícita.;0.87;63;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda la pregunta al mencionar el repositorio complementario mencionado en el documento y al intentar establecer una relación con el pipeline de intensidad/ritmo, aunque no sea explícita.""
+}";si;no_aplica
+q017;json;True;True;La respuesta aborda directamente la pregunta al explicar por qué la calibración global de rangos DSP es problemática para el dataset, mencionando factores como el alto costo, la impredecibilidad, la producción de un punto ciego real y el sacrificio de la clase minoritaria, lo cual afecta la balanced accuracy.;1.21;89;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar por qué la calibración global de rangos DSP es problemática para el dataset, mencionando factores como el alto costo, la impredecibilidad, la producción de un punto ciego real y el sacrificio de la clase minoritaria, lo cual afecta la balanced accuracy.""
+}";si;no_aplica
+q018;json;True;True;La respuesta aborda directamente la pregunta al afirmar que no se confirma una curva de aprendizaje que agregar más canciones mejore el accuracy, explicando la razón en términos de mezcla de clases y subsampleo.;0.94;68;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al afirmar que no se confirma una curva de aprendizaje que agregar más canciones mejore el accuracy, explicando la razón en términos de mezcla de clases y subsampleo.""
+}";si;no_aplica
+q019;json;True;True;La respuesta aborda directamente la pregunta al explicar los efectos de cambiar la tasa de muestreo (SR) de 22050 a 44100 sin ajustar n_fft/hop_length, y menciona que el SR vigente es 22050, lo cual responde a la parte sobre si el cambio sigue vigente.;1.33;97;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar los efectos de cambiar la tasa de muestreo (SR) de 22050 a 44100 sin ajustar n_fft/hop_length, y menciona que el SR vigente es 22050, lo cual responde a la parte sobre si el cambio sigue vigente.""
+}";si;no_aplica
+q020;json;True;True;La respuesta aborda la pregunta al explicar que el descenso en el accuracy se debe a una diferencia en el esquema de columnas del dataset re-etiquetado, lo que afectó el rendimiento del modelo.;0.89;64;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda la pregunta al explicar que el descenso en el accuracy se debe a una diferencia en el esquema de columnas del dataset re-etiquetado, lo que afectó el rendimiento del modelo.""
+}";si;no_aplica
+q021;json;True;True;La respuesta aborda la pregunta al indicar que no hay información disponible sobre cómo se diseñó la estrategia, lo cual es relevante para la pregunta planteada.;0.74;53;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda la pregunta al indicar que no hay información disponible sobre cómo se diseñó la estrategia, lo cual es relevante para la pregunta planteada.""
+}";si;correcta
+q022;json;True;True;La respuesta aborda directamente la pregunta al explicar por qué se utilizó la transformación sqrt en lugar de la normalización lineal, mencionando la ley de potencia de Stevens y su relación con la percepción del loudness.;0.93;67;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar por qué se utilizó la transformación sqrt en lugar de la normalización lineal, mencionando la ley de potencia de Stevens y su relación con la percepción del loudness.""
+}";si;no_aplica
+q023;json;True;True;La respuesta aborda directamente la pregunta al explicar cómo se calcula el Loudness Range (LRA) por segmento, mencionando la diferencia entre percentiles 10 y 95 de los bloques restantes después de aplicar el gating absoluto y relativo. También describe qué tipo de gating se aplica.;1.19;87;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar cómo se calcula el Loudness Range (LRA) por segmento, mencionando la diferencia entre percentiles 10 y 95 de los bloques restantes después de aplicar el gating absoluto y relativo. También describe qué tipo de gating se aplica.""
+}";si;no_aplica
+q024;json;True;True;La respuesta aborda directamente la pregunta al explicar por qué se utilizó la correlación de Spearman en lugar de Pearson y menciona el umbral fijado, aunque no se proporciona información adicional sobre la validación de los kernels de HPSS reducidos.;1.03;75;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar por qué se utilizó la correlación de Spearman en lugar de Pearson y menciona el umbral fijado, aunque no se proporciona información adicional sobre la validación de los kernels de HPSS reducidos.""
+}";si;no_aplica
+q025;json;True;True;La respuesta aborda directamente la pregunta al mencionar el método estadístico utilizado (percentiles p5/p95) y la cantidad de datos (1015 segmentos) sobre los que se realizó la calibración.;0.92;67;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al mencionar el método estadístico utilizado (percentiles p5/p95) y la cantidad de datos (1015 segmentos) sobre los que se realizó la calibración.""
+}";si;no_aplica
+q026;json;True;True;La respuesta aborda directamente la pregunta al explicar la fórmula de balanced accuracy y la razón por la cual se prefirió sobre la accuracy global.;0.71;51;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar la fórmula de balanced accuracy y la razón por la cual se prefirió sobre la accuracy global.""
+}";si;no_aplica
+q027;json;True;True;La respuesta aborda directamente la pregunta al explicar cómo se calculó el intervalo de confianza (media ± 2 veces la desviación estándar) y su propósito en el contexto del ablation test de perc_ratio, así como su interpretación en términos de significancia estadística.;1.13;82;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al explicar cómo se calculó el intervalo de confianza (media ± 2 veces la desviación estándar) y su propósito en el contexto del ablation test de perc_ratio, así como su interpretación en términos de significancia estadística.""
+}";si;no_aplica
+q028;json;True;True;La respuesta aborda directamente la pregunta al mencionar el método utilizado (extrapolación lineal) y el resultado obtenido (desvío de -15.0 %), incluso si no se especifican detalles adicionales sobre la precisión o el contexto.;1.01;73;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al mencionar el método utilizado (extrapolación lineal) y el resultado obtenido (desvío de -15.0 %), incluso si no se especifican detalles adicionales sobre la precisión o el contexto.""
+}";si;no_aplica
+q029;json;True;True;La respuesta aborda directamente la pregunta al mencionar la métrica utilizada (Silhouette score) y el valor obtenido (0.0085), incluso si no se especifica si el valor es correcto o no.;0.94;68;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al mencionar la métrica utilizada (Silhouette score) y el valor obtenido (0.0085), incluso si no se especifica si el valor es correcto o no.""
+}";si;no_aplica
+q030;json;True;True;La respuesta aborda la pregunta al señalar que no se proporciona una relación matemática explícita en el contexto, lo cual implica que la pregunta sobre la relación matemática que explica el crecimiento del overhead no tiene una respuesta disponible en el contexto proporcionado.;1.03;75;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda la pregunta al señalar que no se proporciona una relación matemática explícita en el contexto, lo cual implica que la pregunta sobre la relación matemática que explica el crecimiento del overhead no tiene una respuesta disponible en el contexto proporcionado.""
+}";si;correcta
+q031;json;True;True;La respuesta aborda directamente la pregunta al mencionar la transformación matemática aplicada a `dyn_spread` (raíz cuadrada) y se refiere a un principio de percepción (ley de potencia de Stevens), aunque la precisión del enlace entre la transformación y el principio de percepción podría requerir más clarificación.;1.27;93;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al mencionar la transformación matemática aplicada a `dyn_spread` (raíz cuadrada) y se refiere a un principio de percepción (ley de potencia de Stevens), aunque la precisión del enlace entre la transformación y el principio de percepción podría requerir más clarificación.""
+}";si;no_aplica
+q032;json;True;False;La respuesta no aborda la pregunta, ya que indica desconocimiento sobre el contexto proporcionado, en lugar de ofrecer una explicación o análisis sobre por qué Ollama fue descartado como ruta para clasificación audio-nativa local.;0.93;67;"{
+  ""relevante"": false,
+  ""motivo"": ""La respuesta no aborda la pregunta, ya que indica desconocimiento sobre el contexto proporcionado, en lugar de ofrecer una explicación o análisis sobre por qué Ollama fue descartado como ruta para clasificación audio-nativa local.""
+}";si;correcta
+q033;json;True;True;La respuesta aborda directamente la pregunta al identificar el patrón general de riesgo asociado al bug de logit_scale de CLAP, es decir, el 'fallo silencioso', lo cual es relevante para entender el impacto del error en el pipeline.;1.06;75;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al identificar el patrón general de riesgo asociado al bug de logit_scale de CLAP, es decir, el 'fallo silencioso', lo cual es relevante para entender el impacto del error en el pipeline.""
+}";si;no_aplica
+q034;json;True;True;La respuesta aborda directamente la pregunta al mencionar la diferencia concreta medida (la escala de logit) y cómo se validó (exigiendo que la escala de logit fuera mayor o igual a 10).;0.96;69;"{
+  ""relevante"": true,
+  ""motivo"": ""La respuesta aborda directamente la pregunta al mencionar la diferencia concreta medida (la escala de logit) y cómo se validó (exigiendo que la escala de logit fuera mayor o igual a 10).""
+}";si;no_aplica

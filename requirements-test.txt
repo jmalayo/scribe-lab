@@ -1,6 +1,7 @@
 # dependencias mínimas para tests unitarios (sin torch, qdrant ni modelos)
 rapidfuzz>=3.14
 pydantic-settings>=2.14
+pandas>=2.3
 pytest>=8.0
 pytest-cov>=7.0
 ruff==0.16.10

@@ -122,7 +122,7 @@ Archivos: `generative/llama_3_1_8_B/labels_sentences.csv` y `labels_answers.csv`
 
 ### LettuceDetect en un contenedor propio
 
-`detector/` ([app.py](../../detector/app.py), [Dockerfile](../../detector/Dockerfile)), servicio `detector` del `docker-compose.yml`, perfil `eval`, `POST /predict` en el puerto 8100.
+`detector/` ([app.py](../../detector/app.py), [Dockerfile](../../detector/Dockerfile)), servicio `detector` del `docker-compose.yml`, perfil `eval`, `POST /predict` en el puerto 1011.
 
 El modelo carga su arquitectura como código remoto desde `EuroBERT/EuroBERT-210m`, y ese código usa `ROPE_INIT_FUNCTIONS["default"]`, que transformers 5 eliminó. Re-registrar esa RoPE hace que el modelo cargue sin pesos faltantes, pero la salida cambia (confianzas de ~0.5 dispersas por toda la respuesta). Por eso el contenedor fija transformers 4.49.0, lettucedetect 0.2.3 y torch 2.6.0 CPU. Verificado contra un entorno aislado con las mismas versiones: spans idénticos en 54/54 respuestas (20 de `exp_6` y 34 de `exp_7`), diferencia máxima de confianza 1.67e-06.
 
@@ -131,3 +131,13 @@ El ejemplo del README del modelo no se reproduce: espera el tramo *" La poblaci�
 ### Consumo y primera observación
 
 Consumo medido de cada componente en [ANALYSIS.md §4](./ANALYSIS.md) y primera observación de LettuceDetect, sin calibrar, en [ANALYSIS.md §5](./ANALYSIS.md).
+
+### Capas anti-alucinación para la API (2026-10-09)
+
+`shared/eval/grounding.py` suma las funciones que usará la API en línea: `sentence_scores` (score de LettuceDetect por oración), `unsupported_numbers` (cifras que no están en el contexto ni en la pregunta), `should_abstain` (score máximo del reranker bajo un umbral) y `ground_answer`, que combina las dos primeras. `detector/app.py` acepta `output_format="tokens"` y devuelve cada token con su rango de caracteres en la respuesta. Antes solo devolvía los tramos de más de 0.5, y eso impedía aplicar otro umbral o ver el rango de los scores. Medición contra la etiqueta humana en [ANALYSIS.md §6](./ANALYSIS.md).
+
+Después se agregó el NLI: `nli_predictor` carga mDeBERTa con su commit fijo y `nli_scores` toma, por oración, la mayor implicación y la mayor contradicción sobre los chunks. `ground_answer` suma las razones `nli_not_entailed` y `nli_contradiction`. La medición, con umbrales de 0.5 fijados antes de correr, y los tiempos por pregunta están en [ANALYSIS.md §7](./ANALYSIS.md).
+
+### Juez de relevancia `qwen3:8b`
+
+`generative/relevance_qwen.py` juzga las 34 respuestas de `exp_7` en modo razonamiento y en modo JSON forzado, con `prompt_v2()` de [prompts.py](./prompts.py) (el prompt y el esquema de la medición de consumo), y guarda veredicto, motivo y respuesta cruda por caso. Resultados en [ANALYSIS.md §8](./ANALYSIS.md).

@@ -3,11 +3,7 @@ import time
 from pathlib import Path
 
 from experiments.chunking.run import get_tables_from_docs
-from experiments.evaluation.prompts import (
-    ANSWER_PROMPT,
-    GROUNDEDNESS_PROMPT,
-    RELEVANCE_PROMPT,
-)
+from experiments.evaluation.prompts import prompt_v1
 from experiments.reranking.run import (
     BEST_CHUNKING,
     BEST_METHOD,
@@ -37,6 +33,8 @@ from shared.tracking import get_best_run, log_metrics, tracked_run
 COLLECTION = "exp_evaluation"
 OUT_DIR = Path(__file__).resolve().parent
 
+ANSWER_PROMPT, GROUNDEDNESS_PROMPT, RELEVANCE_PROMPT = prompt_v1()
+
 USE_RERANKER = get_best_run(
     "reranking",
     recall_at_k="recall_at_10",
@@ -59,27 +57,19 @@ def retrieve_context(client, bm25, question: str) -> list[dict]:
 
     return candidates[:TOP_K]
 
+def chunk_block(chunk: dict) -> str:
+
+    tables_str = "\n\n".join(t["text_content"] for t in chunk.get("tables") or [])
+    block = f"[{chunk['doc_id']}] {chunk['text']}"
+
+    if tables_str:
+        block += f"\n\n{tables_str}"
+
+    return block
+
 def build_context_text(context_chunks: list[dict]) -> str:
 
-    blocks = []
-
-    for chunk in context_chunks:
-
-        doc_id = chunk["doc_id"]
-        text = chunk["text"]
-        tables_list = chunk.get("tables") or []
-
-        table_texts = [t["text_content"] for t in tables_list]
-        tables_str = "\n\n".join(table_texts)
-
-        chunk_block = f"[{doc_id}] {text}"
-
-        if tables_str:
-            chunk_block += f"\n\n{tables_str}"
-
-        blocks.append(chunk_block)
-
-    return "\n\n".join(blocks)
+    return "\n\n".join(chunk_block(chunk) for chunk in context_chunks)
 
 def main():
     docs = load_corpus()

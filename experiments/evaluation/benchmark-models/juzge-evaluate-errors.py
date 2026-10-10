@@ -7,14 +7,17 @@ import requests
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-from experiments.evaluation.prompts import GROUNDEDNESS_PROMPT, RELEVANCE_PROMPT
+from experiments.evaluation.prompts import prompt_v1
+from shared.eval.data import load_answers
 from shared.eval.judge import VERDICT_RE
 from shared.settings import settings
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
+_, GROUNDEDNESS_PROMPT, RELEVANCE_PROMPT = prompt_v1()
+
 BASE_MODEL = settings.llm_model_base
-JUDGE_MODEL = settings.llm_model_judge
+JUDGE_MODEL = "deepseek-r1:7b"  # exp_5 se juzgó con DeepSeek; settings.llm_model_judge ya es qwen3:8b
 
 JUDGES = {
     "deepseek": JUDGE_MODEL,
@@ -81,14 +84,7 @@ def main():
     answers_path = run_dir / "base_answers.csv"
     verdicts_path = run_dir / "per_question_judge_verdicts.csv"
 
-    answers_by_id = {
-        row["id"]: row
-            for row in pd.read_csv(
-                answers_path,
-                encoding="utf-8",
-                sep=";"
-            ).to_dict("records")
-    }
+    answers_by_id = {row["id"]: row for row in load_answers(answers_path).to_dict("records")}
 
     verdicts = pd.read_csv(verdicts_path, encoding="utf-8", sep=";")
 
