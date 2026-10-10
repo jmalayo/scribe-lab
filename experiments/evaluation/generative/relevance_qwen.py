@@ -29,7 +29,6 @@ MODES = {
     "json": {"think": False, "format": RELEVANCE_SCHEMA},
 }
 
-
 def unload_models():
     for m in requests.get(f"{settings.llm_host}/api/ps", timeout=10).json().get("models", []):
         requests.post(f"{settings.llm_host}/api/generate", timeout=60, json={"model": m["name"], "keep_alive": 0})
@@ -115,7 +114,6 @@ def main():
     summary = summarize(df)
     (OUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False))
     print(json.dumps(summary, indent=2, ensure_ascii=False))
-
 
 if __name__ == "__main__":
     main()

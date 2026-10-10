@@ -98,7 +98,14 @@ def build_answers(questions: list[dict], answer_model: str, answers_path: Path, 
             }
         )
 
-        chunk_rows.extend({"id": q["id"], "context": chunk_block(chunk)} for chunk in context_chunks)
+        chunk_rows.extend(
+            {
+                "id": q["id"],
+                "context": chunk_block(chunk),
+                "score": chunk.get("rerank_score", chunk.get("rrf_score", chunk.get("score"))),
+            }
+            for chunk in context_chunks
+        )
 
         pd.DataFrame(rows).drop(columns="context").to_csv(answers_path, index=False, encoding="utf-8", sep=";")
         pd.DataFrame(chunk_rows).to_csv(chunks_path, index=False, encoding="utf-8", sep=";")

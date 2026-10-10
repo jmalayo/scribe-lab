@@ -56,19 +56,39 @@ def score_sentences(predict) -> tuple[pd.DataFrame, pd.DataFrame]:
 
         t0 = time.perf_counter()
         tokens = detect_tokens(settings.detector_url, chunks, r.question, r.answer)
+
         t1 = time.perf_counter()
         nli = nli_scores(sentences, chunks, predict)
+
         t2 = time.perf_counter()
-        result = ground_answer(r.answer, chunks, r.question, tokens, LETTUCE_THRESHOLD, nli,
-                               ENTAILMENT_THRESHOLD, CONTRADICTION_THRESHOLD)
+
+        result = ground_answer(
+            answer = r.answer, 
+            chunks = chunks, 
+            question = r.question, 
+            tokens = tokens, 
+            nli = nli,
+            threshold = LETTUCE_THRESHOLD, 
+            entailment_threshold = ENTAILMENT_THRESHOLD,
+            contradiction_threshold = CONTRADICTION_THRESHOLD
+        )
+
         t3 = time.perf_counter()
 
         timings.append({
-            "id": r.id, "n_sentences": len(sentences), "n_chunks": len(chunks),
-            "lettuce_s": t1 - t0, "nli_s": t2 - t1, "combine_s": t3 - t2, "total_s": t3 - t0,
+            "id": r.id, 
+            "n_sentences": len(sentences), 
+            "n_chunks": len(chunks),
+            "lettuce_s": t1 - t0, 
+            "nli_s": t2 - t1, 
+            "ground": t3 - t2, 
+            "total_s": t3 - t0
         })
 
-        flagged = {u["start"]: u for u in result["unsupported_sentences"]}
+        flagged = {
+            u["start"]: u 
+                for u in result["unsupported_sentences"]
+        }
 
         for s, n, h in zip(sentence_scores(r.answer, tokens), nli, human.itertuples(), strict=True):
             u = flagged.get(s["start"], {})
@@ -81,11 +101,16 @@ def score_sentences(predict) -> tuple[pd.DataFrame, pd.DataFrame]:
                 "nli_contradiction": round(n["contradiction"], 4),
                 "numeros_sin_sustento": " ".join(u.get("numbers", [])),
                 "razones": " ".join(u.get("reasons", [])),
-                "oracion": s["sentence"],
+                "oracion": s["sentence"]
             })
 
-    return pd.DataFrame(rows), pd.DataFrame(timings)
+    timing_df = pd.DataFrame(timings)
+    sentence_df = pd.DataFrame(rows)
 
+    # Debug: Filtro para saber cuantos casos debería filtrar LettuceDetect hasta en este breakpoint return
+    # df[df["humano_sustento"].isin(["no_soportada", "contradice"])][["humano_sustento", "razones"]] 
+
+    return sentence_df, timing_df
 
 def detection(flags: pd.Series, positive: pd.Series) -> dict:
     tp = int((flags & positive).sum())
@@ -162,28 +187,21 @@ def summarize_timings(t: pd.DataFrame) -> dict:
     return {
         "nli_service": service_info(settings.nli_url),
         "n_questions": len(t),
-        "per_question": {col: stats(col) for col in ["lettuce_s", "nli_s", "combine_s", "total_s"]},
+        "per_question": {col: stats(col) for col in ["lettuce_s", "nli_s", "ground", "total_s"]},
     }
 
 
 def abstention_scores() -> pd.DataFrame:
-    from experiments.evaluation.run import COLLECTION, retrieve_context
-    from shared.eval.data import load_questions
-    from shared.ingest import build_qdrant_client
-    from shared.retrieval import BM25Index, fetch_all_chunks
 
-    client = build_qdrant_client()
-    bm25 = BM25Index(fetch_all_chunks(client, COLLECTION))
-    no_answer = set(pd.read_csv(LABELS_ANSWERS, sep=";").query("contexto_suficiente == 'n.a.'")["id"])
+    labels_df = pd.read_csv(LABELS_ANSWERS, sep=";")
+    no_answer = set(labels_df.loc[labels_df["contexto_suficiente"] == "n.a.", "id"])
+    max_score = pd.read_csv(CHUNKS, sep=";").groupby("id", sort=False)["score"].max()
 
-    return pd.DataFrame([
-        {
-            "id": q["id"],
-            "sin_respuesta_en_corpus": q["id"] in no_answer,
-            "max_rerank_score": round(float(max(c["rerank_score"] for c in retrieve_context(client, bm25, q["question"]))), 4),
-        }
-        for q in load_questions()
-    ])
+    return pd.DataFrame({
+        "id": max_score.index,
+        "sin_respuesta_en_corpus": max_score.index.isin(no_answer),
+        "max_score": max_score.round(4).to_numpy(),
+    })
 
 
 def main():
@@ -193,16 +211,22 @@ def main():
     predict = nli_http_predictor(settings.nli_url)
 
     sentences, timings = score_sentences(predict)
+
     sentences.to_csv(OUT_DIR / "sentences.csv", sep=";", index=False)
-    timings.round(3).to_csv(OUT_DIR / "timings.csv", sep=";", index=False)
-    summary = {"sentences": summarize_sentences(sentences), "timings": summarize_timings(timings)}
+
+    summary = {
+        "sentences": summarize_sentences(sentences), 
+        "timings": summarize_timings(timings)
+    }
 
     if RUN_ABSTENTION:
+
         abst = abstention_scores()
         abst.to_csv(OUT_DIR / "abstention.csv", sep=";", index=False)
+
         summary["abstention"] = {
             str(label): {"n": len(g), "min": float(g.min()), "max": float(g.max())}
-                for label, g in abst.groupby("sin_respuesta_en_corpus")["max_rerank_score"]
+                for label, g in abst.groupby("sin_respuesta_en_corpus")["max_score"]
         }
 
     (OUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False))
