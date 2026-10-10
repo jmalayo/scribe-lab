@@ -36,7 +36,7 @@ Con `recall@5`, el híbrido ganaba con más margen (`+0.088` sobre dense). La fa
 
 La config de chunking se lee de MLflow con `get_best_run("exp_chunking_dynamic_tables")`, y las tablas markdown se extraen y adjuntan al payload igual que en la [fase 3 del experimento N.º 1](../chunking/PHASES.md).
 
-## Fase 3 — top-10 (vigente)
+## Fase 3 — top-10
 
 Experimento MLflow: `rag-system-eval-hybrid-search` (corridas del 2026-10-06). El pipeline pasa a darle 10 chunks al LLM, así que la decisión es por `recall@10` con desempate por `mrr@10`. La config de chunking se elige también por `recall@10`.
 
@@ -47,3 +47,16 @@ hybrid_rrf: recall@10=0.706 mrr@10=0.405 CI95=[0.5294, 0.8529] p50=11.2ms
 ```
 
 **Mejor método:** `hybrid_rrf`. Empata con `dense` en `recall@10` (0.706) y gana por `mrr@10` (0.405 contra 0.397). Se adopta por el desempate en `mrr@10`, sabiendo que su ventaja con top-10 es chica: no recupera más que dense, pero recupera otras preguntas y ordena mejor ([ANALYSIS.md §1](./ANALYSIS.md)).
+
+## Fase 4 — Gold spans de `q033` y `q034` (vigente)
+
+Mismo código y misma colección que la fase 3, con los gold spans nuevos de `q033` y `q034` (2026-10-09).
+
+```
+     dense: recall@10=0.765 recall@5=0.618 mrr@10=0.456 CI95=[0.6176, 0.8824] p50=10.5ms
+hybrid_rrf: recall@10=0.765 recall@5=0.706 mrr@10=0.449 CI95=[0.6176, 0.9118] p50=10.9ms
+      bm25: recall@10=0.559 recall@5=0.529 mrr@10=0.317 CI95=[0.3824, 0.7059] p50=0.4ms
+```
+
+**Mejor método:** `dense`. Empata con `hybrid_rrf` en `recall@10` y gana por `mrr@10` (0.456 contra 0.449). La diferencia la produce `q033`: `dense` la pone en el puesto 1 y `hybrid_rrf` en el 2. Sin esa pregunta, `hybrid_rrf` seguiría arriba por ~0.007. Se aplicó la regla sin excepción (decisión del 2026-10-09). Pruebas pareadas @10: `dense` contra `hybrid_rrf` 2/2, p=1.0; `hybrid_rrf` contra BM25 7/0, p=0.016; `dense` contra BM25 9/2, p=0.065.
+

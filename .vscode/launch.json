@@ -62,6 +62,16 @@
             "justMyCode": true
         },
         {
+            "name": "debug grounding.py: datos reales (detector_vs_labels)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "experiments.evaluation.generative.detector_vs_labels",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "justMyCode": true
+        },
+        {
             "name": "py-module: pytest (tests/)",
             "type": "debugpy",
             "request": "launch",

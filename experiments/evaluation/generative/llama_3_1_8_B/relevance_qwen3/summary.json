@@ -1,0 +1,40 @@
+{
+  "json": {
+    "n": 34,
+    "invalidos": 0,
+    "acuerdo_con_humano": 0.971,
+    "acuerdo_ci95": [
+      0.9118,
+      1.0
+    ],
+    "qwen_no_relevante": [
+      "q032"
+    ],
+    "latencia": {
+      "p50_s": 0.95,
+      "p95_s": 1.23,
+      "max_s": 1.33,
+      "total_s": 32.9
+    }
+  },
+  "think": {
+    "n": 34,
+    "invalidos": 0,
+    "acuerdo_con_humano": 0.912,
+    "acuerdo_ci95": [
+      0.7941,
+      1.0
+    ],
+    "qwen_no_relevante": [
+      "q018",
+      "q030",
+      "q032"
+    ],
+    "latencia": {
+      "p50_s": 4.42,
+      "p95_s": 6.05,
+      "max_s": 33.18,
+      "total_s": 179.7
+    }
+  }
+}

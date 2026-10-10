@@ -140,7 +140,7 @@ El candidato máximo sube de 277 a 284 caracteres porque `evaluate_chunks_limits
 
 El efecto puntual en las tres preguntas que motivaron el cambio está en [ANALYSIS.md §3](./ANALYSIS.md): `q015` pasa de no estar en el top-5 a rank 1.
 
-## Fase 4 — Re-evaluación con `fuzzy_actual` y top-10 (vigente)
+## Fase 4 — Re-evaluación con `fuzzy_actual` y top-10
 
 Script: `experiments/chunking/run.py`.  
 Experimento MLflow: `exp_chunking_dynamic_tables` (corridas del 2026-10-06).
@@ -164,3 +164,17 @@ chunk_size= 284 overlap=25% -> recall@10=0.706 mrr@10=0.397 CI95=[0.5588, 0.8529
 **Mejor config:** `chunk_size=284, overlap=25%` → `recall@10=0.706`, `mrr@10=0.397`, CI95 `[0.5588, 0.8529]`. Gana por `recall@10` sin necesidad de desempate: las otras dos configs de 284 quedan en `0.676`.
 
 Frente al `recall@10=0.618` de la fase 3, la diferencia en esta config viene del gold set auditado y no de la indexación: `q014` (rank 8), `q027` (rank 1) y `q029` (rank 4) entran al top-10 ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md), sección "Data quality del ground truth"). El efecto del criterio de acierto sobre el barrido está en [ANALYSIS.md §4](./ANALYSIS.md).
+
+## Fase 5 — Gold spans de `q033` y `q034` (vigente)
+
+`q033` y `q034` estaban marcadas como "no encontrado en el corpus", con `gold_spans` vacíos, pero `tagger-music-genesis.md` (sección "Checkpoint CLAP") trae la respuesta. El 2026-10-09 se escribieron sus gold spans, su `source_doc` y su `expected_answer`, sin cambiar el texto de las preguntas. Se re-corrió el barrido completo (9 configs) sin tocar el corpus ni el código.
+
+```
+chunk_size=284 overlap=25% -> recall@10=0.765 recall@5=0.618 mrr@10=0.456 CI95=[0.6176, 0.8824]
+chunk_size=284 overlap=10% -> recall@10=0.735 mrr@10=0.433
+chunk_size=284 overlap=0%  -> recall@10=0.735 mrr@10=0.433
+chunk_size=256 overlap=10% -> recall@10=0.706 mrr@10=0.438
+```
+
+**Mejor config:** sigue siendo `284/25%`. Las dos preguntas aciertan en el puesto 1, así que `recall@10` y `mrr@10` suben exactamente 2/34 = 0.059 cada uno. Run `1e5ab5400558438bb3aa51ca291218ff`.
+

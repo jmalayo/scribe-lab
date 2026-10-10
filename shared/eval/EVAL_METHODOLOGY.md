@@ -99,7 +99,9 @@ Un gold span tiene que ser texto literal de su fuente y contener el núcleo de l
 
 Después de la corrección, los 45 spans de las 34 preguntas son literales (`test_gold_spans.py` en verde).
 
-> **Impacto en grounding** — el `expected_answer` de `q012` todavía afirma que el cambio de SR afecta `compute_lra()`, algo que el corpus ya no respalda. No influye en `recall@k` (solo se usan los `gold_spans`), pero sí en las métricas de generación que comparen respuestas contra `expected_answer` (groundedness, answer correctness).
+> **Impacto en grounding** — el `expected_answer` de `q012` afirmaba que el cambio de SR afecta `compute_lra()`, algo que el corpus ya no respalda. Corregido el 2026-10-09: ahora dice que el paso a 44100 Hz figura como episodio histórico y que el SR vigente es 22050. No influye en `recall@k` (solo se usan los `gold_spans`).
+
+> **Denominador del recall** — `recall_at_k` divide por las 34 preguntas. Las que no tienen `gold_spans` nunca pueden contar como acierto, así que fijan un techo. Hasta el 2026-10-09 eran 5 (`q005`, `q021`, `q032`, `q033`, `q034`), con techo 29/34 = 0.853. `q033` y `q034` estaban marcadas como "no encontrado en el corpus", pero `tagger-music-genesis.md` (sección "Checkpoint CLAP", línea 74) trae la respuesta: `logit_scale ≈ 1.03` contra `18.66` y los porcentajes de discriminación. El 2026-10-09 se escribieron sus gold spans, su `source_doc` y su `expected_answer`, sin cambiar el texto de las preguntas, y se recalcularon chunking, hybrid search y reranking. El techo vigente es 31/34 = 0.912: `q005`, `q021` y `q032` no tienen respuesta en el corpus. La `expected_answer` de `q033` aclara que el corpus describe el fallo silencioso y su mitigación, pero no extiende ese patrón a otras partes del pipeline, como sugiere la pregunta.
 
 ## Latencias (p50 / p95)
 

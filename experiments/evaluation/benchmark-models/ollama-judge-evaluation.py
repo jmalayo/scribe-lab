@@ -1,14 +1,3 @@
-"""Genera respuestas base con el pipeline vigente y, opcionalmente, las juzga con jueces de Ollama.
-
-El contexto se arma igual que en `experiments/evaluation/run.py` (chunking y método elegidos en
-MLflow, tablas del payload, reranker, `TOP_K` chunks). Se configura con las variables de abajo.
-Salida en `results/<EXP>/<TAG>/`: `base_answers.csv` y, con `--use-judge True`,
-`per_question_judge_verdicts.csv` y `results_summary.csv`.
-
-    python experiments/evaluation/benchmark-models/ollama-judge-evaluation.py --use-judge False
-    python experiments/evaluation/benchmark-models/ollama-judge-evaluation.py --use-judge True
-"""
-
 import argparse
 import itertools
 import os
@@ -23,18 +12,15 @@ sys.path.insert(0, str(REPO_ROOT))
 os.chdir(REPO_ROOT)
 
 from experiments.chunking.run import get_tables_from_docs
-from experiments.evaluation.prompts import (
-    ANSWER_PROMPT,
-    GROUNDEDNESS_PROMPT,
-    RELEVANCE_PROMPT,
-)
+from experiments.evaluation.prompts import prompt_v1
 from experiments.evaluation.run import (
     BEST_CHUNKING,
     COLLECTION,
     build_context_text,
+    chunk_block,
     retrieve_context,
 )
-from shared.eval.data import load_questions
+from shared.eval.data import load_answers, load_questions
 from shared.eval.judge import agreement_rate, parse_verdict
 from shared.eval.metrics import latency_summary
 from shared.ingest import (
@@ -49,10 +35,12 @@ from shared.settings import settings
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
+ANSWER_PROMPT, GROUNDEDNESS_PROMPT, RELEVANCE_PROMPT = prompt_v1()
+
 EXP = "exp_7"
 TAG = "llama31_base"
 
-ANSWER_MODEL = "llama3.1:8b-instruct-q4_K_M"
+ANSWER_MODEL = settings.llm_model_answer
 NUM_PREDICT = 500        # defaults de shared.llm.generate; exp_6 usó 1500 / 1.3 con DeepSeek
 REPEAT_PENALTY = 1.0
 
@@ -60,7 +48,7 @@ REPEAT_PENALTY = 1.0
 REUSE_ANSWERS = True
 
 JUDGES = {
-    "deepseek": settings.llm_model_judge.strip(),
+    "qwen": settings.llm_model_judge,
     "llama": settings.llm_model_base.strip(),
 }
 
@@ -68,7 +56,7 @@ JUDGES = {
 JUDGE_NUM_PREDICT = 1500
 JUDGE_REPEAT_PENALTY = 1.3
 
-def build_answers(questions: list[dict], answer_model: str, answers_path: Path,
+def build_answers(questions: list[dict], answer_model: str, answers_path: Path, chunks_path: Path,
                   num_predict: int, repeat_penalty: float) -> list[dict]:
 
     docs = load_corpus()
@@ -83,11 +71,12 @@ def build_answers(questions: list[dict], answer_model: str, answers_path: Path,
         fetch_all_chunks(client, COLLECTION)
     )
 
-    rows = []
+    rows, chunk_rows = [], []
 
     for i, q in enumerate(questions, start=1):
 
-        context_text = build_context_text(retrieve_context(client, bm25, q["question"]))
+        context_chunks = retrieve_context(client, bm25, q["question"])
+        context_text = build_context_text(context_chunks)
 
         t0 = time.perf_counter()
         answer = generate(
@@ -109,12 +98,10 @@ def build_answers(questions: list[dict], answer_model: str, answers_path: Path,
             }
         )
 
-        pd.DataFrame(rows).to_csv(
-            answers_path,
-            index=False,
-            encoding="utf-8",
-            sep=";",
-        )
+        chunk_rows.extend({"id": q["id"], "context": chunk_block(chunk)} for chunk in context_chunks)
+
+        pd.DataFrame(rows).drop(columns="context").to_csv(answers_path, index=False, encoding="utf-8", sep=";")
+        pd.DataFrame(chunk_rows).to_csv(chunks_path, index=False, encoding="utf-8", sep=";")
 
     return rows
 
@@ -196,12 +183,12 @@ def main():
 
     out_dir = RESULTS_DIR / EXP / TAG
     answers_path = out_dir / "base_answers.csv"
+    chunks_path = out_dir / "base_chunks.csv"
 
     if REUSE_ANSWERS:
         print(f"Reusando respuestas base en {answers_path}", flush=True)
 
-        answers_df = pd.read_csv(answers_path, encoding="utf-8", sep=";").fillna({"answer": ""})
-        rows = answers_df.to_dict("records")
+        rows = load_answers(answers_path, chunks_path if chunks_path.exists() else None).to_dict("records")
 
     else:
         if answers_path.exists():
@@ -211,7 +198,7 @@ def main():
 
         print(f"Generando {len(questions)} respuestas base con {ANSWER_MODEL}...", flush=True)
 
-        rows = build_answers(questions, ANSWER_MODEL, answers_path, NUM_PREDICT, REPEAT_PENALTY)
+        rows = build_answers(questions, ANSWER_MODEL, answers_path, chunks_path, NUM_PREDICT, REPEAT_PENALTY)
 
     if not use_judge:
         print(f"\n{len(rows)} respuestas -> {answers_path}")
