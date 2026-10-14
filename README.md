@@ -6,22 +6,23 @@ Laboratorio de experimentos para un sistema RAG (Retrieval-Augmented Generation)
 
 ## Estado actual
 
-Fase de evaluación — módulos independientes, cada uno con su propio objetivo, corridos localmente sobre contenedores Docker (`docker-compose.yml`).
+Laboratorio de evaluación (`experiments/`, sobre `docker-compose-dev.yml`) y, desde el 2026-10-13, un servicio HTTP (`app/`, sobre `docker-compose-prod.yml`) que sirve el pipeline vigente.
 
 - **Prioridad actual: arquitectura de servicio y despliegue.** Con el tiempo acotado, antes de seguir mejorando el retrieval y la evaluación se avanza con la API y el despliegue del pipeline vigente. Lo que se difiere está anotado, con su motivo, en la sección "Dónde estamos" del README de cada experimento.
 - **El `recall@k` de los experimentos 1 a 3 se calcula sobre las 34 preguntas, con un techo de 31/34 = 0.912.** `q005`, `q021` y `q032` no tienen respuesta en el corpus. `q033` y `q034` tienen gold spans desde el 2026-10-09, y los tres experimentos se recalcularon. Detalle en `shared/eval/EVAL_METHODOLOGY.md`, sección "Data quality del ground truth".
 - **Pipeline de retrieval vigente (2026-10-09): chunking `284/25%` → `dense` top-10, sin reranker.** Con los gold spans nuevos, la regla de decisión (`recall@10`, desempate por `mrr@10`) eligió `dense` sobre `hybrid_rrf` y descartó el reranker. Ninguna de las dos diferencias es significativa con 34 preguntas.
-- **Versiones fijadas:** Qdrant `v1.19.1` en `docker-compose.yml` (la versión con la que se generaron todos los resultados) y `qdrant-client>=1.19,<1.20`. El juez LLM configurado en `shared/settings.py` es `qwen3:8b`; DeepSeek queda solo en los scripts que reproducen `exp_5` y `exp_6`.
+- **Servicio `app/` (F5-a, 2026-10-13):** `docker compose -f docker-compose-prod.yml up` levanta Qdrant, TEI, Ollama en CPU (`llama3.2:3b`), un indexador y la API en el puerto 1013, sin GPU. Endpoints `POST /v1/query`, `POST /v1/retrieve`, `GET /health` y `GET /ready`. La configuración sale de `app/config/pipeline.yaml`, que genera `experiments/export_best_config.py` desde MLflow; la app no consulta MLflow. El corpus servido es `corpus_demo/` (los dos documentos de `music-tagger`, el mismo corpus del gold set). En CPU, una respuesta tarda ~25 s y `llama3.2:3b` todavía no se evaluó con las 34 preguntas (B7). Con GPU: `-f docker-compose-prod.gpu.yml`.
+- **Versiones fijadas:** Qdrant `v1.19.1` en `docker-compose-dev.yml` (la versión con la que se generaron todos los resultados) y `qdrant-client>=1.19,<1.20`. El juez LLM configurado en `shared/settings.py` es `qwen3:8b`; DeepSeek queda solo en los scripts que reproducen `exp_5` y `exp_6`.
 - **Capas anti-alucinación en línea** (`shared/eval/grounding.py`): LettuceDetect por oración, NLI (mDeBERTa) por oración × chunk, chequeo de cifras contra el contexto y abstención por score de recuperación. Están implementadas y medidas contra la etiqueta humana, sin calibrar: la combinación encuentra 14 de 17 oraciones problemáticas con precisión 0.30, y tarda 15.9 s por pregunta en CPU con el NLI en el host (p50); el contenedor `nli` es varias veces más rápido. La abstención se mide con el score guardado junto a cada chunk (`base_chunks.csv`): las preguntas sin respuesta y con respuesta se solapan, así que no hay umbral adoptado. Resultados y tiempos en el README del experimento N.º 4.
 
 ## Stack
 
-- **Qdrant** — vector store para la búsqueda densa (`docker-compose.yml`, puerto `6333`).
-- **Text Embeddings Inference (HuggingFace)** — sirve el modelo de embeddings `paraphrase-multilingual-MiniLM-L12-v2` como servicio HTTP (`docker-compose.yml`, puerto `1010`).
-- **Ollama** — sirve los LLM de generación y de juez (`docker-compose.yml`, puerto `11434`).
-- **LettuceDetect** (`detector/`) — servicio FastAPI propio con `KRLabsOrg/lettucedect-210m-eurobert-es-v1` para detectar alucinación por span (`docker-compose.yml`, puerto `1011`, perfil `eval`).
-- **NLI** (`detector/nli_app.py`) — servicio FastAPI propio con `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`, misma imagen que LettuceDetect (`docker-compose.yml`, puerto `1012`, perfil `nli`).
-- **MLflow** — tracking de cada corrida de cada experimento (`docker-compose.yml`, puerto `5000`).
+- **Qdrant** — vector store para la búsqueda densa (`docker-compose-dev.yml`, puerto `6333`).
+- **Text Embeddings Inference (HuggingFace)** — sirve el modelo de embeddings `paraphrase-multilingual-MiniLM-L12-v2` como servicio HTTP (`docker-compose-dev.yml`, puerto `1010`).
+- **Ollama** — sirve los LLM de generación y de juez (`docker-compose-dev.yml`, puerto `1014`).
+- **LettuceDetect** (`detector/`) — servicio FastAPI propio con `KRLabsOrg/lettucedect-210m-eurobert-es-v1` para detectar alucinación por span (`docker-compose-dev.yml`, puerto `1011`, perfil `eval`).
+- **NLI** (`detector/nli_app.py`) — servicio FastAPI propio con `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`, misma imagen que LettuceDetect (`docker-compose-dev.yml`, puerto `1012`, perfil `nli`).
+- **MLflow** — tracking de cada corrida de cada experimento (`docker-compose-dev.yml`, puerto `5000`).
 
 Todos los servicios corren vía `docker-compose up` y se reutilizan entre experimentos.
 
@@ -85,11 +86,13 @@ La carpeta se renombró de `hybrid-serach` a `hybrid-search` (typo corregido) y 
 
 ## Estructura
 
-- `shared/` — código común: ingesta/chunking, retrieval (dense, BM25, RRF, rerank), tracking, settings, y el set de evaluación (`shared/eval`).
+- `app/` — servicio FastAPI (`main.py`, `api/v1.py`, `schemas.py`, `deps.py`), indexador con alias de Qdrant (`reindex.py`), `config/pipeline.yaml` y `Dockerfile` sin root.
+- `corpus_demo/` — corpus versionado que indexa el servicio.
+- `shared/` — código común: ingesta/chunking, retrieval (dense, BM25, RRF, rerank), pipeline del servicio (`pipeline.py`), cliente LLM (Ollama y compatible con OpenAI), prompts, tracking, settings, y el set de evaluación (`shared/eval`). `.importlinter` impide que el código de producción importe el de laboratorio.
 - `experiments/chunking/` — experimento N.º 1: barrido de `chunk_size`/`overlap`, con tablas markdown separadas del embedding.
 - `experiments/hybrid-search/` — experimento N.º 2: dense vs. BM25 vs. fusión híbrida (RRF).
 - `experiments/reranking/` — experimento N.º 3: cross-encoder sobre el mejor retriever de la etapa anterior.
 - `experiments/evaluation/` — experimento N.º 4: evaluación de respuestas (jueces LLM en la fase 1, verificación por oración contra etiquetas humanas en `generative/`).
-- `detector/` — imagen de los servicios LettuceDetect (`app.py`) y NLI (`nli_app.py`): FastAPI, versiones fijas, arranque offline.
-- `tests/` — `unit/` (métricas, BM25/RRF, ingesta, parseo del juez, capas de grounding y carga de respuestas y chunks; los corre el CI) y `data/` (verifica que los gold spans sean literales en el corpus, que no se versiona: corre solo en local).
+- `detector/` — imagen de los servicios LettuceDetect (`detector_app.py`) y NLI (`nli_app.py`): FastAPI, versiones fijas, arranque offline.
+- `tests/` — `unit/` (métricas, BM25/RRF, ingesta, parseo del juez, capas de grounding, carga de respuestas y chunks, pipeline, API, cliente LLM e indexado con alias; los corre el CI) y `data/` (verifica que los gold spans sean literales en el corpus, que no se versiona: corre solo en local).
 

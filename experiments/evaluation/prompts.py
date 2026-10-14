@@ -1,16 +1,9 @@
 from textwrap import dedent
 
+from shared.prompts import ANSWER_PROMPT_V1
+
 
 def prompt_v1():
-
-    ANSWER_PROMPT = """
-    Responde la pregunta usando ÚNICAMENTE el contexto de abajo. Si el contexto no contiene la respuesta, di "No lo sé según el contexto proporcionado."
-
-    Contexto: {context}
-    Pregunta: {question}
-
-    Responde en español, de forma concisa (2-3 oraciones):
-    """
 
     GROUNDEDNESS_PROMPT = """
     ¿Cada afirmación de la "Respuesta a evaluar" de abajo está directamente respaldada por el Contexto de abajo? Responde TRUE o FALSE.
@@ -28,7 +21,7 @@ def prompt_v1():
     Respuesta a evaluar: {answer}
     """
 
-    return dedent(ANSWER_PROMPT), dedent(GROUNDEDNESS_PROMPT), dedent(RELEVANCE_PROMPT)
+    return ANSWER_PROMPT_V1, dedent(GROUNDEDNESS_PROMPT), dedent(RELEVANCE_PROMPT)
 
 
 def prompt_v2():

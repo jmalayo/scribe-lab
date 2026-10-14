@@ -1,0 +1,21 @@
+pipeline_version: 2026-10-13-9995e46
+collection: corpus_demo
+corpus_dir: corpus_demo
+chunk_size: 284
+chunk_overlap: 71
+method: dense
+reranker: false
+pool_size: 20
+top_k: 10
+prompt_version: v1
+llm:
+  provider: ollama
+  model: llama3.2:3b
+  max_tokens: 500
+abstention:
+  enabled: false
+grounding:
+  enabled: false
+  threshold: 0.5
+  entailment_threshold: 0.5
+  contradiction_threshold: 0.5

@@ -66,6 +66,41 @@ def load_corpus(corpus_dir: str | None = None) -> list[SourceDoc]:
 
     return docs
 
+def get_tables_from_docs(doc: SourceDoc) -> tuple[list[dict], str]:
+
+    import markdown
+
+    blocks = re.split(r"\n{2,}", doc.text)
+
+    tables = []
+
+    idx = 0
+    for block in blocks:
+
+        if not block.strip():
+            continue
+
+        html = markdown.markdown(block, extensions=["tables"])
+
+        if "<table" in html:
+
+            tables.append({
+                "text_content": block,
+                "doc_id": doc.doc_id,
+                "type": "Table"
+            })
+
+            idx += 1
+
+    text_without_tables = doc.text
+
+    for tb in tables:
+        text_without_tables = text_without_tables.replace(tb["text_content"], "")
+
+    logger.info(f"{doc.doc_id}: {idx} tabla(s) encontrada(s)")
+
+    return tables, text_without_tables
+
 def corpus_hash(docs: list[SourceDoc]) -> str:
 
     data = (
@@ -162,23 +197,70 @@ def chunk_documents(
     
 class RemoteEmbedder:
 
-    def __init__(self, url: str, model_name: str):
-        import requests
-        from transformers import AutoConfig, AutoTokenizer
-
-        self._url = url.rstrip("/")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.max_seq_length = requests.get(f"{self._url}/info").json()["max_input_length"]
-        self._dim = AutoConfig.from_pretrained(model_name).hidden_size
-
-    def get_dimension(self):
-        return self._dim
-
     _MAX_CLIENT_BATCH = 32
 
-    def encode(self, texts, normalize_embeddings=False):
-        import numpy as np
+    def __init__(self, url: str, model_name: str, timeout: tuple[float, float] = (5, 30)):
+
+        self._url = url.rstrip("/")
+        self._model_name = model_name
+        self._timeout = timeout
+        self._tokenizer = None
+        self._max_seq_length = None
+        self._dim = None
+
+    @property
+    def tokenizer(self):
+
+        if self._tokenizer is None:
+            from transformers import AutoTokenizer
+
+            self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
+
+        return self._tokenizer
+
+    @property
+    def max_seq_length(self) -> int:
+
+        if self._max_seq_length is None:
+            self._max_seq_length = self._request("get", "/info").json()["max_input_length"]
+
+        return self._max_seq_length
+
+    def get_dimension(self) -> int:
+
+        if self._dim is None:
+            self._dim = int(self.encode("dimension").shape[-1])
+
+        return self._dim
+
+    def health(self) -> bool:
+
+        try:
+            self._request("get", "/health")
+
+        except Exception:
+            return False
+
+        return True
+
+    def _request(self, method: str, path: str, json: dict | None = None):
+
         import requests
+
+        resp = requests.request(
+            method, 
+            f"{self._url}{path}", 
+            json=json, 
+            timeout=self._timeout
+        )
+
+        resp.raise_for_status()
+
+        return resp
+
+    def encode(self, texts, normalize_embeddings=False):
+
+        import numpy as np
 
         single = isinstance(texts, str)
         inputs = [texts] if single else list(texts)
@@ -186,19 +268,9 @@ class RemoteEmbedder:
         embeddings = []
 
         for start in range(0, len(inputs), self._MAX_CLIENT_BATCH):
-            
+
             batch = inputs[start : start + self._MAX_CLIENT_BATCH]
-
-            resp = requests.post(
-                f"{self._url}/embed",
-                json={
-                    "inputs": batch, 
-                    "truncate": True
-                }
-            )
-
-            resp.raise_for_status()
-
+            resp = self._request("post", "/embed", json={"inputs": batch, "truncate": True})
             embeddings.extend(resp.json())
 
         vectors = np.array(embeddings, dtype=np.float32)
@@ -216,7 +288,7 @@ def get_embedder():
     if settings.text_embedder_mode == "server":
         return RemoteEmbedder(
             url=settings.text_embedder_url,
-            model_name=f"sentence-transformers/{settings.embedding_model}"
+            model_name=f"sentence-transformers/{settings.embedding_model}",
         )
 
     from sentence_transformers import SentenceTransformer
@@ -328,3 +400,80 @@ def index_chunks(
         total += len(points)
 
     return total
+
+
+def content_chunk_ids(chunks: list[Chunk]) -> list[Chunk]:
+
+    seen: dict[str, int] = {}
+    out = []
+
+    for c in chunks:
+        digest = hashlib.sha256(c.text.encode("utf-8")).hexdigest()
+        key = f"{c.doc_id}#{digest}"
+        n = seen.get(key, 0)
+        seen[key] = n + 1
+        name = key if n == 0 else f"{key}#{n}"
+        out.append(
+            Chunk(
+                chunk_id=str(uuid.uuid5(uuid.NAMESPACE_URL, name)),
+                doc_id=c.doc_id,
+                library=c.library,
+                text=c.text,
+                chunk_index=c.chunk_index,
+                tables=c.tables,
+            )
+        )
+
+    return out
+
+def collection_behind_alias(client: QdrantClient, alias: str) -> str | None:
+
+    for a in client.get_aliases().aliases:
+        if a.alias_name == alias:
+            return a.collection_name
+
+    return None
+
+def index_with_alias(
+    client: QdrantClient,
+    chunks: list[Chunk],
+    alias: str,
+    version: str,
+    config: dict,
+    batch_size: int = 64,
+) -> dict:
+
+    from qdrant_client import models
+
+    target = f"{alias}__{version}"
+
+    previous = collection_behind_alias(client, alias)
+
+    if previous == target:
+        return {
+            "collection": target, 
+            "indexed": 0, 
+            "changed": False
+        }
+
+    n = index_chunks(
+        client, 
+        content_chunk_ids(chunks), 
+        target, 
+        config, 
+        batch_size=batch_size
+    )
+
+    client.update_collection_aliases(
+        change_aliases_operations=[
+            models.CreateAliasOperation(create_alias=models.CreateAlias(collection_name=target, alias_name=alias))
+        ]
+    )
+
+    if previous is not None:
+        client.delete_collection(previous)
+
+    return {
+        "collection": target, 
+        "indexed": n, "changed": True
+    }

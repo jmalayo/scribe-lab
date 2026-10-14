@@ -18,6 +18,11 @@ def dense_search(client: QdrantClient, collection_name: str, query: str, k: int)
 
     embedder = get_embedder()
     vector = embedder.encode(query, normalize_embeddings=True).tolist()
+
+    return dense_search_vector(client, collection_name, vector, k)
+
+def dense_search_vector(client: QdrantClient, collection_name: str, vector: list[float], k: int) -> list[dict]:
+
     hits = client.query_points(
         collection_name=collection_name, 
         query=vector, 

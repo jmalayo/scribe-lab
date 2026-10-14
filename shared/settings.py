@@ -17,11 +17,15 @@ class Settings(BaseSettings):
     detector_url: str = "http://127.0.0.1:1011"
     nli_url: str = "http://127.0.0.1:1012"
 
-    llm_host: str = "http://127.0.0.1:11434"
+    llm_host: str = "http://127.0.0.1:1014"
     llm_backend: str = "ollama"
     llm_model_base: str = "llama3.2:3b"
     llm_model_answer: str = "llama3.1:8b-instruct-q4_K_M"
     llm_model_judge: str = "qwen3:8b"
+    llm_openai_base_url: str = "https://api.groq.com/openai/v1"
+    llm_api_key: str | None = None
+
+    pipeline_config_path: str = "app/config/pipeline.yaml"
 
     mlflow_experiment_prefix: str = "rag-system-eval"
     mlflow_tracking_uri: str = "http://127.0.0.1:5000/"

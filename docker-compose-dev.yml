@@ -1,0 +1,150 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.19.1
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+  embedder:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+    container_name: text-embedder
+    ports:
+      - "1010:80"
+    volumes:
+      - ./embedder_cache/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2:/data/model
+    environment:
+      - HF_HUB_OFFLINE=1
+    command: --model-id /data/model
+
+  ollama:
+    restart: unless-stopped
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "1014:1014"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      OLLAMA_HOST: "0.0.0.0:1014"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_KEEP_ALIVE: "30s"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/1014' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  ollama-pull:
+    restart: no
+    image: ollama/ollama:latest
+    container_name: llama3-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama"]
+    command: ["pull", "llama3.2:3b"]
+    environment:
+      OLLAMA_HOST: "ollama:1014"
+
+  ollama-pull-deepseek:
+    restart: no
+    image: ollama/ollama:latest
+    container_name: deepseek-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama"]
+    command: ["pull", "deepseek-r1:7b"]
+    environment:
+      OLLAMA_HOST: "ollama:1014"
+
+  ollama-pull-qwen:
+    restart: no
+    image: ollama/ollama:latest
+    container_name: qwen-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama"]
+    command: ["pull", "qwen3:8b"]
+    environment:
+      OLLAMA_HOST: "ollama:1014"
+
+  ollama-pull-llama31:
+    restart: no
+    image: ollama/ollama:latest
+    container_name: llama31-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama"]
+    command: ["pull", "llama3.1:8b-instruct-q4_K_M"]
+    environment:
+      OLLAMA_HOST: "ollama:1014"
+
+  detector:
+    restart: "no"
+    build:
+      context: "./detector"
+    image: rag-lettuce-detector:es-v1
+    profiles: ["eval"]
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "1011"]
+    ports:
+      - "1011:1011"
+    mem_limit: 3g
+    volumes:
+      - detector_models:/models
+    environment:
+      - MODEL_ID=KRLabsOrg/lettucedect-210m-eurobert-es-v1
+      - LANG_CODE=es
+      - HF_HUB_OFFLINE=${DETECTOR_OFFLINE:-0}
+      - LETTUCE_REVISION=7698129a608994d734762a116f6ed770f27a7d24
+      - OMP_NUM_THREADS=4
+
+  nli:
+    restart: "no"
+    build:
+      context: "./detector"
+    image: rag-lettuce-detector:es-v1
+    profiles: ["nli"]
+    command: ["uvicorn", "nli_app:app", "--host", "0.0.0.0", "--port", "1012"]
+    ports:
+      - "1012:1012"
+    mem_limit: 3g
+    volumes:
+      - detector_models:/models
+    environment:
+      - MODEL_ID=MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+      - NLI_REVISION=b5113eb38ab63efdd7f280f8c144ea8b13f978ce
+      - HF_HUB_OFFLINE=${DETECTOR_OFFLINE:-0}
+      - OMP_NUM_THREADS=4
+
+  mlflow-server:
+    restart: unless-stopped
+    image: ghcr.io/mlflow/mlflow:v3.15.2
+    container_name: mlflow-server
+    ports:
+      - "${MLFLOW_PORT:-5000}:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --default-artifact-root /mlflow/mlartifacts
+
+volumes:
+  qdrant_storage:
+  embedder_cache:
+  ollama_data:
+  mlflow_data:
+  detector_models:
