@@ -350,8 +350,7 @@ def index_chunks(
 
     from qdrant_client import models
 
-    embedder = get_embedder()
-    dim = embedder.get_dimension()
+    dim = get_embedder().get_dimension()
 
     if client.collection_exists(collection_name):
         client.delete_collection(collection_name)
@@ -363,6 +362,21 @@ def index_chunks(
             distance=models.Distance.COSINE
         ),
     )
+
+    return upsert_chunks(client, chunks, collection_name, config, batch_size)
+
+
+def upsert_chunks(
+    client: QdrantClient,
+    chunks: list[Chunk],
+    collection_name: str,
+    config: dict,
+    batch_size: int = 64,
+) -> int:
+
+    from qdrant_client import models
+
+    embedder = get_embedder()
 
     total = 0
     for start in range(0, len(chunks), batch_size):
@@ -408,7 +422,8 @@ def content_chunk_ids(chunks: list[Chunk]) -> list[Chunk]:
     out = []
 
     for c in chunks:
-        digest = hashlib.sha256(c.text.encode("utf-8")).hexdigest()
+        content = "\n\n".join([c.text, *(t["text_content"] for t in c.tables or [])])
+        digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
         key = f"{c.doc_id}#{digest}"
         n = seen.get(key, 0)
         seen[key] = n + 1
@@ -434,35 +449,130 @@ def collection_behind_alias(client: QdrantClient, alias: str) -> str | None:
 
     return None
 
-def index_with_alias(
+def stored_chunk_positions(client: QdrantClient, collection_name: str) -> dict[str, int | None]:
+
+    positions = {}
+    offset = None
+
+    while True:
+        points, offset = client.scroll(
+            collection_name=collection_name,
+            limit=256,
+            offset=offset,
+            with_payload=["chunk_index"],
+            with_vectors=False,
+        )
+
+        positions.update({str(p.id): p.payload.get("chunk_index") for p in points})
+
+        if offset is None:
+            return positions
+
+
+def apply_chunk_diff(
     client: QdrantClient,
     chunks: list[Chunk],
-    alias: str,
-    version: str,
+    collection_name: str,
     config: dict,
     batch_size: int = 64,
 ) -> dict:
 
     from qdrant_client import models
 
-    target = f"{alias}__{version}"
+    stored = stored_chunk_positions(client, collection_name)
+    wanted = {
+        c.chunk_id: c 
+            for c in chunks
+    }
 
-    previous = collection_behind_alias(client, alias)
+    added = [
+        c for cid, c in wanted.items() 
+            if cid not in stored
+    ]
 
-    if previous == target:
+    moved = [
+        c for cid, c in wanted.items() 
+            if cid in stored and stored[cid] != c.chunk_index
+    ]
+
+    deleted = [
+        cid for cid in stored 
+            if cid not in wanted
+    ]
+
+    upsert_chunks(client, added, collection_name, config, batch_size)
+
+    if moved:
+        client.batch_update_points(
+            collection_name=collection_name,
+            update_operations=[
+                models.SetPayloadOperation(
+                    set_payload=models.SetPayload(
+                        payload={
+                            "chunk_index": c.chunk_index
+                        }, 
+                        points=[c.chunk_id]
+                    )
+                )
+                for c in moved
+            ],
+        )
+
+    if deleted:
+        client.delete(
+            collection_name=collection_name, 
+            points_selector=models.PointIdsList(points=deleted)
+        )
+
+    return {
+        "added": len(added), 
+        "moved": len(moved), 
+        "deleted": len(deleted)
+    }
+
+
+def index_config_hash(config: dict) -> str:
+
+    key = "|".join(f"{k}={config[k]}" for k in sorted(config))
+
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()[:12]
+
+def sync_index(
+    client: QdrantClient,
+    chunks: list[Chunk],
+    alias: str,
+    config: dict,
+    batch_size: int = 64,
+) -> dict:
+
+    from qdrant_client import models
+
+    chunks = content_chunk_ids(chunks)
+    current = collection_behind_alias(client, alias)
+
+    if current is not None and get_current_config(client, current) == config:
+
+        diff = apply_chunk_diff(client, chunks, current, config, batch_size)
+
         return {
-            "collection": target, 
-            "indexed": 0, 
-            "changed": False
+            "collection": current, 
+            "rebuilt": False, 
+            **diff
         }
 
-    n = index_chunks(
-        client, 
-        content_chunk_ids(chunks), 
-        target, 
-        config, 
-        batch_size=batch_size
-    )
+    index_hash = index_config_hash(config)
+    
+    target = f"{alias}__{index_hash}"
+
+    if client.collection_exists(target) and get_current_config(client, target) == config:
+        diff = apply_chunk_diff(client, chunks, target, config, batch_size)
+
+    else:
+        diff = {
+            "added": index_chunks(client, chunks, target, config, batch_size), 
+            "moved": 0, 
+            "deleted": 0
+        }
 
     client.update_collection_aliases(
         change_aliases_operations=[
@@ -470,10 +580,15 @@ def index_with_alias(
         ]
     )
 
-    if previous is not None:
-        client.delete_collection(previous)
+    keep = {target, current}
+
+    for c in client.get_collections().collections:
+        if c.name.startswith(f"{alias}__") and c.name not in keep:
+            client.delete_collection(c.name)
 
     return {
         "collection": target, 
-        "indexed": n, "changed": True
+        "rebuilt": True, 
+        "previous": current, 
+        **diff
     }

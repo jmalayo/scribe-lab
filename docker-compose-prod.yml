@@ -6,7 +6,10 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "3"
 
+x-embedding-revision: &embedding-revision e8f8c211226b894fcb81acc59f3b34ba3efd5f42
+
 x-app-env: &app-env
+  EMBEDDING_REVISION: *embedding-revision
   QDRANT_HOST: qdrant
   QDRANT_PORT: "6333"
   TEXT_EMBEDDER_URL: http://embedder:80
@@ -27,7 +30,7 @@ services:
     restart: unless-stopped
     volumes:
       - tei_data:/data
-    command: ["--model-id", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "--revision", "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"]
+    command: ["--model-id", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "--revision", *embedding-revision]
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:80/health"]
       interval: 10s
@@ -46,6 +49,13 @@ services:
       OLLAMA_HOST: "0.0.0.0:1014"
       OLLAMA_MAX_LOADED_MODELS: "1"
       OLLAMA_KEEP_ALIVE: "10m"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/1014' || exit 1"]
       interval: 10s

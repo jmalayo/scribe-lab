@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     text_embedder_url: str = "http://127.0.0.1:1010"
 
     embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2"
+    embedding_revision: str | None = None
 
     cross_encoder_model: str = "BAAI/bge-reranker-v2-m3"
 
