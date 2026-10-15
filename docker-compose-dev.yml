@@ -96,7 +96,7 @@ services:
       context: "./detector"
     image: rag-lettuce-detector:es-v1
     profiles: ["eval"]
-    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "1011"]
+    command: ["uvicorn", "detector_app:app", "--host", "0.0.0.0", "--port", "1011"]
     ports:
       - "1011:1011"
     mem_limit: 3g

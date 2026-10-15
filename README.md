@@ -88,7 +88,7 @@ La carpeta se renombró de `hybrid-serach` a `hybrid-search` (typo corregido) y 
 
 - `app/` — servicio FastAPI (`main.py`, `api/v1.py`, `schemas.py`, `deps.py`), indexador con alias de Qdrant (`reindex.py`), `config/pipeline.yaml` y `Dockerfile` sin root.
 - `corpus_demo/` — corpus versionado que indexa el servicio.
-- `shared/` — código común: ingesta/chunking, retrieval (dense, BM25, RRF, rerank), pipeline del servicio (`pipeline.py`), cliente LLM (Ollama y compatible con OpenAI), prompts, tracking, settings, y el set de evaluación (`shared/eval`). `.importlinter` impide que el código de producción importe el de laboratorio.
+- `shared/` — código común: ingesta/chunking, retrieval (dense, BM25, RRF, rerank), pipeline del servicio (`pipeline.py`), cliente LLM (Ollama), prompts, tracking, settings, y el set de evaluación (`shared/eval`). `.importlinter` impide que el código de producción importe el de laboratorio.
 - `experiments/chunking/` — experimento N.º 1: barrido de `chunk_size`/`overlap`, con tablas markdown separadas del embedding.
 - `experiments/hybrid-search/` — experimento N.º 2: dense vs. BM25 vs. fusión híbrida (RRF).
 - `experiments/reranking/` — experimento N.º 3: cross-encoder sobre el mejor retriever de la etapa anterior.

@@ -1,12 +1,101 @@
 from __future__ import annotations
 
-import pandas as pd
-import requests
-from transformers import AutoTokenizer
+from dataclasses import dataclass
+from typing import Protocol
 
-from shared.eval.data import load_questions
+import requests
+
 from shared.settings import settings
 
+
+@dataclass
+class LLMResult:
+    text: str
+    tokens_in: int | None = None
+    tokens_out: int | None = None
+
+class LLMClient(Protocol):
+
+    provider: str
+    model: str
+
+    def complete(self, prompt: str) -> LLMResult: ...
+
+    def ping(self) -> bool: ...
+
+class OllamaClient:
+
+    provider = "ollama"
+
+    def __init__(
+        self,
+        host: str,
+        model: str,
+        num_predict: int = 500,
+        num_ctx: int = 4096,
+        repeat_penalty: float = 1.0,
+        stop: list[str] | None = None,
+        timeout: float = 120,
+    ):
+        self.host = host.rstrip("/")
+        self.model = model
+        self.options = {
+            "temperature": 0.0,
+            "num_ctx": num_ctx,
+            "num_thread": 8,
+            "num_predict": num_predict,
+        }
+        if stop:
+            self.options["stop"] = stop
+        if repeat_penalty:
+            self.options["repeat_penalty"] = repeat_penalty
+        self.timeout = timeout
+
+    def complete(self, prompt: str) -> LLMResult:
+
+        resp = requests.post(
+            f"{self.host}/api/generate",
+            json={
+                "model": self.model, 
+                "prompt": prompt, 
+                "stream": False, 
+                "options": self.options
+            },
+            timeout=self.timeout,
+        )
+        resp.raise_for_status()
+
+        body = resp.json()
+
+        return LLMResult(
+            text=body["response"].strip(),
+            tokens_in=body.get("prompt_eval_count"),
+            tokens_out=body.get("eval_count"),
+        )
+
+    def ping(self) -> bool:
+
+        try:
+            tags = requests.get(f"{self.host}/api/tags", timeout=5).json()
+
+        except (requests.RequestException, ValueError):
+            return False
+
+        return any(
+            m.get("name") == self.model 
+                for m in tags.get("models", [])
+        )
+
+def build_llm(provider: str, model: str, max_tokens: int = 500, base_url: str | None = None) -> LLMClient:
+
+    if provider == "ollama":
+        return OllamaClient(
+            host=base_url or settings.llm_host, 
+            model=model, 
+            num_predict=max_tokens
+        )
+
+    raise ValueError(f"LLM provider no soportado: {provider}")
 
 def generate(
     prompt: str,
@@ -19,51 +108,12 @@ def generate(
     if settings.llm_backend is None:
         raise ValueError("LLM backend is not set, please set RAG_LLM_BACKEND in your environment.")
 
-    options = {
-        "temperature": 0.0,
-        "num_ctx": 4096,
-        "num_thread": 8,
-        "num_predict": num_predict
-    }
-
-    if stop:
-        options["stop"] = stop
-
-    if repeat_penalty:
-        options["repeat_penalty"] = repeat_penalty
-
-    resp = requests.post(
-        f"{settings.llm_host}/api/generate",
-        json={
-            "model": model or settings.llm_model_base,
-            "prompt": prompt,
-            "stream": False,
-            "options": options,
-        },
-        timeout=120,
+    client = OllamaClient(
+        host=settings.llm_host,
+        model=model or settings.llm_model_base,
+        num_predict=num_predict,
+        repeat_penalty=repeat_penalty,
+        stop=stop,
     )
-    
-    resp.raise_for_status()
 
-    return resp.json()["response"].strip()
-
-def get_length_questions():
-
-    questions = load_questions()
-
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-3B-Instruct")
-    
-    rows = []
-
-    for q in questions:
-
-        rows.append({
-            "id": q["id"],
-            "question_tokens": len(tokenizer.encode(q["question"])),
-            "expected_answer_tokens": len(tokenizer.encode(q["expected_answer"]))
-        })
-
-    df = pd.DataFrame(rows)
-
-    print(f"Máximo número de tokens - Questions: {df['question_tokens'].max()}")
-    print(f"Máximo número de tokens - Expected Answer: {df['expected_answer_tokens'].max()}")
+    return client.complete(prompt).text

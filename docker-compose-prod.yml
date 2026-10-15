@@ -11,7 +11,6 @@ x-app-env: &app-env
   QDRANT_PORT: "6333"
   TEXT_EMBEDDER_URL: http://embedder:80
   LLM_HOST: http://ollama:1014
-  LLM_API_KEY: ${LLM_API_KEY:-}
   DETECTOR_URL: http://detector:1011
   NLI_URL: http://nli:1012
 
@@ -107,7 +106,7 @@ services:
     image: rag-lettuce-detector:es-v1
     restart: unless-stopped
     profiles: ["grounding"]
-    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "1011"]
+    command: ["uvicorn", "detector_app:app", "--host", "0.0.0.0", "--port", "1011"]
     mem_limit: 3g
     volumes:
       - detector_models:/models
