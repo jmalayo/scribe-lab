@@ -1,0 +1,151 @@
+name: scribe-prod
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-embedding-revision: &embedding-revision e8f8c211226b894fcb81acc59f3b34ba3efd5f42
+
+x-app-env: &app-env
+  EMBEDDING_REVISION: *embedding-revision
+  QDRANT_HOST: qdrant
+  QDRANT_PORT: "6333"
+  TEXT_EMBEDDER_URL: http://embedder:80
+  LLM_HOST: http://ollama:1014
+  DETECTOR_URL: http://detector:1011
+  NLI_URL: http://nli:1012
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.19.1
+    restart: unless-stopped
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    logging: *default-logging
+
+  embedder:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8
+    restart: unless-stopped
+    volumes:
+      - tei_data:/data
+    command: ["--model-id", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "--revision", *embedding-revision]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 180s
+      start_interval: 5s
+    logging: *default-logging
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      OLLAMA_HOST: "0.0.0.0:1014"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_KEEP_ALIVE: "10m"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/1014' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    restart: "no"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama"]
+    command: ["pull", "${LLM_MODEL:-llama3.2:3b}"]
+    environment:
+      OLLAMA_HOST: "ollama:1014"
+    logging: *default-logging
+
+  indexer:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    image: scribe-app:local
+    restart: on-failure:3
+    command: ["python", "-m", "app.reindex"]
+    depends_on:
+      qdrant:
+        condition: service_started
+      embedder:
+        condition: service_healthy
+    environment: *app-env
+    volumes:
+      - hf_cache:/home/app/.cache/huggingface
+    logging: *default-logging
+
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    image: scribe-app:local
+    restart: unless-stopped
+    depends_on:
+      indexer:
+        condition: service_completed_successfully
+      ollama-pull:
+        condition: service_completed_successfully
+    environment: *app-env
+    volumes:
+      - hf_cache:/home/app/.cache/huggingface
+    ports:
+      - "1013:1013"
+    logging: *default-logging
+
+  detector:
+    build:
+      context: ./detector
+    image: rag-lettuce-detector:es-v1
+    restart: unless-stopped
+    profiles: ["grounding"]
+    command: ["uvicorn", "detector_app:app", "--host", "0.0.0.0", "--port", "1011"]
+    mem_limit: 3g
+    volumes:
+      - detector_models:/models
+    environment:
+      - MODEL_ID=KRLabsOrg/lettucedect-210m-eurobert-es-v1
+      - LANG_CODE=es
+      - LETTUCE_REVISION=7698129a608994d734762a116f6ed770f27a7d24
+      - OMP_NUM_THREADS=4
+    logging: *default-logging
+
+  nli:
+    build:
+      context: ./detector
+    image: rag-lettuce-detector:es-v1
+    restart: unless-stopped
+    profiles: ["grounding"]
+    command: ["uvicorn", "nli_app:app", "--host", "0.0.0.0", "--port", "1012"]
+    mem_limit: 3g
+    volumes:
+      - detector_models:/models
+    environment:
+      - MODEL_ID=MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+      - NLI_REVISION=b5113eb38ab63efdd7f280f8c144ea8b13f978ce
+      - OMP_NUM_THREADS=4
+    logging: *default-logging
+
+volumes:
+  qdrant_storage:
+  tei_data:
+  ollama_data:
+  hf_cache:
+  detector_models:

@@ -22,10 +22,11 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     ports:
-      - "11434:11434"
+      - "1014:1014"
     volumes:
       - ollama_data:/root/.ollama
     environment:
+      OLLAMA_HOST: "0.0.0.0:1014"
       OLLAMA_MAX_LOADED_MODELS: "1"
       OLLAMA_KEEP_ALIVE: "30s"
     deploy:
@@ -36,7 +37,7 @@ services:
               count: 1
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/11434' || exit 1"]
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/1014' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -51,7 +52,7 @@ services:
     entrypoint: ["ollama"]
     command: ["pull", "llama3.2:3b"]
     environment:
-      OLLAMA_HOST: "ollama:11434"
+      OLLAMA_HOST: "ollama:1014"
 
   ollama-pull-deepseek:
     restart: no
@@ -63,7 +64,7 @@ services:
     entrypoint: ["ollama"]
     command: ["pull", "deepseek-r1:7b"]
     environment:
-      OLLAMA_HOST: "ollama:11434"
+      OLLAMA_HOST: "ollama:1014"
 
   ollama-pull-qwen:
     restart: no
@@ -75,7 +76,7 @@ services:
     entrypoint: ["ollama"]
     command: ["pull", "qwen3:8b"]
     environment:
-      OLLAMA_HOST: "ollama:11434"
+      OLLAMA_HOST: "ollama:1014"
 
   ollama-pull-llama31:
     restart: no
@@ -87,7 +88,7 @@ services:
     entrypoint: ["ollama"]
     command: ["pull", "llama3.1:8b-instruct-q4_K_M"]
     environment:
-      OLLAMA_HOST: "ollama:11434"
+      OLLAMA_HOST: "ollama:1014"
 
   detector:
     restart: "no"
@@ -95,8 +96,9 @@ services:
       context: "./detector"
     image: rag-lettuce-detector:es-v1
     profiles: ["eval"]
+    command: ["uvicorn", "detector_app:app", "--host", "0.0.0.0", "--port", "1011"]
     ports:
-      - "1011:8000"
+      - "1011:1011"
     mem_limit: 3g
     volumes:
       - detector_models:/models
@@ -113,9 +115,9 @@ services:
       context: "./detector"
     image: rag-lettuce-detector:es-v1
     profiles: ["nli"]
-    command: ["uvicorn", "nli_app:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["uvicorn", "nli_app:app", "--host", "0.0.0.0", "--port", "1012"]
     ports:
-      - "1012:8000"
+      - "1012:1012"
     mem_limit: 3g
     volumes:
       - detector_models:/models

@@ -1,6 +1,7 @@
 import re
 
 import requests
+from pydantic import BaseModel
 
 _SENTENCE_END_RE = re.compile(r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡`\"'(*\-•\d])")
 # Separa en bloques tras terminar una oración
@@ -9,6 +10,26 @@ _BLOCK_RE = re.compile(r"\n\s*\n|\n(?=\s*(?:[-*•]|\d+[.)])\s)")
 # Separa en bloques cuando
 # 1. Existe una linea en blanco entre ellos
 # 2. Existe elementos listas (inclusive sin linea en blanco)
+
+class NliScores(BaseModel):
+    entailment: float
+    contradiction: float
+
+
+class UnsupportedSentence(BaseModel):
+    sentence: str
+    start: int
+    end: int
+    score: float
+    reasons: list[str]
+    numbers: list[str]
+    nli: NliScores | None = None
+
+
+class GroundingResult(BaseModel):
+    score: float
+    unsupported_sentences: list[UnsupportedSentence]
+
 
 def split_sentences(answer: str) -> list[str]:
 

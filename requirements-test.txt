@@ -2,7 +2,14 @@
 rapidfuzz>=3.14
 pydantic-settings>=2.14
 pandas>=2.3
+numpy>=2.5
+requests>=2.34
+pyyaml>=6.0
+fastapi==0.141.1
+httpx>=0.28
 pytest>=8.0
 pytest-cov>=7.0
 ruff==0.16.10
+import-linter==2.15
 langchain-text-splitters==1.1.2
+qdrant-client==1.19.0

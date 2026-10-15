@@ -122,7 +122,7 @@ Archivos: `generative/llama_3_1_8_B/labels_sentences.csv` y `labels_answers.csv`
 
 ### LettuceDetect en un contenedor propio
 
-`detector/` ([app.py](../../detector/app.py), [Dockerfile](../../detector/Dockerfile)), servicio `detector` del `docker-compose.yml`, perfil `eval`, `POST /predict` en el puerto 1011.
+`detector/` ([detector_app.py](../../detector/detector_app.py), [Dockerfile](../../detector/Dockerfile)), servicio `detector` del `docker-compose.yml`, perfil `eval`, `POST /predict` en el puerto 1011.
 
 El modelo carga su arquitectura como código remoto desde `EuroBERT/EuroBERT-210m`, y ese código usa `ROPE_INIT_FUNCTIONS["default"]`, que transformers 5 eliminó. Re-registrar esa RoPE hace que el modelo cargue sin pesos faltantes, pero la salida cambia (confianzas de ~0.5 dispersas por toda la respuesta). Por eso el contenedor fija transformers 4.49.0, lettucedetect 0.2.3 y torch 2.6.0 CPU. Verificado contra un entorno aislado con las mismas versiones: spans idénticos en 54/54 respuestas (20 de `exp_6` y 34 de `exp_7`), diferencia máxima de confianza 1.67e-06.
 

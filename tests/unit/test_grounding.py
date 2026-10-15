@@ -1,6 +1,7 @@
 import pytest
 
 from shared.eval.grounding import (
+    GroundingResult,
     ground_answer,
     nli_scores,
     sentence_ranges,
@@ -148,3 +149,15 @@ def test_ground_answer_suma_las_razones_del_nli():
         ["nli_not_entailed"],
     ]
     assert result["score"] == 0.0
+
+
+def test_ground_answer_output_matches_the_service_schema():
+    answer = "Tarda 5 minutos. Usa RRF."
+    tokens = [{"start": 0, "end": 16, "prob": 0.2}, {"start": 17, "end": 25, "prob": 0.7}]
+    nli = [{"entailment": 0.9, "contradiction": 0.1}, {"entailment": 0.4, "contradiction": 0.1}]
+
+    raw = ground_answer(answer, ["usa RRF y tarda 2 minutos"], "", tokens, threshold=0.5, nli=nli)
+    result = GroundingResult.model_validate(raw)
+
+    assert result.model_dump() == raw
+    assert result.unsupported_sentences[1].nli.entailment == 0.4

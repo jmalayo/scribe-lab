@@ -1,0 +1,23 @@
+[importlinter]
+root_packages =
+    app
+    shared
+include_external_packages = True
+
+[importlinter:contract:produccion-sin-laboratorio]
+name = Producción no importa código de laboratorio
+type = forbidden
+source_modules =
+    app
+    shared.pipeline
+    shared.llm
+    shared.retrieval
+    shared.ingest
+    shared.prompts
+forbidden_modules =
+    shared.tracking
+    shared.eval.metrics
+    shared.eval.judge
+    shared.eval.data
+    mlflow
+    pandas

@@ -1,6 +1,5 @@
 import json
 import logging
-import re
 import time
 from pathlib import Path
 
@@ -16,10 +15,10 @@ from shared.eval.metrics import (
     recall_at_k,
 )
 from shared.ingest import (
-    SourceDoc,
     build_qdrant_client,
     chunk_documents,
     corpus_hash,
+    get_tables_from_docs,
     index_chunks,
     load_corpus,
     qualified_collection_name,
@@ -84,41 +83,6 @@ def run_config(docs, tables, questions, chunk_size: int, overlap_frac: int):
     }
 
     return row
-
-def get_tables_from_docs(doc: SourceDoc) -> tuple[list[dict], str]:
-
-    import markdown
-
-    blocks = re.split(r"\n{2,}", doc.text)
-
-    tables = []
-
-    idx = 0
-    for block in blocks:
-
-        if not block.strip():
-            continue
-
-        html = markdown.markdown(block, extensions=["tables"])
-
-        if "<table" in html:
-             
-            tables.append({
-                "text_content": block,
-                "doc_id": doc.doc_id,
-                "type": "Table"
-            })
-
-            idx += 1
-
-    text_without_tables = doc.text
-
-    for tb in tables:
-        text_without_tables = text_without_tables.replace(tb["text_content"], "")
-
-    logger.info(f"{doc.doc_id}: {idx} tabla(s) encontrada(s)")
-
-    return tables, text_without_tables
 
 def count_tokens(text: str) -> int:
 

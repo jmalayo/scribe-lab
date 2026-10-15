@@ -10,6 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 os.chdir(REPO_ROOT)
 
+
 from shared.eval.data import load_answers, load_chunks
 from shared.eval.grounding import (
     detect_tokens,
@@ -20,7 +21,6 @@ from shared.eval.grounding import (
     split_sentences,
 )
 from shared.eval.metrics import bootstrap_ci, percentile
-from shared.services import service_info
 from shared.settings import settings
 
 OUT_DIR = Path(__file__).resolve().parent / "llama_3_1_8_B" / "grounding_v3"
@@ -220,7 +220,6 @@ def summarize_timings(t: pd.DataFrame) -> dict:
         }
 
     return {
-        "nli_service": service_info(settings.nli_url),
         "n_questions": len(t),
         "per_question": {
             col: stats(col) 

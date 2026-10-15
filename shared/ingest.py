@@ -66,6 +66,41 @@ def load_corpus(corpus_dir: str | None = None) -> list[SourceDoc]:
 
     return docs
 
+def get_tables_from_docs(doc: SourceDoc) -> tuple[list[dict], str]:
+
+    import markdown
+
+    blocks = re.split(r"\n{2,}", doc.text)
+
+    tables = []
+
+    idx = 0
+    for block in blocks:
+
+        if not block.strip():
+            continue
+
+        html = markdown.markdown(block, extensions=["tables"])
+
+        if "<table" in html:
+
+            tables.append({
+                "text_content": block,
+                "doc_id": doc.doc_id,
+                "type": "Table"
+            })
+
+            idx += 1
+
+    text_without_tables = doc.text
+
+    for tb in tables:
+        text_without_tables = text_without_tables.replace(tb["text_content"], "")
+
+    logger.info(f"{doc.doc_id}: {idx} tabla(s) encontrada(s)")
+
+    return tables, text_without_tables
+
 def corpus_hash(docs: list[SourceDoc]) -> str:
 
     data = (
@@ -162,23 +197,70 @@ def chunk_documents(
     
 class RemoteEmbedder:
 
-    def __init__(self, url: str, model_name: str):
-        import requests
-        from transformers import AutoConfig, AutoTokenizer
-
-        self._url = url.rstrip("/")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.max_seq_length = requests.get(f"{self._url}/info").json()["max_input_length"]
-        self._dim = AutoConfig.from_pretrained(model_name).hidden_size
-
-    def get_dimension(self):
-        return self._dim
-
     _MAX_CLIENT_BATCH = 32
 
-    def encode(self, texts, normalize_embeddings=False):
-        import numpy as np
+    def __init__(self, url: str, model_name: str, timeout: tuple[float, float] = (5, 30)):
+
+        self._url = url.rstrip("/")
+        self._model_name = model_name
+        self._timeout = timeout
+        self._tokenizer = None
+        self._max_seq_length = None
+        self._dim = None
+
+    @property
+    def tokenizer(self):
+
+        if self._tokenizer is None:
+            from transformers import AutoTokenizer
+
+            self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
+
+        return self._tokenizer
+
+    @property
+    def max_seq_length(self) -> int:
+
+        if self._max_seq_length is None:
+            self._max_seq_length = self._request("get", "/info").json()["max_input_length"]
+
+        return self._max_seq_length
+
+    def get_dimension(self) -> int:
+
+        if self._dim is None:
+            self._dim = int(self.encode("dimension").shape[-1])
+
+        return self._dim
+
+    def health(self) -> bool:
+
+        try:
+            self._request("get", "/health")
+
+        except Exception:
+            return False
+
+        return True
+
+    def _request(self, method: str, path: str, json: dict | None = None):
+
         import requests
+
+        resp = requests.request(
+            method, 
+            f"{self._url}{path}", 
+            json=json, 
+            timeout=self._timeout
+        )
+
+        resp.raise_for_status()
+
+        return resp
+
+    def encode(self, texts, normalize_embeddings=False):
+
+        import numpy as np
 
         single = isinstance(texts, str)
         inputs = [texts] if single else list(texts)
@@ -186,19 +268,9 @@ class RemoteEmbedder:
         embeddings = []
 
         for start in range(0, len(inputs), self._MAX_CLIENT_BATCH):
-            
+
             batch = inputs[start : start + self._MAX_CLIENT_BATCH]
-
-            resp = requests.post(
-                f"{self._url}/embed",
-                json={
-                    "inputs": batch, 
-                    "truncate": True
-                }
-            )
-
-            resp.raise_for_status()
-
+            resp = self._request("post", "/embed", json={"inputs": batch, "truncate": True})
             embeddings.extend(resp.json())
 
         vectors = np.array(embeddings, dtype=np.float32)
@@ -216,7 +288,7 @@ def get_embedder():
     if settings.text_embedder_mode == "server":
         return RemoteEmbedder(
             url=settings.text_embedder_url,
-            model_name=f"sentence-transformers/{settings.embedding_model}"
+            model_name=f"sentence-transformers/{settings.embedding_model}",
         )
 
     from sentence_transformers import SentenceTransformer
@@ -278,8 +350,7 @@ def index_chunks(
 
     from qdrant_client import models
 
-    embedder = get_embedder()
-    dim = embedder.get_dimension()
+    dim = get_embedder().get_dimension()
 
     if client.collection_exists(collection_name):
         client.delete_collection(collection_name)
@@ -291,6 +362,21 @@ def index_chunks(
             distance=models.Distance.COSINE
         ),
     )
+
+    return upsert_chunks(client, chunks, collection_name, config, batch_size)
+
+
+def upsert_chunks(
+    client: QdrantClient,
+    chunks: list[Chunk],
+    collection_name: str,
+    config: dict,
+    batch_size: int = 64,
+) -> int:
+
+    from qdrant_client import models
+
+    embedder = get_embedder()
 
     total = 0
     for start in range(0, len(chunks), batch_size):
@@ -328,3 +414,181 @@ def index_chunks(
         total += len(points)
 
     return total
+
+
+def content_chunk_ids(chunks: list[Chunk]) -> list[Chunk]:
+
+    seen: dict[str, int] = {}
+    out = []
+
+    for c in chunks:
+        content = "\n\n".join([c.text, *(t["text_content"] for t in c.tables or [])])
+        digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        key = f"{c.doc_id}#{digest}"
+        n = seen.get(key, 0)
+        seen[key] = n + 1
+        name = key if n == 0 else f"{key}#{n}"
+        out.append(
+            Chunk(
+                chunk_id=str(uuid.uuid5(uuid.NAMESPACE_URL, name)),
+                doc_id=c.doc_id,
+                library=c.library,
+                text=c.text,
+                chunk_index=c.chunk_index,
+                tables=c.tables,
+            )
+        )
+
+    return out
+
+def collection_behind_alias(client: QdrantClient, alias: str) -> str | None:
+
+    for a in client.get_aliases().aliases:
+        if a.alias_name == alias:
+            return a.collection_name
+
+    return None
+
+def stored_chunk_positions(client: QdrantClient, collection_name: str) -> dict[str, int | None]:
+
+    positions = {}
+    offset = None
+
+    while True:
+        points, offset = client.scroll(
+            collection_name=collection_name,
+            limit=256,
+            offset=offset,
+            with_payload=["chunk_index"],
+            with_vectors=False,
+        )
+
+        positions.update({str(p.id): p.payload.get("chunk_index") for p in points})
+
+        if offset is None:
+            return positions
+
+
+def apply_chunk_diff(
+    client: QdrantClient,
+    chunks: list[Chunk],
+    collection_name: str,
+    config: dict,
+    batch_size: int = 64,
+) -> dict:
+
+    from qdrant_client import models
+
+    stored = stored_chunk_positions(client, collection_name)
+    wanted = {
+        c.chunk_id: c 
+            for c in chunks
+    }
+
+    added = [
+        c for cid, c in wanted.items() 
+            if cid not in stored
+    ]
+
+    moved = [
+        c for cid, c in wanted.items() 
+            if cid in stored and stored[cid] != c.chunk_index
+    ]
+
+    deleted = [
+        cid for cid in stored 
+            if cid not in wanted
+    ]
+
+    upsert_chunks(client, added, collection_name, config, batch_size)
+
+    if moved:
+        client.batch_update_points(
+            collection_name=collection_name,
+            update_operations=[
+                models.SetPayloadOperation(
+                    set_payload=models.SetPayload(
+                        payload={
+                            "chunk_index": c.chunk_index
+                        }, 
+                        points=[c.chunk_id]
+                    )
+                )
+                for c in moved
+            ],
+        )
+
+    if deleted:
+        client.delete(
+            collection_name=collection_name, 
+            points_selector=models.PointIdsList(points=deleted)
+        )
+
+    return {
+        "added": len(added), 
+        "moved": len(moved), 
+        "deleted": len(deleted)
+    }
+
+
+def index_config_hash(config: dict) -> str:
+
+    key = "|".join(f"{k}={config[k]}" for k in sorted(config))
+
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()[:12]
+
+def sync_index(
+    client: QdrantClient,
+    chunks: list[Chunk],
+    alias: str,
+    config: dict,
+    batch_size: int = 64,
+) -> dict:
+
+    from qdrant_client import models
+
+    chunks = content_chunk_ids(chunks)
+    current = collection_behind_alias(client, alias)
+
+    if current is not None and get_current_config(client, current) == config:
+
+        diff = apply_chunk_diff(client, chunks, current, config, batch_size)
+
+        return {
+            "collection": current, 
+            "rebuilt": False, 
+            **diff
+        }
+
+    index_hash = index_config_hash(config)
+    
+    target = f"{alias}__{index_hash}"
+
+    if client.collection_exists(target) and get_current_config(client, target) == config:
+        diff = apply_chunk_diff(client, chunks, target, config, batch_size)
+
+    else:
+        diff = {
+            "added": index_chunks(client, chunks, target, config, batch_size), 
+            "moved": 0, 
+            "deleted": 0
+        }
+
+    client.update_collection_aliases(
+        change_aliases_operations=[
+            models.CreateAliasOperation(create_alias=models.CreateAlias(collection_name=target, alias_name=alias))
+        ]
+    )
+
+    keep = {target, current}
+
+    for c in client.get_collections().collections:
+        if c.name.startswith(f"{alias}__") and c.name not in keep:
+            client.delete_collection(c.name)
+
+    return {
+        "collection": target, 
+        "rebuilt": True, 
+        "previous": current, 
+        **diff
+    }

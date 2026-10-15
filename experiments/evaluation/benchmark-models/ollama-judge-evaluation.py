@@ -16,8 +16,6 @@ from experiments.evaluation.prompts import prompt_v1
 from experiments.evaluation.run import (
     BEST_CHUNKING,
     COLLECTION,
-    build_context_text,
-    chunk_block,
     retrieve_context,
 )
 from shared.eval.data import load_answers, load_questions
@@ -30,6 +28,7 @@ from shared.ingest import (
     load_corpus,
 )
 from shared.llm import generate
+from shared.prompts import build_context_text, chunk_block
 from shared.retrieval import BM25Index, fetch_all_chunks
 from shared.settings import settings
 

@@ -26,6 +26,7 @@ from shared.ingest import (
     load_corpus,
 )
 from shared.llm import generate
+from shared.prompts import build_context_text
 from shared.retrieval import BM25Index, fetch_all_chunks, rerank
 from shared.settings import settings
 from shared.tracking import get_best_run, log_metrics, tracked_run
@@ -56,20 +57,6 @@ def retrieve_context(client, bm25, question: str) -> list[dict]:
         return rerank(question, candidates, TOP_K)
 
     return candidates[:TOP_K]
-
-def chunk_block(chunk: dict) -> str:
-
-    tables_str = "\n\n".join(t["text_content"] for t in chunk.get("tables") or [])
-    block = f"[{chunk['doc_id']}] {chunk['text']}"
-
-    if tables_str:
-        block += f"\n\n{tables_str}"
-
-    return block
-
-def build_context_text(context_chunks: list[dict]) -> str:
-
-    return "\n\n".join(chunk_block(chunk) for chunk in context_chunks)
 
 def main():
     docs = load_corpus()

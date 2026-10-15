@@ -18,7 +18,6 @@ from experiments.evaluation.run import (
     POOL_SIZE,
     TOP_K,
     USE_RERANKER,
-    build_context_text,
     retrieve_context,
 )
 from shared.eval.data import load_questions
@@ -28,6 +27,7 @@ from shared.ingest import (
     index_chunks,
     load_corpus,
 )
+from shared.prompts import build_context_text
 from shared.retrieval import BM25Index, fetch_all_chunks
 from shared.settings import settings
 
