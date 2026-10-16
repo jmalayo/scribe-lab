@@ -13,3 +13,4 @@ ruff==0.16.10
 import-linter==2.15
 langchain-text-splitters==1.1.2
 qdrant-client==1.19.0
+mcp==1.30.0

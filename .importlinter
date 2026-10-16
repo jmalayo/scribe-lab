@@ -1,6 +1,7 @@
 [importlinter]
 root_packages =
     app
+    mcp_server
     shared
 include_external_packages = True
 
@@ -9,6 +10,7 @@ name = Producción no importa código de laboratorio
 type = forbidden
 source_modules =
     app
+    mcp_server
     shared.pipeline
     shared.llm
     shared.retrieval

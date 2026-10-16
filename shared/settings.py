@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     mlflow_experiment_prefix: str = "rag-system-eval"
     mlflow_tracking_uri: str = "http://127.0.0.1:5000/"
 
+    scribe_api_url: str = "http://127.0.0.1:1013"
+
     corpus_dir: str = "shared/corpus"
     questions_path: str = "shared/eval/questions.jsonl"
 
