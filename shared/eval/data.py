@@ -24,7 +24,7 @@ def load_questions(path: str | None = None) -> list[dict]:
 
 def load_answers(path: str | Path, chunks_path: str | Path | None = None) -> pd.DataFrame:
 
-    df = pd.read_csv(path, sep=";", encoding="utf-8", keep_default_na=False)
+    df = pd.read_csv(path, sep=";", encoding="utf-8-sig", keep_default_na=False)
 
     if chunks_path is None:
         return df

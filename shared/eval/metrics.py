@@ -168,3 +168,31 @@ def bootstrap_ci(values: list[float], n_resamples: int = 1000, ci: float = 0.95,
     hi_idx = int((1 + ci) / 2 * n_resamples) - 1
 
     return (round(means[lo_idx], 4), round(means[hi_idx], 4))
+
+def mcnemar_exact(only_a: int, only_b: int) -> float:
+
+    from math import comb
+
+    n = only_a + only_b
+
+    if n == 0:
+        return 1.0
+
+    tail = sum(comb(n, k) for k in range(min(only_a, only_b) + 1)) / 2 ** n
+
+    return round(min(1.0, 2 * tail), 3)
+
+def cohen_kappa(labels_a: list[str], labels_b: list[str]) -> float:
+
+    n = len(labels_a)
+    observed = sum(a == b for a, b in zip(labels_a, labels_b, strict=True)) / n
+
+    expected = sum(
+        (labels_a.count(k) / n) * (labels_b.count(k) / n)
+            for k in set(labels_a) | set(labels_b)
+    )
+
+    if expected == 1:
+        return 1.0
+
+    return round((observed - expected) / (1 - expected), 3)
