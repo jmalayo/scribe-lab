@@ -5,13 +5,11 @@ from shared.eval.grounding import GroundingResult
 
 class QueryRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
-    collection: str | None = None
     top_k: int | None = Field(default=None, ge=1, le=50)
 
 
 class RetrieveRequest(BaseModel):
     query: str = Field(min_length=1, max_length=2000)
-    collection: str | None = None
     top_k: int | None = Field(default=None, ge=1, le=50)
 
 

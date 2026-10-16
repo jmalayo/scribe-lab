@@ -87,14 +87,6 @@ def test_request_id_is_propagated(client_for):
     assert resp.headers["x-request-id"] == "abc"
 
 
-def test_unknown_collection_is_not_found(client_for):
-
-    resp = client_for(make_pipeline()).post("/v1/query", json={"question": "q", "collection": "otra"})
-
-    assert resp.status_code == 404
-    assert resp.json()["detail"] == "colección desconocida: otra"
-
-
 def test_empty_question_is_a_validation_error(client_for):
 
     resp = client_for(make_pipeline()).post("/v1/query", json={"question": ""})

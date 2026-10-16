@@ -1,7 +1,7 @@
 import time
 
 import requests
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from app.deps import PipelineDep
@@ -13,16 +13,9 @@ from app.schemas import (
     RetrieveResponse,
     Usage,
 )
-from shared.pipeline import Pipeline
 from shared.settings import settings
 
 router = APIRouter()
-
-
-def _check_collection(pipeline: Pipeline, collection: str | None) -> None:
-
-    if collection is not None and collection != pipeline.config.collection:
-        raise HTTPException(status_code=404, detail=f"colección desconocida: {collection}")
 
 
 def _citations(chunks: list[dict], score_key: str) -> list[Citation]:
@@ -42,7 +35,6 @@ def _citations(chunks: list[dict], score_key: str) -> list[Citation]:
 @router.post("/v1/query", response_model=QueryResponse)
 def query(req: QueryRequest, pipeline: PipelineDep) -> QueryResponse:
 
-    _check_collection(pipeline, req.collection)
     result = pipeline.run(req.question, top_k=req.top_k)
 
     return QueryResponse(
@@ -63,7 +55,6 @@ def query(req: QueryRequest, pipeline: PipelineDep) -> QueryResponse:
 @router.post("/v1/retrieve", response_model=RetrieveResponse)
 def retrieve(req: RetrieveRequest, pipeline: PipelineDep) -> RetrieveResponse:
 
-    _check_collection(pipeline, req.collection)
     t0 = time.perf_counter()
     result = pipeline.retrieve(req.query, top_k=req.top_k)
 
