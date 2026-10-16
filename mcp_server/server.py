@@ -2,7 +2,7 @@ from mcp.server.fastmcp import FastMCP
 
 from mcp_server import tools
 
-server = FastMCP("scribe-lab")
+server = FastMCP("scribe-lab", log_level="WARNING")
 
 server.tool(
     description=(

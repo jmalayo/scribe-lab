@@ -45,6 +45,8 @@ services:
     restart: unless-stopped
     volumes:
       - ollama_data:/root/.ollama
+    ports:
+      - "127.0.0.1:1014:1014"
     environment:
       OLLAMA_HOST: "0.0.0.0:1014"
       OLLAMA_MAX_LOADED_MODELS: "1"

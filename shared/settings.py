@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     llm_model_base: str = "llama3.2:3b"
     llm_model_answer: str = "llama3.1:8b-instruct-q4_K_M"
     llm_model_judge: str = "qwen3:8b"
+    llm_model_agent: str = "qwen3:8b"
 
     pipeline_config_path: str = "app/config/pipeline.yaml"
 

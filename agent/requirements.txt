@@ -1,0 +1,4 @@
+-r ../mcp_server/requirements.txt
+langgraph==1.2.17
+langchain-ollama==1.1.0
+langchain-mcp-adapters==0.3.2

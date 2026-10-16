@@ -2,6 +2,8 @@ from textwrap import dedent
 
 PROMPT_VERSION = "v1"
 
+ABSTENTION_ANSWER = "No lo sé según el contexto proporcionado."
+
 ANSWER_PROMPT_V1 = dedent("""
     Responde la pregunta usando ÚNICAMENTE el contexto de abajo. Si el contexto no contiene la respuesta, di "No lo sé según el contexto proporcionado."
 
