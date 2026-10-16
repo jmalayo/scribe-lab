@@ -18,7 +18,12 @@ from agent.graph import build_llm as build_agent_llm
 from agent.tools import agent_tools
 from experiments.evaluation.prompts import prompt_v3
 from shared.eval.data import load_answers, load_questions
-from shared.eval.metrics import bootstrap_ci, latency_summary
+from shared.eval.metrics import (
+    bootstrap_ci,
+    cohen_kappa,
+    latency_summary,
+    mcnemar_exact,
+)
 from shared.llm import build_llm
 from shared.pipeline import Pipeline, PipelineConfig, RetrievalResult
 from shared.settings import settings
@@ -27,6 +32,7 @@ from shared.tracking import log_metrics, tracked_run
 EXP = "exp_1"
 MODEL = "llama3.1:8b-instruct-q4_K_M"
 REUSE_ANSWERS = True
+SUMMARIZE_MANUAL = True
 RESULTS_DIR = Path(__file__).resolve().parent / "results" / EXP
 
 EXP7_ANSWERS = REPO_ROOT / "experiments/evaluation/benchmark-models/results/exp_7/llama31_base/base_answers.csv"
@@ -241,16 +247,69 @@ def summarize(verdicts: pd.DataFrame, answers: pd.DataFrame | None, unanswerable
     return metrics
 
 
-def main(out_dir: Path = RESULTS_DIR) -> dict:
+def paired(verdicts: pd.DataFrame, side_a: str, side_b: str, unanswerable: set[str], hits: tuple[str, ...]) -> dict:
 
-    out_dir.mkdir(parents=True, exist_ok=True)
+    wide = verdicts.pivot(index="id", columns="lado", values="veredicto").drop(index=list(unanswerable))
+    a = wide[side_a].isin(hits)
+    b = wide[side_b].isin(hits)
+
+    only_a = int((a & ~b).sum())
+    only_b = int((b & ~a).sum())
+
+    return {
+        f"only_{side_a}": only_a,
+        f"only_{side_b}": only_b,
+        "mcnemar_p": mcnemar_exact(only_a, only_b),
+    }
+
+
+def question_sets() -> tuple[list[dict], set[str], set[str]]:
 
     questions = load_questions()
-    expected = {q["id"]: q["expected_answer"] for q in questions}
     multi_span = {q["id"] for q in questions if len(q.get("gold_spans") or []) > 1}
 
     labels = pd.read_csv(LABELS_ANSWERS, sep=";", keep_default_na=False)
     unanswerable = set(labels.loc[labels["contexto_suficiente"] == "n.a.", "id"])
+
+    return questions, unanswerable, multi_span
+
+
+def manual_summary(out_dir: Path = RESULTS_DIR) -> dict:
+
+    _, unanswerable, multi_span = question_sets()
+
+    manual = load_answers(out_dir / "verdicts_manual.csv")
+    human = manual.assign(veredicto=manual["veredicto_manual"], valido=True)
+
+    summary = {
+        side: summarize(human[human["lado"] == side], None, unanswerable, multi_span)
+        for side in ("pipeline", "agent")
+    }
+
+    summary["pipeline_vs_agent"] = paired(human, "pipeline", "agent", unanswerable, ("correcta",))
+    summary["pipeline_vs_agent_with_partial"] = paired(human, "pipeline", "agent", unanswerable, ("correcta", "parcial"))
+
+    agree = (manual["veredicto"] == manual["veredicto_manual"]).astype(float).tolist()
+
+    summary["judge"] = {
+        "n": len(agree),
+        "agreement": round(sum(agree) / len(agree), 3),
+        "agreement_ci": bootstrap_ci(agree),
+        "kappa": cohen_kappa(manual["veredicto_manual"].tolist(), manual["veredicto"].tolist()),
+        "confusion_human_x_judge": pd.crosstab(manual["veredicto_manual"], manual["veredicto"]).to_dict(orient="index"),
+    }
+
+    print(json.dumps(summary, indent=2, ensure_ascii=False))
+
+    return summary
+
+
+def main(out_dir: Path = RESULTS_DIR) -> dict:
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    questions, unanswerable, multi_span = question_sets()
+    expected = {q["id"]: q["expected_answer"] for q in questions}
 
     sides = {
         "pipeline": answers_for("pipeline", questions, out_dir),
@@ -294,10 +353,13 @@ def main(out_dir: Path = RESULTS_DIR) -> dict:
 
         summary[side] = metrics
 
+    summary["pipeline_vs_agent"] = paired(verdicts, "pipeline", "agent", unanswerable, ("correcta",))
+    summary["exp7_vs_pipeline"] = paired(verdicts, "exp7", "pipeline", unanswerable, ("correcta",))
+
     print(json.dumps(summary, indent=2, ensure_ascii=False))
 
     return summary
 
 
 if __name__ == "__main__":
-    main()
+    manual_summary() if SUMMARIZE_MANUAL else main()
