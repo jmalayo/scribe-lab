@@ -19,6 +19,7 @@ class Citation(BaseModel):
     chunk_index: int | None = None
     score: float | None = None
     text: str
+    tables: list[str] = []
 
 
 class Usage(BaseModel):

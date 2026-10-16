@@ -27,6 +27,7 @@ def _citations(chunks: list[dict], score_key: str) -> list[Citation]:
             chunk_index=c.get("chunk_index"),
             score=c.get(score_key),
             text=c["text"],
+            tables=[t["text_content"] for t in c.get("tables") or []],
         )
         for c in chunks
     ]

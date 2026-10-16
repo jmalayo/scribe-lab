@@ -38,7 +38,7 @@ def buscar_documentos(consulta: str, top_k: int = 5) -> list[dict]:
             "doc_id": c["doc_id"],
             "chunk_index": c["chunk_index"],
             "score": c["score"],
-            "texto": c["text"],
+            "texto": "\n\n".join([c["text"], *c.get("tables", [])]),
         }
         for c in body["chunks"]
     ]

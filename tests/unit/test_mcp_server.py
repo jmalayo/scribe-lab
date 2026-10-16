@@ -14,7 +14,8 @@ CHUNK = {
     "doc_id": "d.md",
     "chunk_index": 3,
     "score": 0.81,
-    "text": "texto"
+    "text": "texto",
+    "tables": ["| a | b |"]
 }
 
 QUERY_BODY = {
@@ -87,7 +88,7 @@ def test_buscar_documentos_posts_to_retrieve(api):
             "doc_id": "d.md",
             "chunk_index": 3,
             "score": 0.81,
-            "texto": "texto"
+            "texto": "texto\n\n| a | b |"
         }
     ]
 
