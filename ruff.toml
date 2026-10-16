@@ -7,3 +7,4 @@ select = ["E4", "E7", "E9", "F", "PLW1510", "RUF013", "I", "B", "UP"]
 # scripts que agregan la raíz del repo a sys.path antes de importar
 "experiments/evaluation/benchmark-models/*.py" = ["E402"]
 "experiments/evaluation/generative/*.py" = ["E402"]
+"experiments/agent/*.py" = ["E402"]
