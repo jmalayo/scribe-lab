@@ -10,17 +10,16 @@ from shared.settings import settings
 
 def load_questions(path: str | None = None) -> list[dict]:
 
-    p = Path(path or settings.questions_path)
+    root = Path(path or settings.questions_path)
 
-    questions = []
+    questions = [
+        json.loads(line)
+            for file in sorted(root.glob("*.jsonl"))
+                for line in file.read_text(encoding="utf-8").splitlines()
+                    if line.strip()
+    ]
 
-    for line in p.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-
-        if line:
-            questions.append(json.loads(line))
-            
-    return questions
+    return sorted(questions, key=lambda q: q["id"])
 
 def load_answers(path: str | Path, chunks_path: str | Path | None = None) -> pd.DataFrame:
 

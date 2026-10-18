@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     scribe_api_url: str = "http://127.0.0.1:1013"
 
-    corpus_dir: str = "shared/corpus"
-    questions_path: str = "shared/eval/questions.jsonl"
+    corpus_dir: str = "corpus_demo"
+    questions_path: str = "shared/eval/questions"
 
 settings = Settings()

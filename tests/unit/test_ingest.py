@@ -183,7 +183,7 @@ def test_corpus_hash_ignores_order_and_detects_changes():
     assert corpus_hash([a, b]) != corpus_hash([a, doc("texto b editado", "lib/b.md")])
     assert corpus_hash([a, b]) != corpus_hash([a, doc("texto b", "lib/c.md")])
 
-# el doc_id tiene que coincidir con source_doc de questions.jsonl ("music-tagger/...md") o ningún chunk
+# el doc_id tiene que coincidir con source_doc de shared/eval/questions/ ("music-tagger/...md") o ningún chunk
 # cuenta como correcto; el front matter no es contenido y no debe indexarse
 def test_load_corpus_strips_front_matter_and_builds_doc_ids(tmp_path):
 
