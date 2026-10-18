@@ -2,11 +2,13 @@
 
 Análisis y benchmark de clasificación musical mediante técnicas de DSP y ML supervisado.
 
-PoC incial realizada bajo 4 técnicas implementadas: formula lineal ponderada con umbrales calibrados, árbol de decisión, Random Forest y clasificación zero-shot con CLAP. 
+PoC incial realizada bajo 4 técnicas implementadas: formula lineal ponderada con umbrales calibrados, árbol de decisión, Random Forest y clasificación zero-shot con CLAP. La ruta CLAP (Route B) se eliminó del proyecto en la reestructuración de `dsp/` a `features/` + `ml/`; el pipeline actual es solo DSP + ML supervisado.
 
 Sin alcance actual del ~70-80% de balanced accuracy, evidencia que motiva la migración a redes prototípicas (few-shot) sobre embeddings de MERT, ademas de eliminar la calibración global por género y permitir que el usuario defina categorías con pocos ejemplos, reemplazando las fijadas en código. 
 
 Repositorio complementario: ++**[async-music-fetch-engine](https://github.com/jm-alayo/async-music-fetch-engine)**++
+
+Ese repositorio descarga los MP3 que analiza este proyecto: `features/extract.py` lee las canciones de `async-music-fetch-engine/music-extract/data/music-downloaded/rock_english/` y procesa solo las que figuran en el Excel de etiquetas.
 
 ## Benchmark
 
@@ -18,7 +20,7 @@ Se utilizó un dataset compuesto por 96 canciones para el todo el reporte, distr
 - **baja-ritmica:** 21 canciones
 - **incrementable-decreciente:** 23 canciones
 
-Dentro de la extracción por segmento `features\extract.py`, la separación armónico-percusiva (`librosa.effects.hpss`, que alimenta la feature `perc_ratio`, procesamiento estrictamente CPU-bound) concentra prácticamente todo el costo: sobre el dataset real de 96 canciones / 890 segmentos, HPSS acumula el 83–87 % del tiempo de extracción por segmento (`workers=1`).
+Dentro de la extracción por segmento `features/extract.py`, la separación armónico-percusiva (`librosa.effects.hpss`, que alimenta la feature `perc_ratio`, procesamiento estrictamente CPU-bound) concentra prácticamente todo el costo: sobre el dataset real de 96 canciones / 890 segmentos, HPSS acumula **~87 %** del tiempo de extracción por segmento (`workers=1`, sin contención de CPU entre procesos).
 
 La evaluación se realizó sobre **28 de las 96 canciones**, estratificadas por `seg_N` (`_features_2_rock_english_segmin25.csv`). Se seleccionaron `RANDOM_SELECTION=2` canciones aleatorias para cada una de las 15 cantidades de segmentos presentes (4–20), o una si el grupo tenía una sola, usando `RANDOM_SEED=42` para reproducibilidad. Selección registrada en `evidence/phase_a_workers/sample_selection.csv`.
 
@@ -42,13 +44,13 @@ La contención aumenta con la cantidad de workers: el trabajo de HPSS alcanza **
 
 El margen, correspondiente al tiempo no asociado a HPSS, representa un **35.02 % del tiempo de HPSS**, reflejando una mayor competencia por CPU a medida que aumentan los workers. Sin embargo, en este hardware, el overhead **no llega a superar la ganancia del paralelismo**.
 
-> **Observación (control de sesgo de caché):** la tabla usa warm-up. Sin warm-up, los tiempos fueron **395.83 s** (`workers_1`, ~4 % más), **171.51 s** (`workers_3`, ~4 % menos) y **110.59 s** (`workers_16`, ~6 % más), respecto a los valores con warm-up. Estas variaciones corresponden al ruido de ejecución y no muestran un sesgo direccional: **16 workers sigue siendo la configuración más rápida con o sin warm-up**.
+> **Observación (control de sesgo de caché):** la tabla usa warm-up. Sin warm-up, los tiempos fueron **395.83 s** (`workers_1`, ~4 % más), **171.51 s** (`workers_3`, ~4 % menos) y **110.59 s** (`workers_16`, ~7 % más), respecto a los valores con warm-up. Estas variaciones corresponden al ruido de ejecución y no muestran un sesgo direccional: **16 workers sigue siendo la configuración más rápida con o sin warm-up**.
 
-> **Advertencia (96 canciones):** con HPSS presente (tarea pesada), más workers gana y la contención de CPU no llega a comerse la ganancia del paralelismo. Sin HPSS (pipeline actual, tarea liviana), `N_WORKERS=3` **es el más rápido y 16 el más lento**, por el overhead de gestión de procesos e I/O sobre tareas cortas. `N_WORKERS=3` sigue siendo el default óptimo por su equilibrio en tareas livianas, no por saturación de CPU.
+> **Advertencia (96 canciones):** con HPSS presente (tarea pesada), más workers gana y la contención de CPU no llega a comerse la ganancia del paralelismo. Sin HPSS (pipeline actual, tarea liviana), el orden se invierte sobre la misma muestra de 28 canciones: **1 worker es el más rápido (2.50 s/canción), 3 queda en el medio (3.11 s) y 16 es el más lento (3.90 s)**, por el overhead de gestión de procesos e I/O sobre tareas cortas. `N_WORKERS=3` se mantiene como default, pero a escala de 96 canciones no hay un ganador estable entre 1 y 3 (ver "Tiempo real de producción").
 >
-> Comparación con 28 canciones con y sin HPSS: `research\hpss_replication_96\evidence\phase_a_workers\comparison_with_vs_without.log`
+> Comparación con 28 canciones con y sin HPSS: `research/hpss_replication_96/evidence/phase_a_workers/comparison_with_vs_without.log`
 >
-> *Evidencia:* `evidence/phase_a_workers/times_with_hpss.csv`, `evidence/phase_a_workers/summary_with_hpss.csv`.
+> *Evidencia:* la tabla corresponde a la corrida con warm-up de `evidence/phase_a_workers/logs/run_warmup.log`. Los CSV `evidence/phase_a_workers/times_with_hpss.csv` y `summary_with_hpss.csv` guardan una re-corrida de control posterior (`logs/run_retest.log`), que sobrescribió los originales.
 
 
 
@@ -59,9 +61,9 @@ El margen, correspondiente al tiempo no asociado a HPSS, representa un **35.02 %
 
 | Etapa | Trabajo CPU acumulado (s) | Reloj de pared total (s) | Paralelismo efectivo (s) | Duración promedio de procesamiento (s) |
 | ----- | ------------------------- | ------------------------ | ------------------------ | -------------------------------------- |
-| 1     | 195.79                    | 214.8 (~4 min)           | 0.91                     | 2.24                                   |
-| 3     | 748.90                    | 261.1 (~4 min)           | 2.87                     | 2.72                                   |
-| 16    | 4698.33                   | 309.0 (~5 min)           | 15.20                    | 3.22                                   |
+| 1     | 195.79                    | 214.8 (~3.6 min)         | 0.91                     | 2.24                                   |
+| 3     | 748.90                    | 261.1 (~4.4 min)         | 2.87                     | 2.72                                   |
+| 16    | 4698.33                   | 309.0 (~5.2 min)         | 15.20                    | 3.22                                   |
 
 
 > **Observación (variación entre corridas):** `workers_3` y `workers_16` empeoraron minimamente sin cambios de código, debido a variación de carga del sistema. Con ambas muestras, `N_WORKERS=1` nunca fue el peor y fue el más rápido en la última corrida; `N_WORKERS=3` sigue siendo un default razonable, pero **no hay un ganador estable entre 1 y 3** para la tarea liviana actual.
@@ -93,7 +95,7 @@ score_ritmo = 0.45 * onset_n + 0.35 * perc_n + 0.20 * tempo_n
 - `perc_n`: energía percusiva normalizada, derivada de `perc_ratio`.
 - `tempo_n`: tempo normalizado.
 
-El problema de `perc_ratio` no era la calidad de la señal, sino el costo de HPSS: **82-86 %** del tiempo de extracción sobre el dataset real de 96 canciones (`workers=3`/`workers=1`, `evidence/phase_a_workers/times_with_hpss.csv`) — y, como muestra "Tiempo real de producción" en el Benchmark más arriba, un costo **inestable al escalar** (la muestra de 28 canciones subestimaba el costo real a 96 en 37-54 %, incluso ya corregida). Costo alto e impredecible, sumado a que cada iteración de calibración exige re-extraer el dataset completo.
+El problema de `perc_ratio` no era la calidad de la señal, sino el costo de HPSS: **~87 %** del tiempo de extracción por segmento sobre el dataset real de 96 canciones (`workers=1`, tabla del Benchmark) — y, como muestra "Tiempo real de producción" en el Benchmark más arriba, un costo **inestable al escalar** (la muestra de 28 canciones subestimaba el costo real a 96 en 37-54 %, incluso ya corregida). Costo alto e impredecible, sumado a que cada iteración de calibración exige re-extraer el dataset completo.
 
 ## Reducción del kernel (evaluación opcional)
 
@@ -164,7 +166,7 @@ Se agregó `perc_n_mediana` a la lista `FEATURES` y se repitió la validación c
 | **Random Forest** | **52.5 % ± 13.6** | **48.9 % ± 13.3** | **-3.6**  |
 
 
-Intervalos (media ± 2 · error estándar, k=5 folds):
+Intervalos (media ± 2 desviaciones estándar de los 5 folds, k=5; ver "Métodos estadísticos aplicados"):
 
 - Árbol de decisión — con: **[15.5 %, 79.0 %]** · sin: **[11.1 %, 63.3 %]**
 - Random Forest — con: **[25.3 %, 79.6 %]** · sin: **[22.3 %, 75.6 %]**
@@ -178,16 +180,16 @@ Intervalos (media ± 2 · error estándar, k=5 folds):
 
 | Dimensión             | Impacto                                                                               |
 | --------------------- | ------------------------------------------------------------------------------------- |
-| Costo eliminado       | 82-87 % del tiempo de extracción por segmento (`workers=1`/`workers=3`)               |
+| Costo eliminado       | ~87 % del tiempo de extracción por segmento (`workers=1`)                             |
 | Costo en accuracy     | Random Forest: −3.6 puntos, dentro del ruido (intervalos solapados)                   |
 | Árbol de decisión     | Empeora −10.1 puntos al eliminarla                                                    |
 | Complejidad eliminada | `PERC_LO`/`PERC_HI`, debate de `kernel_size`, dependencia de `effects` vs `decompose` |
 
 
-El eje de ritmo pasa a calcularse sin el componente percusivo:
+El eje de ritmo pasa a calcularse sin el componente percusivo (los pesos 0.45/0.20 de onset/tempo, renormalizados y redondeados, quedan en 0.70/0.30 en `features/extract.py`):
 
 ```python
-score_ritmo = 0.69 * onset_n + 0.31 * tempo_n
+score_ritmo = 0.70 * onset_n + 0.30 * tempo_n
 ```
 
 > **Advertencia:** ambos modelos empeoran al remover `perc_ratio` y la feature quedó en el top 2 de importancia — la justificación estadística (intervalos solapados) sostiene la decisión, pero es débil; ameritaría revalidar con un dataset más grande. Del lado del costo la decisión es más sólida: con HPSS, una muestra de 28 canciones subestima el costo real a escala de 96 en 37-54 %, incluso corregida por su propio factor de error — ningún benchmark chico predice bien el costo real en producción, mientras que sin HPSS la extrapolación por muestra sí es estable.
@@ -196,7 +198,7 @@ score_ritmo = 0.69 * onset_n + 0.31 * tempo_n
 
 ## Resultado y estado posterior
 
-El pipeline de producción corre sin HPSS: extracción de las 96 canciones en ~3.4 minutos (`N_WORKERS=3`), Random Forest en 48.9 % ± 13.3 de balanced accuracy (5-fold), 12 features en el modelo, sin constantes de calibración de `perc_ratio`.
+El pipeline de producción corre sin HPSS: extracción de las 96 canciones en 261.1 s (~4.4 minutos) con `N_WORKERS=3`, el default (la corrida más rápida fue con `N_WORKERS=1`: 214.8 s, ~3.6 minutos), Random Forest en 48.9 % ± 13.3 de balanced accuracy (5-fold), 12 features en el modelo, sin constantes de calibración de `perc_ratio`.
 
 ## Benchmark de DSP
 
@@ -204,7 +206,7 @@ El árbol de decisión da 37.2 % ± 13.1 de balanced accuracy, 11.7 puntos por d
 
 Importancia de features en el modelo de producción (sin `perc_ratio`): `zcr_n_mediana` (0.179), `cent_n_mediana` (0.177) y `flat_n_mediana` (0.174) concentran 0.530 de la importancia total — más de la mitad del poder de decisión del modelo, repartido casi por igual entre las tres.
 
-Matriz de confusión (predicho × humano) y desempeño por categoría:
+Matriz de confusión del acuerdo final del router (predicho × humano) y desempeño por categoría. **Medida sobre el conjunto de entrenamiento completo, no con validación cruzada:** acierta 71 de 96 canciones (74.0 %, el mismo acuerdo del router citado arriba) y su recall promedio es 77.1 %, no comparable con el 48.9 % del Random Forest con CV. Sirve para ver el patrón de errores entre categorías, no como estimación de desempeño:
 
 ```
                            alta-agresiva  alta-ritmica  baja-contemplativa  baja-ritmica  incrementable-decreciente
@@ -228,7 +230,7 @@ incrementable-decreciente              0             3                   0      
 
 `baja-contemplativa` tiene 100 % de recall pero solo 56.2 % de precisión — el modelo la usa como categoría "default" con más frecuencia de la que corresponde (16 predicciones sobre 9 casos reales). `baja-ritmica` es el patrón inverso: precisión alta (92.9 %) pero recall bajo (61.9 %).
 
-Del router de confianza: 40.6 % de las canciones caen en `confiable`, 25.0 % en `ambigua`, 34.4 % en `revisar` — más de un tercio del dataset no alcanza el umbral de confianza mínimo del árbol y queda para desempate o revisión manual.
+Del router de confianza: 40.6 % de las canciones caen en `confiable`, 25.0 % en `ambigua`, 34.4 % en `revisar` — más de un tercio del dataset no alcanza el umbral de confianza mínimo del Random Forest y queda para desempate o revisión manual.
 
 **Limitación conocida:** "10cc – I'm Not in Love" (balada suave, sin percusión marcada) obtuvo un `score_energia` más alto que "Marilyn Manson – Sweet Dreams (Are Made of This)" (rock industrial distorsionado) — 0.325 vs 0.257. No es un error de cálculo: `flatness`/`zcr` miden las docenas de capas vocales superpuestas de 10cc como ruido de banda ancha, indistinguible de la distorsión real de Manson. Como estas tres features de timbre concentran el 53 % de la importancia del modelo, esto es una limitación estructural del enfoque DSP — uno de los argumentos centrales para migrar a embeddings pre-entrenados (MERT) en la siguiente fase.
 
@@ -246,7 +248,7 @@ Sin entrenamiento propio: embeddings de audio pre-entrenados (`m-a-p/MERT-v1-95M
 
 El valor ronda cero: en el espacio crudo de MERT no hay un cluster limpio por categoría.
 
-El desglose por categoría (distancia coseno promedio intra/inter-categoría, `fewshot/RESULTS/fase0_tabla_coeficientes.csv`) reparte ese 0.0085 global en dos grupos:
+El desglose por categoría (distancia coseno promedio intra/inter-categoría, `fewshot/RESULTS/table_coefficients.csv`) reparte ese 0.0085 global en dos grupos:
 
 - `alta-agresiva` (0.080) e `incrementable-decreciente` (0.067) tienen la menor distancia intra-categoría de las 5 (0.069 y 0.067) — sus canciones quedan más cerca entre sí que de cualquier otra categoría.
 - `alta-ritmica` (-0.040) y `baja-ritmica` (-0.053) dan silhouette negativo: en ambas, la distancia promedio hacia `incrementable-decreciente` (0.086 y 0.084) es menor que su propia distancia intra-categoría (0.088 y 0.087) — MERT las confunde con `incrementable-decreciente`, no entre sí.
