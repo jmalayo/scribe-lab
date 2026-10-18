@@ -178,7 +178,10 @@ def mcnemar_exact(only_a: int, only_b: int) -> float:
     if n == 0:
         return 1.0
 
-    tail = sum(comb(n, k) for k in range(min(only_a, only_b) + 1)) / 2 ** n
+    tail = sum(
+        comb(n, k)
+            for k in range(min(only_a, only_b) + 1)
+    ) / 2 ** n
 
     return round(min(1.0, 2 * tail), 3)
 
