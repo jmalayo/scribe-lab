@@ -21,22 +21,29 @@ from shared.eval.data import load_answers, load_questions
 from shared.eval.metrics import (
     bootstrap_ci,
     cohen_kappa,
+    is_chunk_correct,
     latency_summary,
     mcnemar_exact,
+    wilson_ci,
 )
 from shared.llm import build_llm
 from shared.pipeline import Pipeline, PipelineConfig, RetrievalResult
 from shared.settings import settings
 from shared.tracking import log_metrics, tracked_run
 
-EXP = "exp_1"
+EXP = "exp_2"
 MODEL = "llama3.1:8b-instruct-q4_K_M"
 REUSE_ANSWERS = True
-SUMMARIZE_MANUAL = True
+SUMMARIZE_MANUAL = False
 RESULTS_DIR = Path(__file__).resolve().parent / "results" / EXP
 
-EXP7_ANSWERS = REPO_ROOT / "experiments/evaluation/benchmark-models/results/exp_7/llama31_base/base_answers.csv"
-LABELS_ANSWERS = REPO_ROOT / "experiments/evaluation/generative/llama_3_1_8_B/labels_answers.csv"
+BASE_QUESTIONS = Path(settings.questions_path) / "questions_base.jsonl"
+TIPOS = ("simple", "comparativa_mismo_doc", "comparativa_entre_docs", "sin_respuesta")
+COMPARATIVAS = ("comparativa_mismo_doc", "comparativa_entre_docs")
+SIDES = ("pipeline", "agent")
+TOP_K = 10
+ALPHA = 0.05
+FALSE_ABSTENTION_MAX = 0.20
 
 CORRECTNESS_PROMPT, CORRECTNESS_SCHEMA = prompt_v3()
 
@@ -71,6 +78,14 @@ class ApiRetrievalPipeline(Pipeline):
         )
 
 
+def spans_found(chunks: list[dict], question: dict) -> int:
+
+    return sum(
+        any(is_chunk_correct(c, {**question, "gold_spans": [span]}) for c in chunks)
+            for span in question["gold_spans"]
+    )
+
+
 def run_pipeline(questions: list[dict]) -> pd.DataFrame:
 
     config = PipelineConfig.from_yaml(settings.pipeline_config_path)
@@ -87,6 +102,7 @@ def run_pipeline(questions: list[dict]) -> pd.DataFrame:
 
     for q in questions:
         result = pipeline.run(q["question"])
+        chunks = result.chunks[:TOP_K]
 
         rows.append({
             "id": q["id"],
@@ -96,6 +112,8 @@ def run_pipeline(questions: list[dict]) -> pd.DataFrame:
             "latency_ms": result.latencies_ms["total"],
             "retrieval_ms": result.latencies_ms["retrieval"],
             "llm_ms": result.latencies_ms["llm"],
+            "n_gold_spans": len(q["gold_spans"]),
+            "gold_spans_at_10": spans_found(chunks, q),
         })
 
     return pd.DataFrame(rows)
@@ -205,14 +223,47 @@ def judge(side: str, answers: pd.DataFrame, expected: dict[str, str]) -> list[di
     return rows
 
 
-def summarize(verdicts: pd.DataFrame, answers: pd.DataFrame | None, unanswerable: set[str], multi_span: set[str]) -> dict:
+def question_sets() -> tuple[list[dict], dict[str, set[str]]]:
 
-    answerable = verdicts[~verdicts["id"].isin(unanswerable)]
-    without = verdicts[verdicts["id"].isin(unanswerable)]
-    multi = answerable[answerable["id"].isin(multi_span)]
+    questions = load_questions()
 
+    base_ids = {
+        json.loads(line)["id"]
+            for line in BASE_QUESTIONS.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+    }
+
+    groups = {
+        tipo: {q["id"] for q in questions if q["tipo"] == tipo}
+            for tipo in TIPOS
+    }
+
+    comparativas = groups["comparativa_mismo_doc"] | groups["comparativa_entre_docs"]
+
+    groups |= {
+        "comparativas_nuevas": comparativas - base_ids,
+        "comparativas_base": comparativas & base_ids,
+        "con_respuesta": {q["id"] for q in questions} - groups["sin_respuesta"],
+    }
+
+    return questions, groups
+
+
+def rate(verdicts: pd.DataFrame, ids: set[str], labels: tuple[str, ...]) -> tuple[int, int]:
+
+    subset = verdicts[verdicts["id"].isin(ids)]
+
+    return int(subset["veredicto"].isin(labels).sum()), len(subset)
+
+
+def summarize(verdicts: pd.DataFrame, answers: pd.DataFrame | None, groups: dict[str, set[str]]) -> dict:
+
+    answerable = verdicts[verdicts["id"].isin(groups["con_respuesta"])]
     correct = (answerable["veredicto"] == "correcta").astype(float).tolist()
     low, high = bootstrap_ci(correct)
+
+    false_abst, n_simple = rate(verdicts, groups["simple"], ("abstencion",))
+    right_abst, n_unanswerable = rate(verdicts, groups["sin_respuesta"], ("abstencion",))
 
     metrics = {
         "n_answerable": len(answerable),
@@ -222,18 +273,35 @@ def summarize(verdicts: pd.DataFrame, answers: pd.DataFrame | None, unanswerable
         "correct_or_partial_rate": round(answerable["veredicto"].isin(["correcta", "parcial"]).mean(), 3),
         "incorrect_rate": round((answerable["veredicto"] == "incorrecta").mean(), 3),
         "false_abstentions": int((answerable["veredicto"] == "abstencion").sum()),
-        "correct_abstentions": int((without["veredicto"] == "abstencion").sum()),
-        "n_unanswerable": len(without),
-        "multi_span_correct_rate": round((multi["veredicto"] == "correcta").mean(), 3),
-        "n_multi_span": len(multi),
+        "false_abstentions_simple": false_abst,
+        "false_abstention_rate_simple": round(false_abst / n_simple, 3),
+        "false_abstention_ci_high_simple": wilson_ci(false_abst, n_simple)[1],
+        "correct_abstentions": right_abst,
+        "correct_abstention_rate": round(right_abst / n_unanswerable, 3),
+        "correct_abstention_ci_low": wilson_ci(right_abst, n_unanswerable)[0],
         "judge_invalid": int((~verdicts["valido"]).sum()),
     }
+
+    for group in (*TIPOS[:3], "comparativas_nuevas", "comparativas_base"):
+        hits, n = rate(verdicts, groups[group], ("correcta",))
+        metrics |= {f"correct_rate_{group}": round(hits / n, 3), f"n_{group}": n}
 
     if answers is not None:
         metrics |= {
             **latency_summary(answers["latency_ms"].astype(float).tolist()),
             "tokens_mean": round(answers["tokens"].astype(float).mean(), 1),
         }
+
+    if answers is not None and "gold_spans_at_10" in answers:
+        retrieved = answers.set_index("id")
+
+        for tipo in TIPOS[:3]:
+            subset = retrieved.loc[sorted(groups[tipo])]
+            found = subset["gold_spans_at_10"].astype(int)
+            metrics |= {
+                f"hit_at_10_{tipo}": round((found > 0).mean(), 3),
+                f"all_spans_at_10_{tipo}": round((found == subset["n_gold_spans"].astype(int)).mean(), 3),
+            }
 
     if answers is not None and "outcome" in answers:
         metrics |= {
@@ -247,9 +315,9 @@ def summarize(verdicts: pd.DataFrame, answers: pd.DataFrame | None, unanswerable
     return metrics
 
 
-def paired(verdicts: pd.DataFrame, side_a: str, side_b: str, unanswerable: set[str], hits: tuple[str, ...]) -> dict:
+def paired(verdicts: pd.DataFrame, side_a: str, side_b: str, ids: set[str], hits: tuple[str, ...]) -> dict:
 
-    wide = verdicts.pivot(index="id", columns="lado", values="veredicto").drop(index=list(unanswerable))
+    wide = verdicts.pivot(index="id", columns="lado", values="veredicto").loc[sorted(ids)]
     a = wide[side_a].isin(hits)
     b = wide[side_b].isin(hits)
 
@@ -257,37 +325,41 @@ def paired(verdicts: pd.DataFrame, side_a: str, side_b: str, unanswerable: set[s
     only_b = int((b & ~a).sum())
 
     return {
+        "n": len(wide),
         f"only_{side_a}": only_a,
         f"only_{side_b}": only_b,
         "mcnemar_p": mcnemar_exact(only_a, only_b),
     }
 
 
-def question_sets() -> tuple[list[dict], set[str], set[str]]:
+def decision(verdicts: pd.DataFrame, summary: dict, groups: dict[str, set[str]]) -> dict:
 
-    questions = load_questions()
-    multi_span = {q["id"] for q in questions if len(q.get("gold_spans") or []) > 1}
+    new, base = groups["comparativas_nuevas"], groups["comparativas_base"]
+    p1 = paired(verdicts, "pipeline", "agent", new, ("correcta",))
 
-    labels = pd.read_csv(LABELS_ANSWERS, sep=";", keep_default_na=False)
-    unanswerable = set(labels.loc[labels["contexto_suficiente"] == "n.a.", "id"])
-
-    return questions, unanswerable, multi_span
+    return {
+        "p1_comparativas_nuevas": p1,
+        "p1_comparativas_nuevas_con_parcial": paired(verdicts, "pipeline", "agent", new, ("correcta", "parcial")),
+        "p1_comparativas_base": paired(verdicts, "pipeline", "agent", base, ("correcta",)),
+        "p1_pasa": p1["mcnemar_p"] < ALPHA and p1["only_agent"] > p1["only_pipeline"],
+        "p2_pasa": summary["agent"]["false_abstention_ci_high_simple"] < FALSE_ABSTENTION_MAX,
+        "p3_pasa": summary["agent"]["correct_abstentions"] >= summary["pipeline"]["correct_abstentions"],
+    }
 
 
 def manual_summary(out_dir: Path = RESULTS_DIR) -> dict:
 
-    _, unanswerable, multi_span = question_sets()
+    _, groups = question_sets()
 
     manual = load_answers(out_dir / "verdicts_manual.csv")
     human = manual.assign(veredicto=manual["veredicto_manual"], valido=True)
 
     summary = {
-        side: summarize(human[human["lado"] == side], None, unanswerable, multi_span)
-        for side in ("pipeline", "agent")
+        side: summarize(human[human["lado"] == side], None, groups)
+            for side in SIDES
     }
 
-    summary["pipeline_vs_agent"] = paired(human, "pipeline", "agent", unanswerable, ("correcta",))
-    summary["pipeline_vs_agent_with_partial"] = paired(human, "pipeline", "agent", unanswerable, ("correcta", "parcial"))
+    summary["decision"] = decision(human, summary, groups)
 
     agree = (manual["veredicto"] == manual["veredicto_manual"]).astype(float).tolist()
 
@@ -308,13 +380,12 @@ def main(out_dir: Path = RESULTS_DIR) -> dict:
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    questions, unanswerable, multi_span = question_sets()
+    questions, groups = question_sets()
     expected = {q["id"]: q["expected_answer"] for q in questions}
 
     sides = {
-        "pipeline": answers_for("pipeline", questions, out_dir),
-        "agent": answers_for("agent", questions, out_dir),
-        "exp7": load_answers(EXP7_ANSWERS),
+        side: answers_for(side, questions, out_dir)
+            for side in SIDES
     }
 
     verdicts_path = out_dir / "verdicts.csv"
@@ -324,37 +395,32 @@ def main(out_dir: Path = RESULTS_DIR) -> dict:
     else:
         verdicts = pd.DataFrame([
             row
-            for side, answers in sides.items()
-            for row in judge(side, answers, expected)
+                for side, answers in sides.items()
+                    for row in judge(side, answers, expected)
         ])
         verdicts.to_csv(verdicts_path, sep=";", index=False)
 
     summary = {}
 
     for side, answers in sides.items():
-        metrics = summarize(
-            verdicts[verdicts["lado"] == side],
-            answers if side != "exp7" else None,
-            unanswerable,
-            multi_span,
-        )
+        metrics = summarize(verdicts[verdicts["lado"] == side], answers, groups)
 
         with tracked_run(
             "agent",
-            side,
+            f"{EXP}-{side}",
             {
                 "exp": EXP,
                 "model": MODEL,
                 "judge": settings.llm_model_judge,
-                "retrieval": "exp_7 (hybrid_rrf + ms-marco)" if side == "exp7" else "/v1/retrieve dense top-10",
+                "retrieval": f"/v1/retrieve dense top-{TOP_K}",
+                "questions": len(questions),
             },
         ):
             log_metrics(metrics)
 
         summary[side] = metrics
 
-    summary["pipeline_vs_agent"] = paired(verdicts, "pipeline", "agent", unanswerable, ("correcta",))
-    summary["exp7_vs_pipeline"] = paired(verdicts, "exp7", "pipeline", unanswerable, ("correcta",))
+    summary["decision"] = decision(verdicts, summary, groups)
 
     print(json.dumps(summary, indent=2, ensure_ascii=False))
 
