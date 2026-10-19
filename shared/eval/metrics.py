@@ -169,6 +169,20 @@ def bootstrap_ci(values: list[float], n_resamples: int = 1000, ci: float = 0.95,
 
     return (round(means[lo_idx], 4), round(means[hi_idx], 4))
 
+def wilson_ci(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+
+    from math import sqrt
+
+    if n == 0:
+        return (0.0, 0.0)
+
+    p = successes / n
+    denominator = 1 + z**2 / n
+    center = (p + z**2 / (2 * n)) / denominator
+    half = z * sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / denominator
+
+    return (round(max(0.0, center - half), 4), round(min(1.0, center + half), 4))
+
 def mcnemar_exact(only_a: int, only_b: int) -> float:
 
     from math import comb
