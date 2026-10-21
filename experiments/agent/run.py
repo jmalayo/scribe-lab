@@ -34,7 +34,7 @@ from shared.tracking import log_metrics, tracked_run
 EXP = "exp_2"
 MODEL = "llama3.1:8b-instruct-q4_K_M"
 REUSE_ANSWERS = True
-SUMMARIZE_MANUAL = False
+SUMMARIZE_MANUAL = True
 RESULTS_DIR = Path(__file__).resolve().parent / "results" / EXP
 
 BASE_QUESTIONS = Path(settings.questions_path) / "questions_base.jsonl"
