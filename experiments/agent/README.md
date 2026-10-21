@@ -1,13 +1,13 @@
 # Experimento N.º 5 — Agente con tool calling contra pipeline fijo
 
-**Estado vigente: el servicio sigue con el pipeline.** Con el mismo modelo y la misma recuperación, el agente no responde mejor según la etiqueta humana, usa el doble de tokens y tarda más. Se abstiene más que el pipeline, en los dos sentidos: acierta 3 de las 4 preguntas sin respuesta, pero también se abstiene en 3 que la tienen. Sobre las 30 preguntas con respuesta y las 4 sin respuesta, `llama3.1:8b` en los dos lados:
+**Estado vigente: el servicio sigue con el pipeline.** Con el mismo modelo y la misma recuperación, el agente no responde mejor según la etiqueta humana, tampoco en las preguntas comparativas, que son donde podía ganar. Usa el doble de tokens y tarda casi el doble. Sobre las 115 preguntas con respuesta y las 20 sin respuesta del set de 135 (`exp_2`), `llama3.1:8b` en los dos lados:
 
-| Lado | Correctas (IC95) | Correctas + parciales | Incorrectas | Multi-span correctas | Abst. correctas | Abst. falsas | p50 | Tokens |
+| Lado | Correctas (IC95) | Correctas + parciales | Incorrectas | Comparativas nuevas correctas | Abst. correctas | Abst. falsas | p50 | Tokens |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| pipeline | 6/30 · 0.200 (0.067–0.367) | 0.633 | 0.367 | 2/14 | 2/4 | 0 | 1.5 s | 994 |
-| agente | 8/30 · 0.267 (0.133–0.433) | 0.567 | 0.333 | 5/14 | 3/4 | 3 | 2.8 s | 2018 |
+| pipeline | 41/115 · 0.357 (0.270–0.444) | 0.643 | 0.287 | 19/64 | 17/20 | 8 | 1.3 s | 969 |
+| agente | 34/115 · 0.296 (0.217–0.383) | 0.591 | 0.348 | 16/64 | 17/20 | 7 | 2.4 s | 1995 |
 
-Etiqueta humana por respuesta en [verdicts_manual.csv](./results/exp_1/verdicts_manual.csv) (columna `veredicto_manual`), resumida por [run.py](./run.py) con `SUMMARIZE_MANUAL = True`. Latencia y tokens del experimento MLflow `rag-system-eval-agent`, corridas del 2026-10-26. La integración del servidor MCP con el agente se verificó por separado en [MCP_INTEGRATION.md](./MCP_INTEGRATION.md).
+Etiqueta humana por respuesta en [verdicts_manual.csv](./results/exp_2/verdicts_manual.csv) (columna `veredicto_manual`), resumida por [run.py](./run.py) con `SUMMARIZE_MANUAL = True`. Latencia y tokens de las corridas `exp_2-pipeline` y `exp_2-agent` del experimento MLflow `rag-system-eval-agent`. La integración del servidor MCP con el agente se verificó por separado en [MCP_INTEGRATION.md](./MCP_INTEGRATION.md).
 
 ## Qué se usa
 
@@ -16,32 +16,41 @@ Etiqueta humana por respuesta en [verdicts_manual.csv](./results/exp_1/verdicts_
 | Modelo que responde | `llama3.1:8b-instruct-q4_K_M`, `temperature=0`, en los dos lados | `MODEL` en [run.py](./run.py) |
 | Pipeline | `Pipeline` de `shared/pipeline.py` con `app/config/pipeline.yaml` (prompt `v1`, `max_tokens=500`), con el modelo reemplazado | `ApiRetrievalPipeline` en [run.py](./run.py) |
 | Agente | Grafo de `agent/`: `buscar_documentos` por MCP (stdio) y `no_hay_respuesta` local, hasta 6 pasos o 24 000 tokens | `agent/graph.py`, `agent/tools.py` |
-| Recuperación | `POST /v1/retrieve` del servicio (`dense` top-10, con las tablas de cada chunk) para los dos lados | `docker-compose-prod.yml` |
-| Veredicto | Etiqueta humana: `correcta`, `parcial`, `incorrecta` o `abstencion`, contra `expected_answer` | [verdicts_manual.csv](./results/exp_1/verdicts_manual.csv) |
+| Recuperación | `POST /v1/retrieve` del servicio (`dense` top-10, con las tablas de cada chunk) para los dos lados, sobre los 5 documentos de `corpus_demo/music-tagger/` (414 chunks) | `docker-compose-prod.yml` |
+| Preguntas | 135, un archivo por tipo: 37 `simple`, 55 `comparativa_mismo_doc`, 23 `comparativa_entre_docs` y 20 `sin_respuesta` | `shared/eval/questions/` |
+| Veredicto | Etiqueta humana: `correcta`, `parcial`, `incorrecta` o `abstencion`, contra `expected_answer` | [verdicts_manual.csv](./results/exp_2/verdicts_manual.csv) |
 | Juez LLM | `qwen3:8b`, `think=False`, salida con esquema JSON y las mismas cuatro clases, con motivo | `prompt_v3()` en [prompts.py](../evaluation/prompts.py) |
-| Referencia | Las 34 respuestas de `exp_7` (mismo modelo, `hybrid_rrf` + pool de 20 + `ms-marco`), solo con juez LLM | [experimento N.º 4](../evaluation/README.md) |
-| Preguntas sin respuesta | `q004`, `q005`, `q021`, `q032` (`contexto_suficiente = n.a.`) | `labels_answers.csv` del [experimento N.º 4](../evaluation/README.md) |
-| Multi-span | Las 14 preguntas con respuesta y más de un gold span | `shared/eval/questions.jsonl` |
+| Regla de decisión | P1: McNemar exacto p<0.05 a favor del agente en las 64 comparativas nuevas. P2: cota superior de Wilson de las abstenciones falsas del agente en las simples por debajo de 0.20. P3: el agente se abstiene bien al menos tanto como el pipeline. El agente se adopta solo si pasan las tres | `decision()` en [run.py](./run.py) |
 
 Los dos lados reciben los mismos chunks del mismo endpoint, así que la diferencia medida es la del agente: decide la consulta, puede volver a buscar y puede abstenerse con una herramienta.
 
 ## Dónde estamos
 
-- **Corrección sin diferencia significativa.** El agente acierta 6 preguntas que el pipeline no, y el pipeline 4 que el agente no (McNemar exacto p=0.754). Contando parciales como acierto, 6 contra 8 (p=0.791). En las 14 multi-span, el agente acierta 5 y el pipeline 2 (`q007`, `q009`, `q013` y `q015` solo el agente, una solo el pipeline; p=0.375).
-- **El agente se comportó casi como el pipeline.** En las 34 preguntas hizo una búsqueda y dos pasos, y nunca llamó a `no_hay_respuesta`: las 6 abstenciones fueron en texto. Su consulta reescrita recupera casi lo mismo que la pregunta original ([MCP_INTEGRATION.md](./MCP_INTEGRATION.md)).
-- **Preguntas sin respuesta.** El pipeline inventa cifras en `q004` y `q005` y se abstiene en `q021` y `q032`. El agente se abstiene en `q004`, `q005` y `q021`, y responde en `q032`. `q021` cuenta como sin respuesta: su `expected_answer` describe un plan que no está en el corpus indexado.
-- **Abstenciones falsas del agente** en `q001`, `q012` y `q027`, que tienen respuesta en el corpus.
-- **Costo.** El agente usa 2018 tokens por pregunta contra 994 y tarda 2.8 s de p50 contra 1.5 s. La herramienta tarda 74 ms de p50, y la recuperación directa del pipeline, 64 ms. La primera pregunta de cada lado tarda 23–24 s por la carga del modelo. `q029` tardó 121.8 s en el agente (10.1 s en la herramienta), un caso aislado sin causa confirmada; por eso el p95 (13.5 s) no se usa para comparar.
-- **El juez `qwen3:8b` coincide con la etiqueta humana en 46 de 68 respuestas** (0.676, IC95 0.574–0.779; kappa de Cohen 0.549). Nunca confunde `correcta` con `incorrecta`, pero es generoso: marca `correcta` 8 que son `parcial` y `parcial` 7 que son `incorrecta`, y clasifica mal 4 de las 8 abstenciones. Las etiquetas se hicieron con el veredicto del juez a la vista, así que el acuerdo puede estar sobreestimado.
+- **Por qué 135 preguntas.** Con las 34 de `exp_1` el benchmark no podía detectar la diferencia que mostraba: en las 14 multi-span, el agente acertó 4 que el pipeline no y el pipeline 1 que el agente no (`p_d = 5/14` de discordancia, `Δ = 3/14` a favor del agente, p=0.375). Con esos valores, el McNemar exacto necesita 64 comparativas para detectar esa `Δ` con potencia 0.80 y α=0.05 (83 para 0.90). Las 14 comparativas de `exp_1` no se cuentan para P1, porque de ellas salió la `Δ` que se quiere confirmar; se agregaron 64 nuevas (44 del mismo documento y 20 entre documentos). Las 37 simples alcanzan para P2: con 2 abstenciones falsas o menos, la cota superior de Wilson (IC95) queda por debajo de 0.20, y con 3 ya la supera. Las 20 sin respuesta solo dan una estimación gruesa de la abstención correcta: con 17 de 20, el IC95 de Wilson va de 0.640 a 0.948.
+- **P1 no pasa: en las comparativas nuevas no hay diferencia, y la que hay favorece al pipeline.** El pipeline acierta 5 que el agente no, y el agente 2 que el pipeline no (McNemar exacto p=0.453). Contando parciales como acierto, 10 contra 6 (p=0.454). En las 14 comparativas de `exp_1`, 1 contra 2 (p=1.0). La `Δ` a favor del agente de `exp_1` no se repite.
+- **P2 y P3 pasan, pero no alcanzan para adoptar el agente.** Los dos lados se abstienen en falso en 2 de las 37 simples (cota de Wilson 0.177) y se abstienen bien en 17 de las 20 sin respuesta. Los dos responden en `q118`, `q120` y `q131`. Abstenciones falsas en preguntas con respuesta: el pipeline en `q004`, `q012`, `q019`, `q068`, `q079`, `q081`, `q099` y `q116`; el agente en `q004`, `q012`, `q047`, `q078`, `q079`, `q080` y `q110`.
+- **Por tipo de pregunta**, correctas según la etiqueta humana y `recall@10` de la recuperación (al menos un gold span entre los 10 chunks / todos los gold spans):
+
+  | Tipo | Pipeline | Agente | Al menos un span | Todos los spans |
+  | --- | --- | --- | --- | --- |
+  | `simple` (37) | 20 | 15 | 0.784 | 0.730 |
+  | `comparativa_mismo_doc` (55) | 16 | 16 | 0.745 | 0.400 |
+  | `comparativa_entre_docs` (23) | 5 | 3 | 0.696 | 0.217 |
+
+  La recuperación trae todos los gold spans en 4 de cada 10 comparativas del mismo documento y en 1 de cada 5 entre documentos. Una sola búsqueda densa no junta las partes de una pregunta comparativa, y el agente no la compensa porque nunca vuelve a buscar.
+- **El agente sigue comportándose como el pipeline.** En 134 de las 135 preguntas hizo una búsqueda y dos pasos; en la restante respondió sin buscar. Nunca llamó a `no_hay_respuesta`: todas sus abstenciones fueron en texto.
+- **Costo.** El agente usa 1995 tokens por pregunta contra 969 y tarda 2.4 s de p50 contra 1.3 s (p95 4.3 s contra 2.0 s). La herramienta tarda 55 ms de p50. La primera pregunta del agente (`q001`) tardó 30.6 s por la carga del modelo.
+- **El juez `qwen3:8b` coincide con la etiqueta humana en 197 de 270 respuestas** (0.730, IC95 0.674–0.778; kappa de Cohen 0.635). Igual que en `exp_1`, casi nunca confunde `correcta` con `incorrecta` y es generoso: marca `parcial` 25 que son `incorrecta` y `correcta` 9 que son `parcial`. Clasifica mal 16 de las 49 abstenciones, 11 de ellas como `correcta`. Las etiquetas se hicieron con el veredicto del juez a la vista, así que el acuerdo puede estar sobreestimado.
 
   | Humano \ juez | correcta | parcial | incorrecta | abstencion |
   | --- | --- | --- | --- | --- |
-  | correcta | 11 | 3 | 0 | 0 |
-  | parcial | 8 | 14 | 0 | 0 |
-  | incorrecta | 0 | 7 | 17 | 0 |
-  | abstencion | 2 | 0 | 2 | 4 |
+  | correcta | 59 | 15 | 1 | 0 |
+  | parcial | 9 | 52 | 6 | 0 |
+  | incorrecta | 0 | 25 | 53 | 1 |
+  | abstencion | 11 | 2 | 3 | 33 |
 
-- **Con el juez en lugar de la etiqueta humana** el resultado es el mismo: 10/30 correctas cada lado (McNemar p=1.0). Las 34 respuestas de `exp_7` solo tienen veredicto del juez: 14/30 correctas contra 10/30 del pipeline vigente (p=0.344). Veredictos y motivos en [verdicts.csv](./results/exp_1/verdicts.csv).
+- **Antecedente: `exp_1`, con 34 preguntas sobre 2 documentos.** El agente acertó 8/30 y el pipeline 6/30 (McNemar p=0.754), con el juez 10/30 cada uno. Etiqueta humana en [results/exp_1/verdicts_manual.csv](./results/exp_1/verdicts_manual.csv) y veredictos del juez en [results/exp_1/verdicts.csv](./results/exp_1/verdicts.csv). Las preguntas y el corpus cambiaron desde entonces, así que sus números no se comparan con los de `exp_2`.
+- **El router por tipo de pregunta** (simples al pipeline, comparativas al agente) no se construye: dependía de que P1 favoreciera al agente.
 - **El benchmark no evalúa el modelo por defecto del agente.** `agent/` usa `qwen3:8b` (`llm_model_agent` en `shared/settings.py`); acá se usó `llama3.1:8b` en los dos lados para que la única diferencia sea el agente. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **Comparar `qwen3:8b` con `deepseek-r1:7b` como jueces** contra la misma etiqueta humana. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 
@@ -53,4 +62,4 @@ docker compose -f docker-compose-dev.yml up -d --no-deps mlflow-server
 python experiments/agent/run.py
 ```
 
-Con `SUMMARIZE_MANUAL = True` (valor actual) el script solo resume [verdicts_manual.csv](./results/exp_1/verdicts_manual.csv): métricas por lado con la etiqueta humana, comparación pareada y acuerdo del juez. Con `False` genera las respuestas, las juzga con `qwen3:8b` y registra los tres runs en MLflow. `EXP`, `MODEL` y `REUSE_ANSWERS` se configuran al inicio del script. Generar necesita `llama3.1:8b-instruct-q4_K_M` y `qwen3:8b` en el Ollama de `docker-compose-prod.yml`, y las respuestas de `exp_7` (`experiments/evaluation/benchmark-models/results/exp_7/`, que no se versionan). Las respuestas generadas se escriben en `results/<EXP>/answers_*.csv` y se reutilizan para volver a juzgar sin regenerar.
+Con `SUMMARIZE_MANUAL = True` (valor actual) el script solo resume [verdicts_manual.csv](./results/exp_2/verdicts_manual.csv): métricas por lado y por tipo con la etiqueta humana, la regla de decisión y el acuerdo del juez. Con `False` genera las respuestas, las juzga con `qwen3:8b`, registra los dos runs en MLflow y evalúa la regla de decisión con el juez. `EXP`, `MODEL` y `REUSE_ANSWERS` se configuran al inicio del script. Generar necesita `llama3.1:8b-instruct-q4_K_M` y `qwen3:8b` en el Ollama de `docker-compose-prod.yml`, con el índice de `corpus_demo/` al día (`app.reindex`). Las respuestas generadas se escriben en `results/<EXP>/answers_*.csv`, que no se versionan, y se reutilizan para volver a juzgar sin regenerar.
