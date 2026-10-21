@@ -24,6 +24,7 @@ Por cada config del barrido (3 tamaños × 3 overlaps), el corpus se trocea y se
 
 ## Dónde estamos
 
+- **Medido con el set anterior: 34 preguntas sobre los 2 documentos de entonces.** Desde el 2026-10-18 el set tiene 135 preguntas, un archivo por tipo en `shared/eval/questions/`, sobre los 5 documentos de `corpus_demo/music-tagger/`, y estos resultados no se recalcularon. El [experimento N.º 5](../agent/README.md) ya usa el set nuevo. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **`284/25%` es la config que leen los experimentos siguientes**, con `get_best_run("exp_chunking_dynamic_tables")` por `recall@10` y desempate por `mrr@10`: [hybrid search](../hybrid-search/README.md), [reranking](../reranking/README.md) y la generación de [evaluación](../evaluation/README.md).
 - **Ningún chunk de la config vigente se trunca antes del embedding**, y cada una de las 10 tablas del corpus queda adjunta a un solo chunk. Con chunks chicos (`128/32`) una tabla se adjunta dos veces ([ANALYSIS.md §3](./ANALYSIS.md)).
 - **`tagger-music-genesis.md` abre un bloque `---` que no cierra.** Por eso su encabezado (`## source`, `fetched_at`, `library`) se indexa como contenido. Corregirlo cambia la indexación y obliga a recalcular otra vez los tres experimentos de retrieval. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.

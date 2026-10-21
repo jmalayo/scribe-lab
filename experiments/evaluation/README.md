@@ -47,6 +47,7 @@ Por respuesta se etiqueta además la relevancia (`si`/`no`), si la abstención f
 
 ## Dónde estamos
 
+- **Medido con el set anterior: 34 preguntas sobre los 2 documentos de entonces.** Desde el 2026-10-18 el set tiene 135 preguntas, un archivo por tipo en `shared/eval/questions/`, sobre los 5 documentos de `corpus_demo/music-tagger/`, y estos resultados no se recalcularon. El [experimento N.º 5](../agent/README.md) ya usa el set nuevo. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **Llama 3.1 y Qwen3 no entran juntos en los 8 GB de VRAM.** Primero se generan todas las respuestas y después se juzgan.
 - **LettuceDetect con el umbral por defecto (0.5) marca 1 de las 14 respuestas no sustentadas**, sin falsas alarmas en las otras 20. Por oración marca 2 de 17 (`recall` 0.118, IC95 0–0.294), las dos de `q007`. El rango de su score explica por qué ([ANALYSIS.md §6](./ANALYSIS.md)):
 

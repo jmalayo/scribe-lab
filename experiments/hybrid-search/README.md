@@ -26,6 +26,7 @@ Con la colección ya indexada (o reusada si el `chunk_size`, el `overlap` y el c
 
 ## Dónde estamos
 
+- **Medido con el set anterior: 34 preguntas sobre los 2 documentos de entonces.** Desde el 2026-10-18 el set tiene 135 preguntas, un archivo por tipo en `shared/eval/questions/`, sobre los 5 documentos de `corpus_demo/music-tagger/`, y estos resultados no se recalcularon. El [experimento N.º 5](../agent/README.md) ya usa el set nuevo. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **`dense` reemplazó a `hybrid_rrf` como retriever base el 2026-10-09**, al recalcular con los gold spans de `q033` y `q034`. Se aplicó la regla fijada (`recall@10`, desempate por `mrr@10`) sin excepciones. El [reranking](../reranking/README.md) lo lee de MLflow con `get_best_run("hybrid-search")`, filtrado por la config de chunking vigente.
 - **Entre `dense` y `hybrid_rrf` no hay diferencia significativa.** Los dos aciertan 26 de 34 preguntas, pero no las mismas: `dense` acierta `q003` y `q018`, y `hybrid_rrf` acierta `q008` y `q022` (McNemar exacto 2/2, p=1.0). El desempate en `mrr@10` lo decide una sola pregunta: `q033`, en el puesto 1 con `dense` y en el 2 con `hybrid_rrf`. `hybrid_rrf` tiene mejor `recall@5` (0.706 contra 0.618).
 - **Frente a BM25 sola, `hybrid_rrf` es significativamente mejor (7/0, p=0.016), pero `dense` no llega a serlo (9/2, p=0.065).** El método adoptado no es el único con ventaja significativa sobre BM25. Pruebas anteriores en [ANALYSIS.md](./ANALYSIS.md).
