@@ -127,6 +127,24 @@ services:
       - HF_HUB_OFFLINE=${DETECTOR_OFFLINE:-0}
       - OMP_NUM_THREADS=4
 
+  postgres:
+    restart: unless-stopped
+    image: pgvector/pgvector:0.8.1-pg17
+    container_name: postgres
+    ports:
+      - "1015:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: scribe
+      POSTGRES_PASSWORD: scribe
+      POSTGRES_DB: scribe
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scribe -d scribe"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   mlflow-server:
     restart: unless-stopped
     image: ghcr.io/mlflow/mlflow:v3.15.2
@@ -148,3 +166,4 @@ volumes:
   ollama_data:
   mlflow_data:
   detector_models:
+  postgres_data:
