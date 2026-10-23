@@ -5,7 +5,15 @@ from alembic import command
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import IntegrityError
 
-TABLES = {"documentos", "chunks", "preguntas", "pregunta_documentos"}
+TABLES = {
+    "documentos",
+    "chunks",
+    "preguntas",
+    "pregunta_documentos",
+    "corridas_eval",
+    "resultados_pregunta",
+    "veredictos",
+}
 
 
 def tables(engine) -> set[str]:

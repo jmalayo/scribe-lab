@@ -1,9 +1,21 @@
+from datetime import UTC, datetime
+
+import pytest
 from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
-from sqlalchemy import func, select
+from sqlalchemy import func, insert, select
+from sqlalchemy.exc import IntegrityError
 
-from shared.db import documentos, metadata, preguntas, upsert
+from shared.db import (
+    corridas_eval,
+    documentos,
+    metadata,
+    preguntas,
+    resultados_pregunta,
+    upsert,
+    veredictos,
+)
 
 PREGUNTA = {
     "id": "q001",
@@ -54,3 +66,64 @@ def test_upsert_splits_large_loads_into_batches(db, monkeypatch):
 
     with engine.connect() as c:
         assert c.execute(select(func.count()).select_from(documentos)).scalar() == 5
+
+
+@pytest.fixture
+def resultado(db):
+
+    config, engine = db
+    command.upgrade(config, "head")
+
+    with engine.begin() as c:
+        upsert(c, preguntas, [PREGUNTA], ["id"])
+
+        corrida = c.execute(
+            insert(corridas_eval)
+                .values(
+                    experimento="exp_2",
+                    metodo="pipeline",
+                    config={"model": "m"},
+                    git_commit="abc",
+                    mlflow_run_id="r1",
+                    creada_en=datetime.now(UTC),
+                )
+                .returning(corridas_eval.c.id)
+        ).scalar()
+
+        c.execute(
+            insert(resultados_pregunta).values(
+                corrida_id=corrida,
+                pregunta_id="q001",
+                gold_hash="h1",
+                respuesta="r",
+                latencia_ms=1.0,
+                tokens=10,
+            )
+        )
+
+    return engine, corrida
+
+
+@pytest.mark.parametrize(
+    ("fuente", "veredicto", "pregunta"),
+    [
+        ("humano", "dudosa", "q001"),
+        ("lector", "correcta", "q001"),
+        ("humano", "correcta", "q999"),
+    ],
+    ids=["veredicto_desconocido", "fuente_desconocida", "sin_resultado"],
+)
+def test_verdicts_reject_unknown_labels_and_answers_without_a_result(resultado, fuente, veredicto, pregunta):
+
+    engine, corrida = resultado
+
+    with pytest.raises(IntegrityError), engine.begin() as c:
+        c.execute(
+            insert(veredictos).values(
+                corrida_id=corrida,
+                pregunta_id=pregunta,
+                fuente=fuente,
+                veredicto=veredicto,
+                motivo="m",
+            )
+        )
