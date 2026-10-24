@@ -2,16 +2,28 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.exc import OperationalError
 
 from shared.db import build_engine, corridas_eval, veredictos
 from shared.eval.data import load_answers
+from shared.eval.metrics import cohen_kappa
 
 AGENT_RESULTS = Path("experiments/agent/results/exp_2")
 
 
-def loaded_verdicts() -> Counter:
+@pytest.fixture
+def conn():
+
+    try:
+        with build_engine().connect() as c:
+            yield c
+
+    except OperationalError:
+        pytest.skip("Postgres de docker-compose-dev.yml no está levantado")
+
+
+def loaded_verdicts(conn) -> Counter:
 
     query = (
         select(
@@ -25,17 +37,12 @@ def loaded_verdicts() -> Counter:
             .group_by(corridas_eval.c.metodo, veredictos.c.fuente, veredictos.c.veredicto)
     )
 
-    try:
-        with build_engine().connect() as c:
-            rows = c.execute(query).all()
-
-    except OperationalError:
-        pytest.skip("Postgres de docker-compose-dev.yml no está levantado")
+    rows = conn.execute(query).all()
 
     return Counter({(lado, fuente, veredicto): n for lado, fuente, veredicto, n in rows})
 
 
-def test_loaded_verdicts_match_the_labels_file():
+def test_loaded_verdicts_match_the_labels_file(conn):
 
     labels = load_answers(AGENT_RESULTS / "verdicts_manual.csv")
 
@@ -45,4 +52,16 @@ def test_loaded_verdicts_match_the_labels_file():
                 for fuente, columna in (("juez", "veredicto"), ("humano", "veredicto_manual"))
     )
 
-    assert loaded_verdicts() == expected
+    assert loaded_verdicts(conn) == expected
+
+
+def test_kappa_view_matches_the_labels_file(conn):
+
+    labels = load_answers(AGENT_RESULTS / "verdicts_manual.csv")
+    expected = cohen_kappa(labels["veredicto_manual"].tolist(), labels["veredicto"].tolist())
+
+    kappa = conn.execute(
+        text("SELECT kappa FROM v_acuerdo_juez_humano WHERE experimento = 'exp_2' AND metodo = 'todos'")
+    ).scalar()
+
+    assert float(kappa) == pytest.approx(expected, abs=1e-3)
