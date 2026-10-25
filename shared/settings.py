@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     embedding_revision: str | None = None
 
     cross_encoder_model: str = "BAAI/bge-reranker-v2-m3"
+    reranker_mode: str = "local"
+    reranker_url: str = "http://127.0.0.1:1016"
 
     detector_url: str = "http://127.0.0.1:1011"
     nli_url: str = "http://127.0.0.1:1012"
