@@ -36,8 +36,10 @@ OUT_DIR = Path(__file__).resolve().parent
 
 ANSWER_PROMPT, GROUNDEDNESS_PROMPT, RELEVANCE_PROMPT = prompt_v1()
 
+RERANKING_STAGE = "reranking-135q"
+
 USE_RERANKER = get_best_run(
-    "reranking",
+    RERANKING_STAGE,
     recall_at_k="recall_at_10",
     tiebreak="mrr_at_10",
     filter_string=(

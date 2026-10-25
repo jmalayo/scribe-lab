@@ -30,8 +30,9 @@ from shared.tracking import log_metrics, tracked_run
 OVERLAP_FRACS = [0.0, 0.10, 0.25]
 SAFETY_MARGIN = 0.85
 K_MAX = 10
-EXP_NAME="exp_chunking_dynamic_tables"
-COLLECTION = qualified_collection_name(EXP_NAME)
+EXP_NAME = "exp_chunking_dynamic_tables_135q"
+COLLECTION = qualified_collection_name("exp_chunking_dynamic_tables")
+BEST_CONFIG_FILE = "best_config_135q.json"
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +191,7 @@ def main():
     rows.sort(key=lambda r: (r["recall@10"], r["mrr@10"]), reverse=True)
     best = rows[0]
 
-    (OUT_DIR / "results" / "best_config.json").write_text(
+    (OUT_DIR / "results" / BEST_CONFIG_FILE).write_text(
         json.dumps(
             {
                 "chunk_size": best["chunk_size"], 
@@ -201,7 +202,7 @@ def main():
     )
 
     print(f"\nMejor config: chunk_size={best['chunk_size']} overlap={best['overlap_frac']:.0%} "
-          f"(recall@10={best['recall@10']:.3f}, mrr@10={best['mrr@10']:.3f}) -> guardado en results/best_config.json")
+          f"(recall@10={best['recall@10']:.3f}, mrr@10={best['mrr@10']:.3f}) -> guardado en results/{BEST_CONFIG_FILE}")
 
 if __name__ == "__main__":
     main()
