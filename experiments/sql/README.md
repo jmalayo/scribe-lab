@@ -5,7 +5,7 @@
 | Tabla | Filas | Origen |
 | --- | --- | --- |
 | `documentos` | 5 | `corpus_demo/music-tagger/`, colección `propia`, con el `sha256` del texto |
-| `chunks` | 414 | El mismo chunking que el indexador (`284/71`), con el ID del punto en Qdrant y `n_tokens` (2–127) |
+| `chunks` | 400 | El mismo chunking que el indexador (`293/73` desde el 2026-10-25), con el ID del punto en Qdrant y `n_tokens` (hasta 127) |
 | `preguntas` | 135 | `shared/eval/questions/`, con su tipo y el hash de sus gold spans |
 | `pregunta_documentos` | 137 | `source_doc` de cada pregunta con respuesta: 93 citan un documento y 22 citan dos |
 | `corridas_eval` | 2 | Las corridas `exp_2-pipeline` y `exp_2-agent` del experimento MLflow `rag-system-eval-agent`, con sus parámetros, commit y hora de inicio |
@@ -40,15 +40,15 @@ Sobre esas tablas, seis vistas responden una pregunta cada una con un patrón de
 
 ## Dónde estamos
 
-- **Los chunks cargados son los que sirve la API.** Los 414 IDs de `chunks` coinciden con los 414 puntos de la colección `corpus_demo__c99b624061de`, la que está detrás del alias `corpus_demo` en el Qdrant de `docker-compose-prod.yml` (comparación de conjuntos, 2026-10-22).
+- **Los chunks cargados son los que sirve la API.** Los 400 IDs de `chunks` coinciden con los 400 puntos de la colección `corpus_demo__c8f560b11ab3`, la que está detrás del alias `corpus_demo` en el Qdrant de `docker-compose-prod.yml` después de reindexar con `293/73` (comparación de conjuntos, 2026-10-25). Con `284/71` eran 414, también idénticos (2026-10-22).
 - **`chunks.texto` guarda el texto embebido, sin las tablas.** Las tablas viajan en el payload de Qdrant; `n_tokens` se cuenta con el tokenizer del modelo de embeddings sobre ese texto.
 - **Las preguntas sin respuesta no tienen documento.** Su `source_doc` es `no encontrado en el corpus`, así que no generan filas en `pregunta_documentos`. `q003` es `comparativa_entre_docs` y cita un solo documento.
-- **Si el corpus cambia, la carga no borra los chunks que desaparecieron.** Con el corpus fijo no pasa; hacerlo bien exige la misma lógica de diferencias que el indexador. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
+- **La carga reemplaza los chunks de los documentos cargados.** Borra los de esos documentos y vuelve a insertar los del chunking vigente, así que un cambio de configuración o de corpus no deja chunks viejos. Funciona porque ninguna tabla apunta todavía a `chunks`; cuando `consulta_chunks` los referencie, la carga tendrá que borrar solo los que desaparecieron.
 - **Los números del [experimento N.º 5](../agent/README.md) salen igual en SQL.** Con la etiqueta humana, 41 correctas del pipeline y 34 del agente sobre las 115 con respuesta, 17 de 20 abstenciones correctas por lado, 5 comparativas nuevas que acierta solo el pipeline contra 2 que acierta solo el agente, y 197 de 270 veredictos del juez iguales al humano. Tokens por pregunta: 969.2 y 1995.3.
 - **Las respuestas no se versionan.** `answers_*.csv` está fuera del repo, como en `exp_1`, así que la carga de `resultados_pregunta` solo se reproduce en la máquina que generó `exp_2`.
 - **El agente no tiene gold spans por pregunta.** Recupera con su propia consulta y `run.py` no la evalúa contra los gold spans, así que `gold_spans_at_10` queda vacío en sus 135 filas.
 - **Los experimentos 1 a 4 no se cargan.** Sus preguntas son las 34 del set anterior, editadas después, y sus `gold_hash` no coinciden con los de `preguntas`. Mezclarlos daría resultados que parecen comparables y no lo son. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
-- **Un chunk supera el largo que admite el embedder.** El chunk 15 de `tagger-music-genesis.md` tiene 127 tokens de texto, 129 con los dos especiales, y el embedder corta en 128 (`max_input_length` de `/info`), así que su último token no se embebe. `validate_chunk` no lo recorta porque el tokenizer de Python admite hasta 512. La vista cuenta el límite como `n_tokens + 2 > 128`; el conteo de TEI (`/tokenize`) da 129 para ese chunk. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
+- **Un chunk supera el largo que admite el embedder.** Con `284/71`, el chunk 15 de `tagger-music-genesis.md` tenía 127 tokens de texto, 129 con los dos especiales, y el embedder corta en 128 (`max_input_length` de `/info`), así que su último token no se embebe. `validate_chunk` no lo recorta porque el tokenizer de Python admite hasta 512. La vista cuenta el límite como `n_tokens + 2 > 128`; el conteo de TEI (`/tokenize`) da 129 para ese chunk. Con `293/73` la vista sigue marcando un chunk de ese documento. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **`v_peores_preguntas` empata mucho con dos métodos.** Los puntos de fallo van de 0 a 2 por fuente, así que el puesto 1 reúne todas las preguntas que fallan en los dos lados. Separa mejor cuando haya más corridas por experimento.
 - **Siguiente:** las tablas del servicio (`api_keys`, `consultas`), con la API escribiendo cada consulta.
 

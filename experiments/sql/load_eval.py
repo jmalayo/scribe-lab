@@ -5,7 +5,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
@@ -88,6 +88,8 @@ def load_corpus_and_questions(conn, questions: list[dict]) -> dict:
             select(documentos.c.nombre, documentos.c.id).where(documentos.c.coleccion == COLECCION)
         ).all()
     )
+
+    conn.execute(delete(chunks).where(chunks.c.documento_id.in_(doc_ids.values())))
 
     counts["chunks"] = upsert(
         conn,
