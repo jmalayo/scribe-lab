@@ -8,7 +8,6 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from experiments.evaluation.run import USE_RERANKER  # noqa: E402
 from experiments.reranking.run import (  # noqa: E402
     BEST_CHUNKING,
     BEST_METHOD,
@@ -20,6 +19,7 @@ from shared.pipeline import PipelineConfig  # noqa: E402
 OUT_PATH = REPO_ROOT / "app" / "config" / "pipeline.yaml"
 COLLECTION_ALIAS = "corpus_demo"
 CORPUS_DIR = "corpus_demo"
+RERANKER = False
 
 
 def git_short_sha() -> str:
@@ -41,7 +41,7 @@ def main():
         "chunk_size": BEST_CHUNKING["chunk_size"],
         "chunk_overlap": BEST_CHUNKING["chunk_overlap"],
         "method": BEST_METHOD,
-        "reranker": USE_RERANKER,
+        "reranker": RERANKER,
         "pool_size": POOL_SIZE,
         "top_k": TOP_K,
     }

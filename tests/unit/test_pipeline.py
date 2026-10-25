@@ -175,8 +175,8 @@ def test_repo_pipeline_yaml_matches_the_adopted_configuration():
 
     config = PipelineConfig.from_yaml(REPO_ROOT / "app" / "config" / "pipeline.yaml")
 
-    assert (config.chunk_size, config.chunk_overlap) == (284, 71)
-    assert config.method == "dense"
+    assert (config.chunk_size, config.chunk_overlap) == (293, 73)
+    assert config.method == "hybrid_rrf"
     assert config.reranker is False
     assert config.top_k == 10
     assert config.abstention.enabled is False
