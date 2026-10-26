@@ -2,7 +2,7 @@
 
 Recorrido completo del [experimento de reranking](./README.md), con lo que se descartó en cada paso y por qué. Los análisis con números que respaldan las decisiones están en [ANALYSIS.md](./ANALYSIS.md).
 
-Todas las fases comparan las mismas dos variantes sobre el set de 34 preguntas con gold spans: el pool de candidatos del retriever base tal cual (**baseline**: `hybrid_rrf` en las fases 1 a 4, `dense` en la 5) y ese mismo pool reordenado por un cross-encoder (**reranked**).
+Todas las fases comparan las mismas dos variantes sobre el set de preguntas con gold spans (34 en las fases 1 a 5, 135 en la 6): el pool de candidatos del retriever base tal cual (**baseline**: `hybrid_rrf` en las fases 1 a 4 y 6, `dense` en la 5) y ese mismo pool reordenado por un cross-encoder (**reranked**).
 
 
 | Fase  | Chunking  | Chunks finales | Cross-encoder            | Métrica de decisión | Estado                                     |
@@ -11,7 +11,8 @@ Todas las fases comparan las mismas dos variantes sobre el set de 34 preguntas c
 | 2     | `284/25%` | 5              | `ms-marco-MiniLM-L-6-v2` | `recall@5`          | Reemplazada por el paso a top-10           |
 | 3     | `284/25%` | 10             | `ms-marco-MiniLM-L-6-v2` | `recall@10`         | Reemplazada por el cambio de cross-encoder |
 | 4     | `284/25%` | 10             | `bge-reranker-v2-m3`     | `recall@10`         | Reemplazada por el cambio de retriever base |
-| **5** | `284/25%` | 10             | `bge-reranker-v2-m3` sobre `dense` | `recall@10` | **Vigente: sin reranker**          |
+| 5     | `284/25%` | 10             | `bge-reranker-v2-m3` sobre `dense` | `recall@10` | Reemplazada por el set de 135 preguntas |
+| **6** | `293/25%` | 10             | `bge-reranker-v2-m3` sobre `hybrid_rrf` | `recall@10` | **Vigente: lo elige la regla; sin reranker en local por latencia** |
 
 
 
@@ -66,7 +67,7 @@ bge reranked:      recall@10=0.706 mrr@10=0.456 recall@5=0.676 CI95=[0.5294, 0.8
 
 En [results.json](./results/results.json), el `mean_ms=4728.7` de `bge` está inflado por la descarga del modelo en la primera llamada. p50 y p95 no se ven afectados. Las p50/p95 de todas las fases se registraron con el cálculo de percentil anterior al 2026-10-08 ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md), sección "Latencias").
 
-## Fase 5 — Gold spans de `q033` y `q034`, retriever base `dense` (vigente)
+## Fase 5 — Gold spans de `q033` y `q034`, retriever base `dense`
 
 Con los gold spans nuevos de `q033` y `q034` (2026-10-09), el mejor método de hybrid search pasó a ser `dense`, así que el reranker se midió sobre los 20 candidatos de `dense`.
 
@@ -77,3 +78,13 @@ con bge-reranker-v2-m3:       recall@10=0.735 recall@5=0.706 mrr@10=0.515 p50=19
 
 **Resultado:** el reranker no se adopta. Pierde `q003` y `q018` (puesto 10 en `dense`, fuera del top-10 después del rerank) y gana `q022` (puesto 19 del pool → 2). McNemar exacto 2/1, p=1.0. Mejora `recall@5` y `mrr@10`, pero la regla decide por `recall@10`, y se aplicó sin excepción (decisión del 2026-10-09). Runs: sin reranker `28f9ad010c544fad91f242e970908464`, con reranker `e790936b763a4051afea75c6d7cdf2cf`.
 
+## Fase 6 — Set de 135 preguntas, retriever base `hybrid_rrf` (vigente)
+
+Experimento MLflow: `rag-system-eval-reranking-135q` (corridas del 2026-10-25), también en [results_135q.json](./results/results_135q.json). Chunking `293/25%` y retriever base `hybrid_rrf`, de las fases vigentes de los experimentos [N.º 1](../chunking/PHASES.md) y [N.º 2](../hybrid-search/PHASES.md).
+
+```
+sin reranker (hybrid_rrf, top-10): recall@10=0.659 recall@5=0.622 mrr@10=0.469 p50=13.6ms  p95=22.2ms
+con bge-reranker-v2-m3 (GPU):      recall@10=0.733 recall@5=0.719 mrr@10=0.592 p50=201.7ms p95=243.4ms
+```
+
+**Resultado:** el reranker mejora de forma significativa. Gana 11 preguntas y pierde 1 (McNemar exacto 1/11, p=0.006; [paired_135q.json](./results/paired_135q.json)), y la regla lo elige. Las latencias de la corrida se midieron con el modelo en la GPU. Forzado a CPU, el rerank de los 20 candidatos tarda 4.05 s de p50 ([latency_cpu_135q.json](./results/latency_cpu_135q.json)), así que el servicio local no lo usa (`RERANKER = False` en `export_best_config.py`). Queda previsto para la ruta en la nube, con TEI en GPU. Opciones comparadas en el [README](./README.md).
