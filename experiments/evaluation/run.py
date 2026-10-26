@@ -26,30 +26,18 @@ from shared.ingest import (
     load_corpus,
 )
 from shared.llm import generate
+from shared.pipeline import PipelineConfig
 from shared.prompts import build_context_text
 from shared.retrieval import BM25Index, fetch_all_chunks, rerank
 from shared.settings import settings
-from shared.tracking import get_best_run, log_metrics, tracked_run
+from shared.tracking import log_metrics, tracked_run
 
 COLLECTION = "exp_evaluation"
 OUT_DIR = Path(__file__).resolve().parent
 
 ANSWER_PROMPT, GROUNDEDNESS_PROMPT, RELEVANCE_PROMPT = prompt_v1()
 
-RERANKING_STAGE = "reranking-135q"
-
-USE_RERANKER = get_best_run(
-    RERANKING_STAGE,
-    recall_at_k="recall_at_10",
-    tiebreak="mrr_at_10",
-    filter_string=(
-        f"params.chunk_size = '{BEST_CHUNKING['chunk_size']}' "
-        f"and params.chunk_overlap = '{BEST_CHUNKING['chunk_overlap']}' "
-        f"and params.base_method = '{BEST_METHOD}' "
-        f"and params.reranker_model = '{settings.cross_encoder_model}' "
-        "and metrics.recall_at_10 >= 0"
-    )
-)["params.use_reranker"] == "True"
+USE_RERANKER = PipelineConfig.from_yaml(settings.pipeline_config_path).reranker
 
 def retrieve_context(client, bm25, question: str) -> list[dict]:
 

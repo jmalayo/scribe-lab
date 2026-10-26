@@ -1,4 +1,3 @@
-import argparse
 import itertools
 import os
 import sys
@@ -45,6 +44,7 @@ REPEAT_PENALTY = 1.0
 
 # True: juzga el base_answers.csv existente en vez de generarlo
 REUSE_ANSWERS = True
+USE_JUDGE = False
 
 JUDGES = {
     "qwen": settings.llm_model_judge,
@@ -173,17 +173,7 @@ def summarize(judge_name: str, judge_model: str, answer_model: str,
     }
 
 
-def parse_args() -> argparse.Namespace:
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--use-judge", required=True, choices=["True", "False"],
-                        help="False: solo genera base_answers.csv; True: además lo juzga con JUDGES")
-
-    return parser.parse_args()
-
 def main():
-
-    use_judge = parse_args().use_judge == "True"
 
     questions = load_questions()
 
@@ -206,7 +196,7 @@ def main():
 
         rows = build_answers(questions, ANSWER_MODEL, answers_path, chunks_path, NUM_PREDICT, REPEAT_PENALTY)
 
-    if not use_judge:
+    if not USE_JUDGE:
         print(f"\n{len(rows)} respuestas -> {answers_path}")
         return
 
