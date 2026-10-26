@@ -8,15 +8,16 @@ Recorrido completo del [experimento de chunking](./README.md), con lo que se des
 | 2 | Dinámicos: 128, 256, 277 | Inline en el texto | Coincidencia exacta | `recall@5` | `277/25%` | Reemplazada: tablas cortadas o perdidas en el contexto |
 | 3 | Dinámicos: 128, 256, 284 | Separadas, en el payload | Coincidencia exacta | `recall@5` | `284/25%` | Re-evaluada en la fase 4 |
 | 4 | Igual que la fase 3 | Igual que la fase 3 | `fuzzy_actual`, gold set auditado | `recall@10` | `284/25%` | Re-corrida en la fase 5 con los gold spans nuevos |
-| **5** | Igual que la fase 3 | Igual que la fase 3 | `fuzzy_actual`, gold spans de `q033` y `q034` | `recall@10` | `284/25%` | **Vigente** |
+| 5 | Igual que la fase 3 | Igual que la fase 3 | `fuzzy_actual`, gold spans de `q033` y `q034` | `recall@10` | `284/25%` | Reemplazada por el set de 135 preguntas |
+| **6** | Dinámicos: 128, 256, 293 | Igual que la fase 3 | `fuzzy_actual`, 135 preguntas sobre 5 documentos | `recall@10` | `293/25%` | **Vigente** |
 
-Cada fase tiene su propio experimento de MLflow: `chunking` (fase 1), `chunking_dynamic` (fase 2) y `exp_chunking_dynamic_tables` (fases 3 a 5). `results/best_config.json` no es estable entre fases: `run.py` siempre escribe en la misma ruta, así que cada corrida sobreescribe la anterior. La config real de cada fase se respalda en su experimento de MLflow.
+Cada fase tiene su propio experimento de MLflow: `chunking` (fase 1), `chunking_dynamic` (fase 2) `exp_chunking_dynamic_tables` (fases 3 a 5) y `exp_chunking_dynamic_tables_135q` (fase 6, que escribe en `results/best_config_135q.json`). `results/best_config.json` no es estable entre fases: `run.py` siempre escribe en la misma ruta, así que cada corrida sobreescribe la anterior. La config real de cada fase se respalda en su experimento de MLflow.
 
-## Cómo se evaluó (igual en las 5 fases)
+## Cómo se evaluó (igual en las 6 fases)
 
 Por cada config se trocea el corpus, se indexa en Qdrant y, para cada pregunta del set, se hace una búsqueda densa (embedding + similitud) pidiendo los 10 resultados más cercanos. Un chunk se marca "correcto" si viene del documento fuente correcto **y** contiene la respuesta esperada (gold span) según `is_chunk_correct()` (`shared/eval/metrics.py`).
 
-Modelo de embeddings: `paraphrase-multilingual-MiniLM-L12-v2` (`shared/settings.py`), el mismo en las 5 fases, con límite de **128 tokens**. Un chunk que supera ese límite se trunca en silencio antes de generar el embedding (`validate_chunk` en `shared/ingest.py`, vía `truncation=True`); verificado debuggeando. Esto importa porque `chunk_size` se mide en caracteres, no en tokens: un chunk de 512 caracteres puede superar los 128 tokens del modelo, y en ese caso el embedding solo representa la parte truncada. La fase 1 ignoraba este límite; las fases 2 a 5 lo miden contra el servicio real antes de correr el experimento.
+Modelo de embeddings: `paraphrase-multilingual-MiniLM-L12-v2` (`shared/settings.py`), el mismo en las 6 fases, con límite de **128 tokens**. Un chunk que supera ese límite se trunca en silencio antes de generar el embedding (`validate_chunk` en `shared/ingest.py`, vía `truncation=True`); verificado debuggeando. Esto importa porque `chunk_size` se mide en caracteres, no en tokens: un chunk de 512 caracteres puede superar los 128 tokens del modelo, y en ese caso el embedding solo representa la parte truncada. La fase 1 ignoraba este límite; las fases 2 a 6 lo miden contra el servicio real antes de correr el experimento.
 
 El overlap no influye en el límite de tokens en ninguna fase. `chunk_overlap` controla cuánto texto se repite **entre** chunks consecutivos (`RecursiveCharacterTextSplitter`), pero ningún chunk individual crece más allá de `chunk_size` caracteres por tener overlap: el splitter sigue cortando cada pieza al mismo tope.
 
@@ -166,7 +167,7 @@ chunk_size= 284 overlap=25% -> recall@10=0.706 mrr@10=0.397 CI95=[0.5588, 0.8529
 
 Frente al `recall@10=0.618` de la fase 3, la diferencia en esta config viene del gold set auditado y no de la indexación: `q014` (rank 8), `q027` (rank 1) y `q029` (rank 4) entran al top-10 ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md), sección "Data quality del ground truth"). El efecto del criterio de acierto sobre el barrido está en [ANALYSIS.md §4](./ANALYSIS.md).
 
-## Fase 5 — Gold spans de `q033` y `q034` (vigente)
+## Fase 5 — Gold spans de `q033` y `q034`
 
 `q033` y `q034` estaban marcadas como "no encontrado en el corpus", con `gold_spans` vacíos, pero `tagger-music-genesis.md` (sección "Checkpoint CLAP") trae la respuesta. El 2026-10-09 se escribieron sus gold spans, su `source_doc` y su `expected_answer`, sin cambiar el texto de las preguntas. Se re-corrió el barrido completo (9 configs) sin tocar el corpus ni el código.
 
@@ -179,3 +180,16 @@ chunk_size=256 overlap=10% -> recall@10=0.706 mrr@10=0.438
 
 **Mejor config:** sigue siendo `284/25%`. Las dos preguntas aciertan en el puesto 1, así que `recall@10` y `mrr@10` suben exactamente 2/34 = 0.059 cada uno. Run `1e5ab5400558438bb3aa51ca291218ff`.
 
+## Fase 6 — Set de 135 preguntas sobre 5 documentos (vigente)
+
+Experimento MLflow: `rag-system-eval-exp_chunking_dynamic_tables_135q` (corridas del 2026-10-25). Mismo código y criterio que la fase 5, con el set de 135 preguntas por tipo (`shared/eval/questions/`) y el corpus de 5 documentos de `corpus_demo/music-tagger/`. La calibración contra el embedder, sobre el corpus nuevo, dio los tamaños 128, 256 y 293. El techo del `recall@10` es 115/135 = 0.852.
+
+```
+chunk_size=293 overlap=25% -> recall@10=0.637 recall@5=0.504 mrr@10=0.408 CI95=[0.5481, 0.7185]
+chunk_size=293 overlap=10% -> recall@10=0.630 recall@5=0.511 mrr@10=0.413
+chunk_size=293 overlap=0%  -> recall@10=0.630 recall@5=0.511 mrr@10=0.413
+chunk_size=256 overlap=0%  -> recall@10=0.593 recall@5=0.496 mrr@10=0.384
+chunk_size=128 overlap=25% -> recall@10=0.304 recall@5=0.274 mrr@10=0.179
+```
+
+**Mejor config:** `293/25%`, run `5eef9909f77b489daffdea0565a32d9c`, también en [best_config_135q.json](./results/best_config_135q.json). Frente a `284/71` con búsqueda densa, cada una acierta una pregunta que la otra no (McNemar exacto 1/1, p=1.0; [paired_135q.json](../reranking/results/paired_135q.json)): el cambio sale de la regla fijada, no de una mejora medible. El servicio la usa desde el 2026-10-25.

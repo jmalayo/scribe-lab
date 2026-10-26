@@ -9,7 +9,7 @@ flowchart LR
     A["agent/graph.py<br/>ChatOllama + bind_tools"] -- "tool_call" --> T["ToolNode<br/>(agent/graph.py)"]
     T -- "buscar_documentos" --> C["MultiServerMCPClient<br/>(agent/tools.py)"]
     C -- "stdio, 1 sesión por corrida" --> S["mcp_server/server.py<br/>FastMCP"]
-    S -- "POST /v1/retrieve" --> API["app/ en 1013<br/>dense top-10"]
+    S -- "POST /v1/retrieve" --> API["app/ en 1013<br/>hybrid_rrf top-10"]
     T -- "no_hay_respuesta" --> L["agent/tools.py<br/>tool local"]
     T -- "ToolMessage" --> A
 ```
