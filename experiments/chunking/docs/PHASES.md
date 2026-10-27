@@ -148,7 +148,7 @@ Script: `experiments/chunking/run.py`.
 Experimento MLflow: `exp_chunking_dynamic_tables` (corridas del 2026-10-06).
 
 Misma indexación que la fase 3, con dos cambios de evaluación:
-- **Criterio de acierto `fuzzy_actual`:** matching tolerante (`rapidfuzz.fuzz.partial_ratio_alignment`) acotado por cobertura del span y por los números de la ventana que hizo match, y gold set auditado ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md)).
+- **Criterio de acierto `fuzzy_actual`:** matching tolerante (`rapidfuzz.fuzz.partial_ratio_alignment`) acotado por cobertura del span y por los números de la ventana que hizo match, y gold set auditado ([EVAL_METHODOLOGY.md](../../../shared/eval/EVAL_METHODOLOGY.md)).
 - **Métrica de decisión `recall@10`:** el pipeline le pasa 10 chunks al LLM (`TOP_K=10` en `experiments/reranking/run.py`), con `mrr@10` como desempate. El intervalo de confianza también es sobre `recall@10` y queda registrado en MLflow (`recall_at_10_ci95_low` / `recall_at_10_ci95_high`).
 
 ```
@@ -165,7 +165,7 @@ chunk_size= 284 overlap=25% -> recall@10=0.706 mrr@10=0.397 CI95=[0.5588, 0.8529
 
 **Mejor config:** `chunk_size=284, overlap=25%` → `recall@10=0.706`, `mrr@10=0.397`, CI95 `[0.5588, 0.8529]`. Gana por `recall@10` sin necesidad de desempate: las otras dos configs de 284 quedan en `0.676`.
 
-Frente al `recall@10=0.618` de la fase 3, la diferencia en esta config viene del gold set auditado y no de la indexación: `q014` (rank 8), `q027` (rank 1) y `q029` (rank 4) entran al top-10 ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md), sección "Data quality del ground truth"). El efecto del criterio de acierto sobre el barrido está en [ANALYSIS.md §4](./ANALYSIS.md).
+Frente al `recall@10=0.618` de la fase 3, la diferencia en esta config viene del gold set auditado y no de la indexación: `q014` (rank 8), `q027` (rank 1) y `q029` (rank 4) entran al top-10 ([EVAL_METHODOLOGY.md](../../../shared/eval/EVAL_METHODOLOGY.md), sección "Data quality del ground truth"). El efecto del criterio de acierto sobre el barrido está en [ANALYSIS.md §4](./ANALYSIS.md).
 
 ## Fase 5 — Gold spans de `q033` y `q034`
 
@@ -192,4 +192,4 @@ chunk_size=256 overlap=0%  -> recall@10=0.593 recall@5=0.496 mrr@10=0.384
 chunk_size=128 overlap=25% -> recall@10=0.304 recall@5=0.274 mrr@10=0.179
 ```
 
-**Mejor config:** `293/25%`, run `5eef9909f77b489daffdea0565a32d9c`, también en [best_config_135q.json](./results/best_config_135q.json). Frente a `284/71` con búsqueda densa, cada una acierta una pregunta que la otra no (McNemar exacto 1/1, p=1.0; [paired_135q.json](../reranking/results/paired_135q.json)): el cambio sale de la regla fijada, no de una mejora medible. El servicio la usa desde el 2026-10-25.
+**Mejor config:** `293/25%`, run `5eef9909f77b489daffdea0565a32d9c`, también en [best_config_135q.json](../results/best_config_135q.json). Frente a `284/71` con búsqueda densa, cada una acierta una pregunta que la otra no (McNemar exacto 1/1, p=1.0; [paired_135q.json](../../reranking/results/paired_135q.json)): el cambio sale de la regla fijada, no de una mejora medible. El servicio la usa desde el 2026-10-25.

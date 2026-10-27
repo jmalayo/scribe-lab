@@ -22,7 +22,7 @@ hybrid_rrf: recall@5=0.529 mrr@10=0.347 p50=12.2ms
      dense: recall@5=0.471 mrr@10=0.336 p50=11.9ms
 ```
 
-`hybrid_rrf` ganaba por `recall@5` (`+0.059` sobre dense), con BM25 casi a la par de dense y ~40× más rápido. Estos números miden una config de chunking que trunca chunks antes del embedding ([fase 1 del experimento N.º 1](../chunking/PHASES.md)), así que no son comparables con las fases siguientes.
+`hybrid_rrf` ganaba por `recall@5` (`+0.059` sobre dense), con BM25 casi a la par de dense y ~40× más rápido. Estos números miden una config de chunking que trunca chunks antes del embedding ([fase 1 del experimento N.º 1](../../chunking/docs/PHASES.md)), así que no son comparables con las fases siguientes.
 
 ## Fase 2 — chunking vigente (`284/25%`), decidida por `recall@5`
 
@@ -36,7 +36,7 @@ hybrid_rrf: recall@5=0.647 mrr@10=0.405 p50=11.3ms
 
 Con `recall@5`, el híbrido ganaba con más margen (`+0.088` sobre dense). La fase 3 muestra que con 10 chunks esa ventaja desaparece en cobertura y queda solo como mejor orden (`mrr@10`).
 
-La config de chunking se lee de MLflow con `get_best_run("exp_chunking_dynamic_tables")`, y las tablas markdown se extraen y adjuntan al payload igual que en la [fase 3 del experimento N.º 1](../chunking/PHASES.md).
+La config de chunking se lee de MLflow con `get_best_run("exp_chunking_dynamic_tables")`, y las tablas markdown se extraen y adjuntan al payload igual que en la [fase 3 del experimento N.º 1](../../chunking/docs/PHASES.md).
 
 ## Fase 3 — top-10
 
@@ -64,7 +64,7 @@ hybrid_rrf: recall@10=0.765 recall@5=0.706 mrr@10=0.449 CI95=[0.6176, 0.9118] p5
 
 ## Fase 5 — Set de 135 preguntas sobre 5 documentos (vigente)
 
-Experimento MLflow: `rag-system-eval-hybrid-search-135q` (corridas del 2026-10-25), también en [results_135q.json](./results/results_135q.json). Chunking `293/25%` de la fase 6 del [experimento N.º 1](../chunking/PHASES.md). Techo del `recall@10`: 115/135 = 0.852.
+Experimento MLflow: `rag-system-eval-hybrid-search-135q` (corridas del 2026-10-25), también en [results_135q.json](../results/results_135q.json). Chunking `293/25%` de la fase 6 del [experimento N.º 1](../../chunking/docs/PHASES.md). Techo del `recall@10`: 115/135 = 0.852.
 
 ```
 hybrid_rrf: recall@10=0.659 recall@5=0.593 mrr@10=0.466 CI95=[0.5778, 0.7407] p50=13.3ms
@@ -72,4 +72,4 @@ hybrid_rrf: recall@10=0.659 recall@5=0.593 mrr@10=0.466 CI95=[0.5778, 0.7407] p5
       bm25: recall@10=0.615 recall@5=0.489 mrr@10=0.365 CI95=[0.5259, 0.6963] p50=0.8ms
 ```
 
-**Mejor método:** `hybrid_rrf` (run `f810ce4d83304d419e44af5f8b786b70`), por `recall@10`. Frente a `dense` acierta 8 preguntas más y 5 menos (McNemar exacto 5/8, p=0.581; [paired_135q.json](../reranking/results/paired_135q.json)): la regla lo elige sin diferencia significativa. El servicio lo usa desde el 2026-10-25.
+**Mejor método:** `hybrid_rrf` (run `f810ce4d83304d419e44af5f8b786b70`), por `recall@10`. Frente a `dense` acierta 8 preguntas más y 5 menos (McNemar exacto 5/8, p=0.581; [paired_135q.json](../../reranking/results/paired_135q.json)): la regla lo elige sin diferencia significativa. El servicio lo usa desde el 2026-10-25.

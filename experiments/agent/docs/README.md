@@ -7,20 +7,20 @@
 | pipeline | 41/115 · 0.357 (0.270–0.444) | 0.643 | 0.287 | 19/64 | 17/20 | 8 | 1.3 s | 969 |
 | agente | 34/115 · 0.296 (0.217–0.383) | 0.591 | 0.348 | 16/64 | 17/20 | 7 | 2.4 s | 1995 |
 
-Etiqueta humana por respuesta en [verdicts_manual.csv](./results/exp_2/verdicts_manual.csv) (columna `veredicto_manual`), resumida por [run.py](./run.py) con `SUMMARIZE_MANUAL = True`. Latencia y tokens de las corridas `exp_2-pipeline` y `exp_2-agent` del experimento MLflow `rag-system-eval-agent`. La integración del servidor MCP con el agente se verificó por separado en [MCP_INTEGRATION.md](./MCP_INTEGRATION.md).
+Etiqueta humana por respuesta en [verdicts_manual.csv](../results/exp_2/verdicts_manual.csv) (columna `veredicto_manual`), resumida por [run.py](../run.py) con `SUMMARIZE_MANUAL = True`. Latencia y tokens de las corridas `exp_2-pipeline` y `exp_2-agent` del experimento MLflow `rag-system-eval-agent`. La integración del servidor MCP con el agente se verificó por separado en [MCP_INTEGRATION.md](./MCP_INTEGRATION.md).
 
 ## Qué se usa
 
 | Pieza | Valor | Dónde |
 | --- | --- | --- |
-| Modelo que responde | `llama3.1:8b-instruct-q4_K_M`, `temperature=0`, en los dos lados | `MODEL` en [run.py](./run.py) |
-| Pipeline | `Pipeline` de `shared/pipeline.py` con `app/config/pipeline.yaml` (prompt `v1`, `max_tokens=500`), con el modelo reemplazado | `ApiRetrievalPipeline` en [run.py](./run.py) |
+| Modelo que responde | `llama3.1:8b-instruct-q4_K_M`, `temperature=0`, en los dos lados | `MODEL` en [run.py](../run.py) |
+| Pipeline | `Pipeline` de `shared/pipeline.py` con `app/config/pipeline.yaml` (prompt `v1`, `max_tokens=500`), con el modelo reemplazado | `ApiRetrievalPipeline` en [run.py](../run.py) |
 | Agente | Grafo de `agent/`: `buscar_documentos` por MCP (stdio) y `no_hay_respuesta` local, hasta 6 pasos o 24 000 tokens | `agent/graph.py`, `agent/tools.py` |
 | Recuperación | `POST /v1/retrieve` del servicio (`dense` top-10 en `exp_2`, con las tablas de cada chunk) para los dos lados, sobre los 5 documentos de `corpus_demo/music-tagger/` (414 chunks) | `docker-compose-prod.yml` |
 | Preguntas | 135, un archivo por tipo: 37 `simple`, 55 `comparativa_mismo_doc`, 23 `comparativa_entre_docs` y 20 `sin_respuesta` | `shared/eval/questions/` |
-| Veredicto | Etiqueta humana: `correcta`, `parcial`, `incorrecta` o `abstencion`, contra `expected_answer` | [verdicts_manual.csv](./results/exp_2/verdicts_manual.csv) |
-| Juez LLM | `qwen3:8b`, `think=False`, salida con esquema JSON y las mismas cuatro clases, con motivo | `prompt_v3()` en [prompts.py](../evaluation/prompts.py) |
-| Regla de decisión | P1: McNemar exacto p<0.05 a favor del agente en las 64 comparativas nuevas. P2: cota superior de Wilson de las abstenciones falsas del agente en las simples por debajo de 0.20. P3: el agente se abstiene bien al menos tanto como el pipeline. El agente se adopta solo si pasan las tres | `decision()` en [run.py](./run.py) |
+| Veredicto | Etiqueta humana: `correcta`, `parcial`, `incorrecta` o `abstencion`, contra `expected_answer` | [verdicts_manual.csv](../results/exp_2/verdicts_manual.csv) |
+| Juez LLM | `qwen3:8b`, `think=False`, salida con esquema JSON y las mismas cuatro clases, con motivo | `prompt_v3()` en [prompts.py](../../evaluation/prompts.py) |
+| Regla de decisión | P1: McNemar exacto p<0.05 a favor del agente en las 64 comparativas nuevas. P2: cota superior de Wilson de las abstenciones falsas del agente en las simples por debajo de 0.20. P3: el agente se abstiene bien al menos tanto como el pipeline. El agente se adopta solo si pasan las tres | `decision()` en [run.py](../run.py) |
 
 Los dos lados reciben los mismos chunks del mismo endpoint, así que la diferencia medida es la del agente: decide la consulta, puede volver a buscar y puede abstenerse con una herramienta.
 
@@ -49,8 +49,8 @@ Los dos lados reciben los mismos chunks del mismo endpoint, así que la diferenc
   | incorrecta | 0 | 25 | 53 | 1 |
   | abstencion | 11 | 2 | 3 | 33 |
 
-- **Antecedente: `exp_1`, con 34 preguntas sobre 2 documentos.** El agente acertó 8/30 y el pipeline 6/30 (McNemar p=0.754), con el juez 10/30 cada uno. Etiqueta humana en [results/exp_1/verdicts_manual.csv](./results/exp_1/verdicts_manual.csv) y veredictos del juez en [results/exp_1/verdicts.csv](./results/exp_1/verdicts.csv). Las preguntas y el corpus cambiaron desde entonces, así que sus números no se comparan con los de `exp_2`.
-- **`exp_2` se midió con la recuperación anterior del servicio** (`284/25%` → `dense` top-10). Desde el 2026-10-25 el servicio sirve `293/25%` → `hybrid_rrf` top-10, que recupera mejor en las 135 preguntas (`recall@10` 0.659 contra 0.637, sin diferencia significativa; [hybrid search](../hybrid-search/README.md)). Las respuestas no se volvieron a generar, así que no se sabe cuánto cambia la corrección de cada lado. Volver a correr el lado del pipeline es opcional.
+- **Antecedente: `exp_1`, con 34 preguntas sobre 2 documentos.** El agente acertó 8/30 y el pipeline 6/30 (McNemar p=0.754), con el juez 10/30 cada uno. Etiqueta humana en [results/exp_1/verdicts_manual.csv](../results/exp_1/verdicts_manual.csv) y veredictos del juez en [results/exp_1/verdicts.csv](../results/exp_1/verdicts.csv). Las preguntas y el corpus cambiaron desde entonces, así que sus números no se comparan con los de `exp_2`.
+- **`exp_2` se midió con la recuperación anterior del servicio** (`284/25%` → `dense` top-10). Desde el 2026-10-25 el servicio sirve `293/25%` → `hybrid_rrf` top-10, que recupera mejor en las 135 preguntas (`recall@10` 0.659 contra 0.637, sin diferencia significativa; [hybrid search](../../hybrid-search/docs/README.md)). Las respuestas no se volvieron a generar, así que no se sabe cuánto cambia la corrección de cada lado. Volver a correr el lado del pipeline es opcional.
 - **El router por tipo de pregunta** (simples al pipeline, comparativas al agente) no se construye: dependía de que P1 favoreciera al agente.
 - **El benchmark no evalúa el modelo por defecto del agente.** `agent/` usa `qwen3:8b` (`llm_model_agent` en `shared/settings.py`); acá se usó `llama3.1:8b` en los dos lados para que la única diferencia sea el agente. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **Comparar `qwen3:8b` con `deepseek-r1:7b` como jueces** contra la misma etiqueta humana. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
@@ -63,4 +63,4 @@ docker compose -f docker-compose-dev.yml up -d --no-deps mlflow-server
 python experiments/agent/run.py
 ```
 
-Con `SUMMARIZE_MANUAL = True` (valor actual) el script solo resume [verdicts_manual.csv](./results/exp_2/verdicts_manual.csv): métricas por lado y por tipo con la etiqueta humana, la regla de decisión y el acuerdo del juez. Con `False` genera las respuestas, las juzga con `qwen3:8b`, registra los dos runs en MLflow y evalúa la regla de decisión con el juez. `EXP`, `MODEL` y `REUSE_ANSWERS` se configuran al inicio del script. Generar necesita `llama3.1:8b-instruct-q4_K_M` y `qwen3:8b` en el Ollama de `docker-compose-prod.yml`, con el índice de `corpus_demo/` al día (`app.reindex`). Las respuestas generadas se escriben en `results/<EXP>/answers_*.csv`, que no se versionan, y se reutilizan para volver a juzgar sin regenerar.
+Con `SUMMARIZE_MANUAL = True` (valor actual) el script solo resume [verdicts_manual.csv](../results/exp_2/verdicts_manual.csv): métricas por lado y por tipo con la etiqueta humana, la regla de decisión y el acuerdo del juez. Con `False` genera las respuestas, las juzga con `qwen3:8b`, registra los dos runs en MLflow y evalúa la regla de decisión con el juez. `EXP`, `MODEL` y `REUSE_ANSWERS` se configuran al inicio del script. Generar necesita `llama3.1:8b-instruct-q4_K_M` y `qwen3:8b` en el Ollama de `docker-compose-prod.yml`, con el índice de `corpus_demo/` al día (`app.reindex`). Las respuestas generadas se escriben en `results/<EXP>/answers_*.csv`, que no se versionan, y se reutilizan para volver a juzgar sin regenerar.

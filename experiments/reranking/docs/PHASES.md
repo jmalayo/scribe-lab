@@ -26,7 +26,7 @@ baseline: recall@5=0.529 mrr@5=0.328 p50=13.4ms p95=23.1ms
 reranked: recall@5=0.588 mrr@5=0.393 p50=34.4ms p95=45.8ms
 ```
 
-El reranker ya se adoptaba (`+0.059` de `recall@5`), pero sobre una config de chunking que truncaba chunks antes del embedding ([fase 1 del experimento N.º 1](../chunking/PHASES.md)). Por eso estos números no son comparables con las fases siguientes.
+El reranker ya se adoptaba (`+0.059` de `recall@5`), pero sobre una config de chunking que truncaba chunks antes del embedding ([fase 1 del experimento N.º 1](../../chunking/docs/PHASES.md)). Por eso estos números no son comparables con las fases siguientes.
 
 ## Fase 2 — chunking vigente (`284/25%`), top-5
 
@@ -65,7 +65,7 @@ bge reranked:      recall@10=0.706 mrr@10=0.456 recall@5=0.676 CI95=[0.5294, 0.8
 
 `ms-marco` está entrenado solo en inglés y el corpus está en español, así que se probó un cross-encoder multilingüe. `bge` pierde `q018` en `recall@10`, pero sube el chunk correcto en 9 preguntas. Las pruebas pareadas no encuentran diferencia de calidad, y el desempate por métricas secundarias e idioma favorece a `bge` ([ANALYSIS.md §1](./ANALYSIS.md)). Decidido el 2026-10-08.
 
-En [results.json](./results/results.json), el `mean_ms=4728.7` de `bge` está inflado por la descarga del modelo en la primera llamada. p50 y p95 no se ven afectados. Las p50/p95 de todas las fases se registraron con el cálculo de percentil anterior al 2026-10-08 ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md), sección "Latencias").
+En [results.json](../results/results.json), el `mean_ms=4728.7` de `bge` está inflado por la descarga del modelo en la primera llamada. p50 y p95 no se ven afectados. Las p50/p95 de todas las fases se registraron con el cálculo de percentil anterior al 2026-10-08 ([EVAL_METHODOLOGY.md](../../../shared/eval/EVAL_METHODOLOGY.md), sección "Latencias").
 
 ## Fase 5 — Gold spans de `q033` y `q034`, retriever base `dense`
 
@@ -80,11 +80,11 @@ con bge-reranker-v2-m3:       recall@10=0.735 recall@5=0.706 mrr@10=0.515 p50=19
 
 ## Fase 6 — Set de 135 preguntas, retriever base `hybrid_rrf` (vigente)
 
-Experimento MLflow: `rag-system-eval-reranking-135q` (corridas del 2026-10-25), también en [results_135q.json](./results/results_135q.json). Chunking `293/25%` y retriever base `hybrid_rrf`, de las fases vigentes de los experimentos [N.º 1](../chunking/PHASES.md) y [N.º 2](../hybrid-search/PHASES.md).
+Experimento MLflow: `rag-system-eval-reranking-135q` (corridas del 2026-10-25), también en [results_135q.json](../results/results_135q.json). Chunking `293/25%` y retriever base `hybrid_rrf`, de las fases vigentes de los experimentos [N.º 1](../../chunking/docs/PHASES.md) y [N.º 2](../../hybrid-search/docs/PHASES.md).
 
 ```
 sin reranker (hybrid_rrf, top-10): recall@10=0.659 recall@5=0.622 mrr@10=0.469 p50=13.6ms  p95=22.2ms
 con bge-reranker-v2-m3 (GPU):      recall@10=0.733 recall@5=0.719 mrr@10=0.592 p50=201.7ms p95=243.4ms
 ```
 
-**Resultado:** el reranker mejora de forma significativa. Gana 11 preguntas y pierde 1 (McNemar exacto 1/11, p=0.006; [paired_135q.json](./results/paired_135q.json)), y la regla lo elige. Las latencias de la corrida se midieron con el modelo en la GPU. Forzado a CPU, el rerank de los 20 candidatos tarda 4.05 s de p50 ([latency_cpu_135q.json](./results/latency_cpu_135q.json)), así que el servicio local no lo usa (`RERANKER = False` en `export_best_config.py`). Queda previsto para la ruta en la nube, con TEI en GPU. Opciones comparadas en el [README](./README.md).
+**Resultado:** el reranker mejora de forma significativa. Gana 11 preguntas y pierde 1 (McNemar exacto 1/11, p=0.006; [paired_135q.json](../results/paired_135q.json)), y la regla lo elige. Las latencias de la corrida se midieron con el modelo en la GPU. Forzado a CPU, el rerank de los 20 candidatos tarda 4.05 s de p50 ([latency_cpu_135q.json](../results/latency_cpu_135q.json)), así que el servicio local no lo usa (`RERANKER = False` en `export_best_config.py`). Queda previsto para la ruta en la nube, con TEI en GPU. Opciones comparadas en el [README](./README.md).

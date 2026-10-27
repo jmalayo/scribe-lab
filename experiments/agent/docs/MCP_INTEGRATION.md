@@ -50,7 +50,7 @@ Sobre las 34 corridas del agente del benchmark (`exp_1`, `llama3.1:8b`) y con ll
 | La capa MCP agrega latencia | Latencia de la herramienta contra la recuperación directa del pipeline | 74 ms contra 64 ms de p50 |
 | `no_hay_respuesta` no es alcanzable | Test con modelo guionado (`test_no_hay_respuesta_ends_with_abstention` en `tests/unit/test_agent.py`) y herramientas enviadas a Ollama | El grafo corta con abstención cuando se la llama, y el modelo la recibe. `llama3.1:8b` no la llamó en ninguna de las 34: se abstuvo en texto en 6, según la etiqueta humana |
 
-La comparación de recuperación se reproduce leyendo la `consulta` de cada llamada en el `answers_agent.csv` de `exp_1` que escribe [run.py](./run.py) y pidiendo `/v1/retrieve` con esa consulta y con la pregunta original. Las 34 preguntas de `exp_1` hoy son `shared/eval/questions/questions_base.jsonl`, editadas después de esta verificación.
+La comparación de recuperación se reproduce leyendo la `consulta` de cada llamada en el `answers_agent.csv` de `exp_1` que escribe [run.py](../run.py) y pidiendo `/v1/retrieve` con esa consulta y con la pregunta original. Las 34 preguntas de `exp_1` hoy son `shared/eval/questions/questions_base.jsonl`, editadas después de esta verificación.
 
 ## Lo que la verificación no descarta
 

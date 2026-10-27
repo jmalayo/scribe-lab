@@ -43,7 +43,7 @@ Con `num_predict=1500`, DeepSeek gastaba todo el presupuesto en su bloque de raz
 
 Con 3000, el fallo bajó a la mitad en ambas direcciones: **11.8 %** (`exp_6/deepseek_base/results_summary.csv`) y **8.8 %** (`exp_6/llama_base/results_summary.csv`).
 
-**Las 6 preguntas que fallaban con 1500** (base Llama, juzgadas por DeepSeek; [reporte_num_predict_1500_vs_3000_llama_base.csv](./benchmark-models/results/reporte_num_predict_1500_vs_3000_llama_base.csv)):
+**Las 6 preguntas que fallaban con 1500** (base Llama, juzgadas por DeepSeek; [reporte_num_predict_1500_vs_3000_llama_base.csv](../benchmark-models/results/reporte_num_predict_1500_vs_3000_llama_base.csv)):
 
 | Pregunta | Falla con 1500 | Con 3000 | Resuelto |
 |---|---|---|---|
@@ -56,7 +56,7 @@ Con 3000, el fallo bajó a la mitad en ambas direcciones: **11.8 %** (`exp_6/dee
 
 Las 3 que no se resuelven escalan su `thinking` casi en proporción al presupuesto (~2× con el doble de `num_predict`). Es una necesidad real de más tokens, no un tope arbitrario, así que se documentan como límite conocido del juez en vez de seguir subiendo `num_predict`. La corrida completa (`34/34`, `exp_6/llama_base/results_summary.csv`) lo confirma: el fallo baja de 6/34 (17.6 %) con 1500 a exactamente 3/34 (8.8 %) con 3000, y el groundedness limpio de DeepSeek queda en **80.6 %** (n=31).
 
-**Mismo patrón del otro lado** (base DeepSeek, autojuzgándose; [reporte_num_predict_1500_vs_3000_deepseek_base.csv](./benchmark-models/results/reporte_num_predict_1500_vs_3000_deepseek_base.csv)):
+**Mismo patrón del otro lado** (base DeepSeek, autojuzgándose; [reporte_num_predict_1500_vs_3000_deepseek_base.csv](../benchmark-models/results/reporte_num_predict_1500_vs_3000_deepseek_base.csv)):
 
 | Pregunta | Falla con 1500 | Con 3000 | Resuelto |
 |---|---|---|---|
@@ -74,7 +74,7 @@ En esta reproducción puntual se resuelven 6 de 9. Las 3 que no (`q018`, `q019`,
 
 ## 3. Contexto que recibe el LLM
 
-Por pregunta, sobre las 34 de `exp_7` (tokens contados por Ollama para `llama3.1:8b`; resultado en [context_stats.csv](./generative/context_stats.csv)):
+Por pregunta, sobre las 34 de `exp_7` (tokens contados por Ollama para `llama3.1:8b`; resultado en [context_stats.csv](../generative/context_stats.csv)):
 
 ```
 chunks por contexto         10 en 34/34
@@ -88,7 +88,7 @@ El contexto más largo usa menos de un tercio de la ventana de 4096 tokens, así
 ## 4. Consumo medido
 
 Script: `experiments/evaluation/generative/measure_resources.py` (corrida del 2026-10-07; el script se retiró el 2026-10-09 y su resultado queda en el CSV de abajo).  
-Resultado: [resources_summary.csv](./generative/resources_summary.csv). Las 34 respuestas de `exp_7`, sus 67 oraciones y contextos de 10 chunks. Latencias por respuesta, en segundos, con el cálculo de percentil anterior al 2026-10-08 ([EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md), sección "Latencias").
+Resultado: [resources_summary.csv](../generative/resources_summary.csv). Las 34 respuestas de `exp_7`, sus 67 oraciones y contextos de 10 chunks. Latencias por respuesta, en segundos, con el cálculo de percentil anterior al 2026-10-08 ([EVAL_METHODOLOGY.md](../../../shared/eval/EVAL_METHODOLOGY.md), sección "Latencias").
 
 ```
 componente                dispositivo   p50     p95     max     total   RAM pico   VRAM

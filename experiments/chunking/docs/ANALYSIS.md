@@ -4,7 +4,7 @@ Análisis con números detrás de las decisiones del [experimento de chunking](.
 
 ## Métricas
 
-Las usan todos los experimentos de retrieval del proyecto ([hybrid search](../hybrid-search/README.md), [reranking](../reranking/README.md)).
+Las usan todos los experimentos de retrieval del proyecto ([hybrid search](../../hybrid-search/docs/README.md), [reranking](../../reranking/docs/README.md)).
 
 - **recall@k**: de todas las preguntas, en qué fracción apareció el chunk correcto entre los primeros k resultados. Es la métrica principal: mide si el sistema *encuentra* la información, sin importar en qué posición.
 - **mrr@k (mean reciprocal rank)**: además de encontrarlo, qué tan arriba aparece. Si el chunk correcto es el resultado 1 suma el máximo (1); en el puesto 5 suma 1/5; si no aparece, suma cero. Es recall ponderado por posición: penaliza que la respuesta esté "enterrada".
@@ -77,7 +77,7 @@ Las celdas son tablas adjuntas en total para las 10 del corpus. Solo `128/32` du
 
 ## 4. Criterio de acierto
 
-Con matching tolerante sin guardas, las configs de 128 casi duplicarían su `recall@10` (`cs128_ov0`: `0.412` contra `0.206`) al contar chunks truncados como aciertos. En las configs de 284 la elección no cambia con `recall@10` (el fuzzy sin guardas también elegiría `cs284_ov25`), pero sí cambiaría con `recall@5` ([matcher_comparison.csv](./results/matcher_comparison.csv)). La comparación completa de criterios y la calibración de las guardas están en [EVAL_METHODOLOGY.md](../../shared/eval/EVAL_METHODOLOGY.md).
+Con matching tolerante sin guardas, las configs de 128 casi duplicarían su `recall@10` (`cs128_ov0`: `0.412` contra `0.206`) al contar chunks truncados como aciertos. En las configs de 284 la elección no cambia con `recall@10` (el fuzzy sin guardas también elegiría `cs284_ov25`), pero sí cambiaría con `recall@5` ([matcher_comparison.csv](../results/matcher_comparison.csv)). La comparación completa de criterios y la calibración de las guardas están en [EVAL_METHODOLOGY.md](../../../shared/eval/EVAL_METHODOLOGY.md).
 
 ## 5. Comparación entre fases
 
@@ -90,6 +90,6 @@ Con matching tolerante sin guardas, las configs de 128 casi duplicarían su `rec
 | ¿Qué se embebe realmente? | ~81 % del chunk en promedio (el resto se trunca en silencio, con corte arbitrario) | El chunk completo | El chunk completo, sin el markdown de sus tablas | Igual que la fase 3 |
 | ¿Tablas separadas? | No: inline en el texto embebido | No: inline en el texto embebido | Sí: adjuntas en `chunk.tables`, nunca entran al embedding | Igual que la fase 3 |
 | Criterio de acierto | Coincidencia exacta | Coincidencia exacta | Coincidencia exacta | Tolerante con guardas de cobertura y números, gold set auditado |
-| Confiabilidad del número | Baja: mide una config que no se puede desplegar sin seguir truncando | Alta: validado contra el servicio real | Alta: validado contra el servicio real y contra Qdrant | Alta: mismo retrieval evaluado con varios criterios ([matcher_comparison.csv](./results/matcher_comparison.csv)) |
+| Confiabilidad del número | Baja: mide una config que no se puede desplegar sin seguir truncando | Alta: validado contra el servicio real | Alta: validado contra el servicio real y contra Qdrant | Alta: mismo retrieval evaluado con varios criterios ([matcher_comparison.csv](../results/matcher_comparison.csv)) |
 
 **Lectura:** `512` sobreestima su rendimiento porque se evalúa truncado, así que `277` es el primer candidato válido sin truncación oculta. `256` y `277` no muestran diferencias significativas (sus IC95 se solapan), y `128` resulta inferior en todas las fases. `284` sale de una calibración independiente sobre el corpus sin tablas, por lo que no se compara directamente con `277`. En la fase 4, `284/25%` gana `recall@10` por una pregunta sobre las otras configs de 284 (`0.706` contra `0.676`), dentro de intervalos que se solapan: con 34 preguntas, la elección se sostiene por ser la mejor punta en `recall@10` y en `mrr@10` a la vez, no por una diferencia significativa.

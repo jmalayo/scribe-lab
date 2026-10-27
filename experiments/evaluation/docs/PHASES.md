@@ -10,7 +10,7 @@ Recorrido completo del [experimento de evaluación de respuestas](./README.md), 
 La fase 2 responde a dos problemas que dejó la fase 1.
 
 1. **Los jueces no coinciden entre sí.** El acuerdo en groundedness fue de 23.3 % (`llama_base`) y 31.0 % (`deepseek_base`) sobre las filas válidas ([ANALYSIS.md §1](./ANALYSIS.md)). Sin una referencia humana no hay forma de saber cuál de los dos acierta, y un `TRUE`/`FALSE` por respuesta no dice qué parte de la respuesta falla.
-2. **Las respuestas juzgadas no venían del pipeline vigente.** Se generaron con el chunking de la [fase 1 del experimento N.º 1](../chunking/PHASES.md) (`512/25%`, truncado por el embedder), 5 chunks por pregunta y el contexto armado solo con el texto de cada chunk, sin las tablas del payload.
+2. **Las respuestas juzgadas no venían del pipeline vigente.** Se generaron con el chunking de la [fase 1 del experimento N.º 1](../../chunking/docs/PHASES.md) (`512/25%`, truncado por el embedder), 5 chunks por pregunta y el contexto armado solo con el texto de cada chunk, sin las tablas del payload.
 
 ## Fase 1 — Jueces LLM: auto-juicio vs. juicio cruzado
 
@@ -57,8 +57,8 @@ En ese momento la etapa LLM del pipeline principal (`experiments/evaluation/run.
     environment:
       OLLAMA_HOST: "ollama:11434"
   ```
-- El script [ollama-judge-evaluation.py](./benchmark-models/ollama-judge-evaluation.py) inserta la raíz del repo en `sys.path`. En esta fase las respuestas base se cacheaban apenas se generaban. Salida en pandas/CSV, separador `;`.
-- `generate()` (`shared/llm.py`) usa `repeat_penalty=1.3` en las llamadas de juicio, para evitar que el modelo quede repitiendo el mismo token en loop.
+- El script [ollama-judge-evaluation.py](../benchmark-models/ollama-judge-evaluation.py) inserta la raíz del repo en `sys.path`. En esta fase las respuestas base se cacheaban apenas se generaban. Salida en pandas/CSV, separador `;`.
+- Las llamadas de juicio usan `repeat_penalty=1.3` (`JUDGE_REPEAT_PENALTY`), para evitar que el modelo quede repitiendo el mismo token en loop.
 - **Fix:** `num_predict` de `judge_answers()` subió de 1500 a 3000. Con 1500, DeepSeek gastaba todo el presupuesto en su bloque de razonamiento oculto (`thinking`) antes de escribir el veredicto, y dejaba `response` vacío (`done_reason: "length"`). Con 3000 el fallo bajó a la mitad en ambas direcciones; las cifras y las tablas por pregunta están en [ANALYSIS.md §2](./ANALYSIS.md). Estos casos quedan marcados con columnas `{judge}_asw_valido` en `per_question_judge_verdicts.csv`, y su re-evaluación queda en `judge_errors_deepseek_1500.csv` y `judge_errors_deepseek_3000.csv` de `results/exp_5/deepseek_base/`.
 
 ### Prompt engineering — `GROUNDEDNESS_PROMPT` / `RELEVANCE_PROMPT`
@@ -104,7 +104,7 @@ Cada respuesta se corta en oraciones con `split_sentences` (`shared/eval/groundi
 Script: `experiments/evaluation/benchmark-models/ollama-judge-evaluation.py` con `USE_JUDGE = False` (configuración en las variables del inicio del script: `EXP`, `TAG`, `ANSWER_MODEL`, `REUSE_ANSWERS`, `USE_JUDGE`, `JUDGES`).  
 Salida: `benchmark-models/results/exp_7/llama31_base/base_answers.csv`.
 
-El contexto se arma igual que en `experiments/evaluation/run.py`, que toma chunking, método base y tamaño del pool de [reranking](../reranking/README.md): `284/25%`, `hybrid_rrf`, pool de 20 → cross-encoder → **10 chunks**, con las tablas del payload reinsertadas al final de su chunk (`build_context_text`). Generación con `temperature=0`, `num_predict=500` y `repeat_penalty=1.0`. Las respuestas de `exp_7` se generaron cuando el cross-encoder era `ms-marco-MiniLM-L-6-v2`.
+El contexto se arma igual que en `experiments/evaluation/run.py`, que toma chunking, método base y tamaño del pool de [reranking](../../reranking/docs/README.md): `284/25%`, `hybrid_rrf`, pool de 20 → cross-encoder → **10 chunks**, con las tablas del payload reinsertadas al final de su chunk (`build_context_text`). Generación con `temperature=0`, `num_predict=500` y `repeat_penalty=1.0`. Las respuestas de `exp_7` se generaron cuando el cross-encoder era `ms-marco-MiniLM-L-6-v2`.
 
 Correcciones en el camino:
 
@@ -122,7 +122,7 @@ Archivos: `generative/llama_3_1_8_B/labels_sentences.csv` y `labels_answers.csv`
 
 ### LettuceDetect en un contenedor propio
 
-`detector/` ([detector_app.py](../../detector/detector_app.py), [Dockerfile](../../detector/Dockerfile)), servicio `detector` del `docker-compose.yml`, perfil `eval`, `POST /predict` en el puerto 1011.
+`detector/` ([detector_app.py](../../../detector/detector_app.py), [Dockerfile](../../../detector/Dockerfile)), servicio `detector` del `docker-compose.yml`, perfil `eval`, `POST /predict` en el puerto 1011.
 
 El modelo carga su arquitectura como código remoto desde `EuroBERT/EuroBERT-210m`, y ese código usa `ROPE_INIT_FUNCTIONS["default"]`, que transformers 5 eliminó. Re-registrar esa RoPE hace que el modelo cargue sin pesos faltantes, pero la salida cambia (confianzas de ~0.5 dispersas por toda la respuesta). Por eso el contenedor fija transformers 4.49.0, lettucedetect 0.2.3 y torch 2.6.0 CPU. Verificado contra un entorno aislado con las mismas versiones: spans idénticos en 54/54 respuestas (20 de `exp_6` y 34 de `exp_7`), diferencia máxima de confianza 1.67e-06.
 
@@ -140,4 +140,4 @@ Después se agregó el NLI: `nli_predictor` carga mDeBERTa con su commit fijo y 
 
 ### Juez de relevancia `qwen3:8b`
 
-El juez de relevancia `qwen3:8b` juzga las 34 respuestas de `exp_7` en modo razonamiento y en modo JSON forzado, con `prompt_v2()` de [prompts.py](./prompts.py) (el prompt y el esquema de la medición de consumo), y guarda veredicto, motivo y respuesta cruda por caso. Resultados en [ANALYSIS.md §8](./ANALYSIS.md).
+El juez de relevancia `qwen3:8b` juzga las 34 respuestas de `exp_7` en modo razonamiento y en modo JSON forzado, con `prompt_v2()` de [prompts.py](../prompts.py) (el prompt y el esquema de la medición de consumo), y guarda veredicto, motivo y respuesta cruda por caso. Resultados en [ANALYSIS.md §8](./ANALYSIS.md).

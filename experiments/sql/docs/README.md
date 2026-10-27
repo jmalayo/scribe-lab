@@ -9,10 +9,10 @@
 | `preguntas` | 135 | `shared/eval/questions/`, con su tipo y el hash de sus gold spans |
 | `pregunta_documentos` | 137 | `source_doc` de cada pregunta con respuesta: 93 citan un documento y 22 citan dos |
 | `corridas_eval` | 2 | Las corridas `exp_2-pipeline` y `exp_2-agent` del experimento MLflow `rag-system-eval-agent`, con sus parámetros, commit y hora de inicio |
-| `resultados_pregunta` | 270 | `answers_pipeline.csv` y `answers_agent.csv` de [exp_2](../agent/results/exp_2/): respuesta, latencia, tokens y, en el pipeline, cuántos gold spans trajo el top-10 |
-| `veredictos` | 540 | [verdicts_manual.csv](../agent/results/exp_2/verdicts_manual.csv): el veredicto del juez (`juez`) y la etiqueta humana (`humano`) de cada respuesta |
+| `resultados_pregunta` | 270 | `answers_pipeline.csv` y `answers_agent.csv` de [exp_2](../../agent/results/exp_2/): respuesta, latencia, tokens y, en el pipeline, cuántos gold spans trajo el top-10 |
+| `veredictos` | 540 | [verdicts_manual.csv](../../agent/results/exp_2/verdicts_manual.csv): el veredicto del juez (`juez`) y la etiqueta humana (`humano`) de cada respuesta |
 
-Filas contadas con `SELECT count(*)` sobre cada tabla después de correr [load_eval.py](./load_eval.py) dos veces.
+Filas contadas con `SELECT count(*)` sobre cada tabla después de correr [load_eval.py](../load_eval.py) dos veces.
 
 Sobre esas tablas, seis vistas responden una pregunta cada una con un patrón de SQL distinto (definiciones en `migrations/views/`):
 
@@ -33,7 +33,7 @@ Sobre esas tablas, seis vistas responden una pregunta cada una con un patrón de
 | Esquema | Migraciones de Alembic en autocommit, una sentencia DDL por migración, PK `uuid` generadas en el servidor y FK con `RESTRICT`, para que la misma cadena corra en Aurora DSQL | `migrations/versions/` |
 | Tablas en Python | Las mismas tablas declaradas con SQLAlchemy Core; un test compara las dos definiciones | `shared/db.py`, `tests/integration/test_db.py` |
 | Carga | `upsert`: `INSERT … ON CONFLICT DO UPDATE` en lotes de hasta 3 000 filas (límite de DSQL); correrla dos veces no duplica nada | `upsert()` en `shared/db.py` |
-| Chunks | `chunk_documents` + `content_chunk_ids` con la configuración de `app/config/pipeline.yaml`, igual que `app.reindex` | [load_eval.py](./load_eval.py) |
+| Chunks | `chunk_documents` + `content_chunk_ids` con la configuración de `app/config/pipeline.yaml`, igual que `app.reindex` | [load_eval.py](../load_eval.py) |
 | Resultados | Cada fila guarda el `gold_hash` de la pregunta con la que se midió: si después se editan los gold spans, el resultado sigue atado a su versión | `resultados_pregunta.gold_hash` |
 | Verificación | Los veredictos de la base coinciden, clase por clase, con el archivo de etiquetas, y el κ de la vista con el de `cohen_kappa` en Python | `tests/data/test_eval_load.py` |
 | Vistas | Un archivo `.sql` por vista, aplicado por su propia migración (una sentencia DDL cada una) | `migrations/views/`, `migrations/versions/0008_*` a `0013_*` |
@@ -44,7 +44,7 @@ Sobre esas tablas, seis vistas responden una pregunta cada una con un patrón de
 - **`chunks.texto` guarda el texto embebido, sin las tablas.** Las tablas viajan en el payload de Qdrant; `n_tokens` se cuenta con el tokenizer del modelo de embeddings sobre ese texto.
 - **Las preguntas sin respuesta no tienen documento.** Su `source_doc` es `no encontrado en el corpus`, así que no generan filas en `pregunta_documentos`. `q003` es `comparativa_entre_docs` y cita un solo documento.
 - **La carga reemplaza los chunks de los documentos cargados.** Borra los de esos documentos y vuelve a insertar los del chunking vigente, así que un cambio de configuración o de corpus no deja chunks viejos. Funciona porque ninguna tabla apunta todavía a `chunks`; cuando `consulta_chunks` los referencie, la carga tendrá que borrar solo los que desaparecieron.
-- **Los números del [experimento N.º 5](../agent/README.md) salen igual en SQL.** Con la etiqueta humana, 41 correctas del pipeline y 34 del agente sobre las 115 con respuesta, 17 de 20 abstenciones correctas por lado, 5 comparativas nuevas que acierta solo el pipeline contra 2 que acierta solo el agente, y 197 de 270 veredictos del juez iguales al humano. Tokens por pregunta: 969.2 y 1995.3.
+- **Los números del [experimento N.º 5](../../agent/docs/README.md) salen igual en SQL.** Con la etiqueta humana, 41 correctas del pipeline y 34 del agente sobre las 115 con respuesta, 17 de 20 abstenciones correctas por lado, 5 comparativas nuevas que acierta solo el pipeline contra 2 que acierta solo el agente, y 197 de 270 veredictos del juez iguales al humano. Tokens por pregunta: 969.2 y 1995.3.
 - **Las respuestas no se versionan.** `answers_*.csv` está fuera del repo, como en `exp_1`, así que la carga de `resultados_pregunta` solo se reproduce en la máquina que generó `exp_2`.
 - **El agente no tiene gold spans por pregunta.** Recupera con su propia consulta y `run.py` no la evalúa contra los gold spans, así que `gold_spans_at_10` queda vacío en sus 135 filas.
 - **Los experimentos 1 a 4 no se cargan.** Sus preguntas son las 34 del set anterior, editadas después, y sus `gold_hash` no coinciden con los de `preguntas`. Mezclarlos daría resultados que parecen comparables y no lo son. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.

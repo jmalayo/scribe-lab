@@ -1,6 +1,6 @@
 # Experimento N.º 2 — Análisis y justificaciones
 
-Pruebas con números detrás de las decisiones del [experimento de hybrid search](./README.md). Las fases en orden están en [PHASES.md](./PHASES.md). Las métricas se definen en la sección "Métricas" del [ANALYSIS del experimento N.º 1](../chunking/ANALYSIS.md). El método de las pruebas pareadas (McNemar exacto, bootstrap pareado, mínimo de 6 discordantes para p < 0.05) está en la sección "Cómo se compara a dos sistemas sobre las mismas preguntas" del [ANALYSIS de reranking](../reranking/ANALYSIS.md).
+Pruebas con números detrás de las decisiones del [experimento de hybrid search](./README.md). Las fases en orden están en [PHASES.md](./PHASES.md). Las métricas se definen en la sección "Métricas" del [ANALYSIS del experimento N.º 1](../../chunking/docs/ANALYSIS.md). El método de las pruebas pareadas (McNemar exacto, bootstrap pareado, mínimo de 6 discordantes para p < 0.05) está en la sección "Cómo se compara a dos sistemas sobre las mismas preguntas" del [ANALYSIS de reranking](../../reranking/docs/ANALYSIS.md).
 
 **Datos.** Los rankings por pregunta se recalcularon el 2026-10-08 sobre la colección `exp_hybrid_search__paraphrase-multilingual-MiniLM-L12-v2` (`284/71`, la misma que reusa `run.py`). Reproducen exactamente `recall@10`, `recall@5` y `mrr@10` de los tres métodos en las corridas del 2026-10-06.
 
@@ -48,7 +48,7 @@ Pruebas con números detrás de las decisiones del [experimento de hybrid search
 | `recall@5` | +0.147 | [+0.029, +0.265] |
 | `mrr@10` | +0.118 | [−0.010, +0.244] |
 
-**Conclusión:** la mejora de `hybrid_rrf` sobre BM25 sola **sí es significativa en `recall@10`** (p = 0.031): es la única comparación del pipeline con evidencia estadística a 34 preguntas. BM25 sola nunca acierta una pregunta que el híbrido pierda. En `recall@5`, el bootstrap excluye el 0 pero McNemar da p = 0.0625: con todas las discordantes del mismo lado, el bootstrap no puede generar diferencias negativas y subestima la incertidumbre, así que vale McNemar (ver [reranking ANALYSIS §2](../reranking/ANALYSIS.md)).
+**Conclusión:** la mejora de `hybrid_rrf` sobre BM25 sola **sí es significativa en `recall@10`** (p = 0.031): es la única comparación del pipeline con evidencia estadística a 34 preguntas. BM25 sola nunca acierta una pregunta que el híbrido pierda. En `recall@5`, el bootstrap excluye el 0 pero McNemar da p = 0.0625: con todas las discordantes del mismo lado, el bootstrap no puede generar diferencias negativas y subestima la incertidumbre, así que vale McNemar (ver [reranking ANALYSIS §2](../../reranking/docs/ANALYSIS.md)).
 
 **Dense contra BM25**, como referencia: en `recall@10`, 8 discordantes a favor de dense y 2 a favor de BM25 (`q008`, `q022`), p = 0.109. Las 2 que solo BM25 resuelve son justamente las que el híbrido gana sobre dense.
 
@@ -58,4 +58,4 @@ p50 por búsqueda en las corridas del 2026-10-06: `hybrid_rrf` 11.2 ms, `dense` 
 
 ## 4. Consistencia con el experimento de chunking
 
-La búsqueda densa de la fase 2 (`recall@5=0.559`, `mrr@10=0.397`) da exactamente los mismos números que la config ganadora del [experimento de chunking](../chunking/README.md) con el mismo criterio. Eso confirma que la colección de este experimento tiene la misma indexación.
+La búsqueda densa de la fase 2 (`recall@5=0.559`, `mrr@10=0.397`) da exactamente los mismos números que la config ganadora del [experimento de chunking](../../chunking/docs/README.md) con el mismo criterio. Eso confirma que la colección de este experimento tiene la misma indexación.
