@@ -13,7 +13,12 @@ from shared.settings import settings
 def build_pipeline() -> Pipeline:
 
     config = PipelineConfig.from_yaml(settings.pipeline_config_path)
-    llm = build_llm(config.llm.provider, config.llm.model, config.llm.max_tokens, config.llm.base_url)
+    llm = build_llm(
+        config.llm.provider,
+        config.llm.model,
+        max_tokens=config.llm.max_tokens,
+        base_url=config.llm.base_url,
+    )
     grounder = (
         http_grounder(settings.detector_url, settings.nli_url, config.grounding) if config.grounding.enabled else None
     )

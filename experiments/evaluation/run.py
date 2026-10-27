@@ -25,7 +25,7 @@ from shared.ingest import (
     index_chunks,
     load_corpus,
 )
-from shared.llm import generate
+from shared.llm import build_llm
 from shared.pipeline import PipelineConfig
 from shared.prompts import build_context_text
 from shared.retrieval import BM25Index, fetch_all_chunks, rerank
@@ -64,6 +64,7 @@ def main():
         fetch_all_chunks(client, COLLECTION)
     )
 
+    llm = build_llm("ollama", settings.llm_model_base)
     grounded_verdicts, relevant_verdicts, gen_latencies = [], [], []
     per_question_rows = []
 
@@ -73,13 +74,13 @@ def main():
         context_text = build_context_text(context_chunks)
 
         t0 = time.perf_counter()
-        answer = generate(ANSWER_PROMPT.format(context=context_text, question=q["question"]))
+        answer = llm.complete(ANSWER_PROMPT.format(context=context_text, question=q["question"])).text
         gen_latencies.append((time.perf_counter() - t0) * 1000)
 
-        grounded_raw = generate(GROUNDEDNESS_PROMPT.format(context=context_text, answer=answer))
+        grounded_raw = llm.complete(GROUNDEDNESS_PROMPT.format(context=context_text, answer=answer)).text
         grounded, _ = parse_verdict(grounded_raw)
 
-        relevant_raw = generate(RELEVANCE_PROMPT.format(question=q["question"], answer=answer))
+        relevant_raw = llm.complete(RELEVANCE_PROMPT.format(question=q["question"], answer=answer)).text
         relevant, _ = parse_verdict(relevant_raw)
 
         grounded_verdicts.append(grounded)
