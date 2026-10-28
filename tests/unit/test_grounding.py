@@ -2,6 +2,7 @@ import pytest
 
 from shared.eval.grounding import (
     GroundingResult,
+    abstained,
     ground_answer,
     nli_scores,
     sentence_ranges,
@@ -161,3 +162,16 @@ def test_ground_answer_output_matches_the_service_schema():
 
     assert result.model_dump() == raw
     assert result.unsupported_sentences[1].nli.entailment == 0.4
+
+
+@pytest.mark.parametrize(
+    ("answer", "expected"),
+    [
+        ("No lo sé según el contexto proporcionado.", True),
+        ("NO LO SE.", True),
+        ("Usa balanced accuracy.", False),
+    ],
+)
+def test_abstained_ignores_case_and_accents(answer, expected):
+
+    assert abstained(answer) is expected
