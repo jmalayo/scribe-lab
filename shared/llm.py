@@ -21,6 +21,8 @@ class LLMClient(Protocol):
 
     def complete(self, prompt: str) -> LLMResult: ...
 
+    def chat(self, messages: list[dict], json_format: bool | dict = False) -> LLMResult: ...
+
     def ping(self) -> bool: ...
 
 class OllamaClient:
@@ -69,6 +71,30 @@ class OllamaClient:
 
         return LLMResult(
             text=body["response"].strip(),
+            tokens_in=body.get("prompt_eval_count"),
+            tokens_out=body.get("eval_count"),
+        )
+
+    def chat(self, messages: list[dict], json_format: bool | dict = False) -> LLMResult:
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "stream": False,
+            "think": False,
+            "options": self.options,
+        }
+
+        if json_format:
+            payload["format"] = json_format if isinstance(json_format, dict) else "json"
+
+        resp = requests.post(f"{self.host}/api/chat", json=payload, timeout=self.timeout)
+        resp.raise_for_status()
+
+        body = resp.json()
+
+        return LLMResult(
+            text=body.get("message", {}).get("content", "").strip(),
             tokens_in=body.get("prompt_eval_count"),
             tokens_out=body.get("eval_count"),
         )

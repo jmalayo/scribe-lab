@@ -77,11 +77,11 @@ def make_config(**overrides) -> PipelineConfig:
     return PipelineConfig.model_validate(base)
 
 
-def make_pipeline(config=None, llm=None, grounder=None, chunks=None):
+def make_pipeline(config=None, llm=None, grounder=None, chunks=None, rewriter=None):
 
     chunks = chunks if chunks is not None else [make_chunk(i, 0.9 - i * 0.1) for i in range(5)]
 
-    return Pipeline(config or make_config(), FakeClient(chunks), FakeEmbedder(), llm or FakeLLM(), grounder)
+    return Pipeline(config or make_config(), FakeClient(chunks), FakeEmbedder(), llm or FakeLLM(), grounder, rewriter)
 
 
 def test_run_dense_builds_prompt_and_reports_stages():
