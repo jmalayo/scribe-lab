@@ -1,0 +1,25 @@
+conv_id;condicion;pregunta;respuesta;abstencion
+c31;literal;¿Y por qué se eliminó en la reestructuración de dsp/ a features/ + ml/?;Se eliminó porque la ruta CLAP (Route B) se eliminó del proyecto en la reestructuración de `dsp/` a `features/` + `ml/`, y el pipeline actual es solo DSP + ML supervisado.;False
+c31;multi_consulta;¿Por qué se eliminó Route B (CLAP zero-shot) en la reestructuración de dsp/ a features/ + ml?;No lo sé según el contexto proporcionado.;True
+c32;literal;¿Y qué GPU se usó realmente para calcular los embeddings de las 96 canciones?;No lo sé según el contexto proporcionado.;True
+c32;multi_consulta;¿Qué GPU se usó realmente para calcular los embeddings de las 96 canciones?;No lo sé según el contexto proporcionado.;True
+c33;literal;¿Cuántas canciones de la playlist rock_english quedaron así?;"No lo sé según el contexto proporcionado. El contexto proporciona información sobre la evaluación de la música y las limitaciones del modelo, pero no proporciona información sobre la cantidad de canciones de la playlist ""rock_english"" que quedaron así.";True
+c33;multi_consulta;¿Cuántas canciones de la playlist rock_english quedaron como incorrectas?;No lo sé según el contexto proporcionado. El contexto proporciona información sobre la evaluación de la música y las categorías de energía/ritmo, pero no proporciona información sobre las canciones etiquetadas como incorrectas en la playlist rock_english.;True
+c35;literal;¿Cuántos árboles usa ese modelo?;No lo sé según el contexto proporcionado. El contexto proporciona información sobre el modelo de música y sus características, pero no menciona el número de árboles que utiliza.;True
+c35;multi_consulta;¿Cuántos árboles usa el modelo de producción sin perc_ratio?;No lo sé según el contexto proporcionado.;True
+n36;literal;¿Por qué se descartó Ollama como ruta para eso en local?;No lo sé según el contexto proporcionado.;True
+n36;multi_consulta;¿Por qué se descartó Ollama como ruta para resolver ambigüedades en local?;No lo sé según el contexto proporcionado.;True
+n38;literal;¿Y qué valores numéricos tienen esos dos?;No lo sé según el contexto proporcionado.;True
+n38;multi_consulta;¿Qué valores numéricos tienen perc_n_mediana y PERC_LO/PERC_HI?;No lo sé según el contexto proporcionado.;True
+n43;literal;¿Cuál es el tempo promedio en BPM de las canciones de alta-ritmica?;No lo sé según el contexto proporcionado.;True
+n43;multi_consulta;¿Cuál es el tempo promedio en BPM de las canciones de alta-ritmica?;No lo sé según el contexto proporcionado.;True
+n44;literal;¿Y qué tasa de éxito tienen esas descargas sobre playlists de Spotify?;No lo sé según el contexto proporcionado. El contexto proporcionado no menciona la tasa de éxito de las descargas de playlists de Spotify.;True
+n44;multi_consulta;¿Qué tasa de éxito tienen las descargas de async-music-fetch-engine sobre playlists de Spotify?;No lo sé según el contexto proporcionado.;True
+n46;literal;¿Y en el árbol de decisión de producción cuáles son las más importantes?;No lo sé según el contexto proporcionado.;True
+n46;multi_consulta;¿En el árbol de decisión de producción, qué features son las más importantes?;Según el contexto, las tres features más importantes en el árbol de decisión de producción son `zcr_n_mediana` (0.179), `cent_n_mediana` (0.177) y `flat_n_mediana` (0.174), que concentran 0.530 de la importancia total del modelo, más de la mitad del poder de decisión.;False
+n47;literal;¿Por qué se eligió esa versión de MERT y no una más grande?;No lo sé según el contexto proporcionado.;True
+n47;multi_consulta;¿Por qué se eligió la versión de MERT de 13 estados ocultos en embed_mert.py?;No lo sé según el contexto proporcionado.;True
+n48;literal;¿En qué CPU se corrió ese benchmark?;No lo sé según el contexto proporcionado.;True
+n48;multi_consulta;¿En qué CPU se corrió ese benchmark?;No lo sé según el contexto proporcionado.;True
+n49;literal;¿Bajo qué licencia se publica el proyecto?;El proyecto se publica bajo la licencia MIT.;False
+n49;multi_consulta;¿Bajo qué licencia se publica el proyecto?;El proyecto se publica bajo la licencia MIT.;False
