@@ -1,9 +1,9 @@
-pipeline_version: 2026-10-13-9995e46
+pipeline_version: 2026-10-25-cd48358
 collection: corpus_demo
 corpus_dir: corpus_demo
-chunk_size: 284
-chunk_overlap: 71
-method: dense
+chunk_size: 293
+chunk_overlap: 73
+method: hybrid_rrf
 reranker: false
 pool_size: 20
 top_k: 10

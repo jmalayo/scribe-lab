@@ -1,5 +1,6 @@
 import math
 
+import httpx
 import pytest
 
 from shared import ingest, retrieval
@@ -155,13 +156,13 @@ class FakeQdrant:
 
         return self.records[start:end], (end if end < len(self.records) else None)
 
-class FakeCrossEncoder:
+class FakeReranker:
 
     def __init__(self, scores):
         self.scores = scores
 
-    def predict(self, pairs, batch_size, show_progress_bar):
-        return [self.scores[text] for _, text in pairs]
+    def score(self, question, texts):
+        return [self.scores[text] for text in texts]
 
 def test_dense_search_merges_payload_and_score(monkeypatch):
 
@@ -197,7 +198,7 @@ def test_fetch_all_chunks_empty_collection():
 # y conserva el payload original junto a rerank_score
 def test_rerank_orders_by_cross_encoder_score(monkeypatch):
     scores = {"uno": 0.1, "dos": 0.9, "tres": 0.5}
-    monkeypatch.setattr(retrieval, "get_rerank", lambda: FakeCrossEncoder(scores))
+    monkeypatch.setattr(retrieval, "get_rerank", lambda: FakeReranker(scores))
     candidates = [chunk("c1", "uno"), chunk("c2", "dos"), chunk("c3", "tres")]
 
     reranked = rerank("pregunta", candidates, top_k=2)
@@ -210,3 +211,35 @@ def test_rerank_empty_candidates_skips_model(monkeypatch):
     monkeypatch.setattr(retrieval, "get_rerank", lambda: pytest.fail("no debe cargar el modelo"))
 
     assert rerank("pregunta", [], top_k=5) == []
+
+
+def test_remote_reranker_returns_scores_in_input_order(monkeypatch):
+
+    calls = []
+
+    def post(url, json, timeout):
+        calls.append((url, json))
+        return httpx.Response(
+            200,
+            json=[{"index": 2, "score": 0.9}, {"index": 0, "score": 0.4}, {"index": 1, "score": 0.1}],
+            request=httpx.Request("POST", url),
+        )
+
+    monkeypatch.setattr("requests.post", post)
+
+    scores = retrieval.RemoteReranker("http://reranker/").score("pregunta", ["uno", "dos", "tres"])
+
+    assert scores == [0.4, 0.1, 0.9]
+    assert calls == [("http://reranker/rerank", {"query": "pregunta", "texts": ["uno", "dos", "tres"], "truncate": True})]
+
+
+@pytest.mark.parametrize(("mode", "expected"), [("server", "RemoteReranker"), ("local", "LocalReranker")])
+def test_get_rerank_follows_the_reranker_mode(monkeypatch, mode, expected):
+
+    monkeypatch.setattr(retrieval.settings, "reranker_mode", mode)
+    monkeypatch.setattr(retrieval, "LocalReranker", type("LocalReranker", (), {"__init__": lambda self, name: None}))
+    retrieval.get_rerank.cache_clear()
+
+    assert type(retrieval.get_rerank()).__name__ == expected
+
+    retrieval.get_rerank.cache_clear()

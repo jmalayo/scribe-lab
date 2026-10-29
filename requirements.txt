@@ -10,3 +10,6 @@ pandas>=2.3
 markdown>=3.10
 pre-commit>=4.6
 pyyaml>=6.0
+sqlalchemy==2.0.52
+alembic==1.19.1
+psycopg[binary]==3.2.13

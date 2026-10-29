@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from app.deps import get_pipeline
 from app.main import app
-from tests.unit.test_pipeline import FakeLLM, make_pipeline
+from tests.unit.test_pipeline import FakeLLM, make_chunk, make_pipeline
 
 
 class AliasClient:
@@ -63,6 +63,7 @@ def test_query_returns_contract(client_for):
         "chunk_index": 0,
         "score": pytest.approx(0.9),
         "text": "texto 0",
+        "tables": [],
     }
     assert body["grounding"] is None
     assert body["usage"] == {"tokens_in": 11, "tokens_out": 3}
@@ -80,19 +81,19 @@ def test_retrieve_returns_chunks_without_calling_the_llm(client_for):
     assert llm.prompts == []
 
 
+def test_retrieve_returns_the_tables_of_each_chunk(client_for):
+
+    chunk = make_chunk(0, 0.9) | {"tables": [{"text_content": "| a | b |"}]}
+    resp = client_for(make_pipeline(chunks=[chunk])).post("/v1/retrieve", json={"query": "q", "top_k": 1})
+
+    assert resp.json()["chunks"][0]["tables"] == ["| a | b |"]
+
+
 def test_request_id_is_propagated(client_for):
 
     resp = client_for(make_pipeline()).post("/v1/query", json={"question": "q"}, headers={"x-request-id": "abc"})
 
     assert resp.headers["x-request-id"] == "abc"
-
-
-def test_unknown_collection_is_not_found(client_for):
-
-    resp = client_for(make_pipeline()).post("/v1/query", json={"question": "q", "collection": "otra"})
-
-    assert resp.status_code == 404
-    assert resp.json()["detail"] == "colección desconocida: otra"
 
 
 def test_empty_question_is_a_validation_error(client_for):

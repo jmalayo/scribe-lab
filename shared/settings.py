@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     embedding_revision: str | None = None
 
     cross_encoder_model: str = "BAAI/bge-reranker-v2-m3"
+    reranker_mode: str = "local"
+    reranker_url: str = "http://127.0.0.1:1016"
 
     detector_url: str = "http://127.0.0.1:1011"
     nli_url: str = "http://127.0.0.1:1012"
@@ -23,13 +25,18 @@ class Settings(BaseSettings):
     llm_model_base: str = "llama3.2:3b"
     llm_model_answer: str = "llama3.1:8b-instruct-q4_K_M"
     llm_model_judge: str = "qwen3:8b"
+    llm_model_agent: str = "qwen3:8b"
 
     pipeline_config_path: str = "app/config/pipeline.yaml"
 
     mlflow_experiment_prefix: str = "rag-system-eval"
     mlflow_tracking_uri: str = "http://127.0.0.1:5000/"
 
-    corpus_dir: str = "shared/corpus"
-    questions_path: str = "shared/eval/questions.jsonl"
+    scribe_api_url: str = "http://127.0.0.1:1013"
+
+    database_url: str = "postgresql+psycopg://scribe:scribe@127.0.0.1:1015/scribe"
+
+    corpus_dir: str = "corpus_demo"
+    questions_path: str = "shared/eval/questions"
 
 settings = Settings()

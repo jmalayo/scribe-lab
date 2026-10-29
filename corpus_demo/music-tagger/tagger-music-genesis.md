@@ -6,8 +6,8 @@ library: music-tagger
 
 # Music Tagger — Clasificación de intensidad/ritmo de canciones
 
-> **Este documento es histórico.** Para cualquier número de accuracy, tiempo o configuración
-> VIGENTE, la única fuente es `music-tagger/music-tagger-benchmark.md`. Un número que aparece
+> **Este documento es histórico.** Para cualquier número de accuracy, tiempo, configuración o
+> estado del código VIGENTE, la única fuente es `music-tagger/music-tagger-benchmark.md`. Un número que aparece
 > acá y difiere del benchmark está superado — se conserva por su valor de razonamiento (qué se
 > intentó, qué falló, por qué), no porque siga siendo el estado actual del proyecto.
 
@@ -21,7 +21,9 @@ Sistema de clasificación de intensidad/ritmo con dos rutas independientes, comp
 
 Route A es el enfoque principal por accuracy. Route B se usa solo como desempate en casos ambiguos.
 
-## 2. Features y fórmulas vigentes (Route A)
+Esta es la arquitectura de la época. Más tarde `dsp/` se reestructuró en `features/` + `ml/` y Route B (CLAP) se eliminó del proyecto (ver `music-tagger-benchmark.md`).
+
+## 2. Features y fórmulas de Route A (estado de la época)
 
 
 
@@ -34,6 +36,7 @@ score_ritmo   = 0.45*onset_density_n + 0.35*perc_ratio_n + 0.20*tempo_n
 
 - `noise_n`: combina `spectral_flatness` + `zero_crossing_rate` para distinguir distorsión agresiva de producción brillante tonal.
 - `onset_density`: filtrada por fuerza (percentil `ONSET_GATE_PCT` de la envolvente) — sin filtro, un fingerpicking suave infla la densidad igual que una batería real.
+- `perc_ratio_n` sale de HPSS; más tarde HPSS y `perc_ratio` se eliminaron del pipeline y el eje de ritmo quedó solo con onset y tempo (ver `music-tagger-benchmark.md`).
 - `fold_tempo()`: colapsa el BPM a una misma octava (rango `[70,140)`) para evitar que el pulso de toda la banda (no solo la batería) se confunda con el tempo real.
 
 
@@ -50,7 +53,7 @@ Los 9 rangos de normalización (`ONSET_LO/HI`, `TEMPO_LO/HI`, `CENT_LO/HI`, `OST
 - `ONSET_GATE_PCT`: el valor documentado como vigente es 60; hay evidencia de una edición a 50 sin confirmar (ver Pendientes).
 - `kernel_size` de HPSS: default `31`. `kernel_size=9` fue **rechazado** tras validación estadística rigurosa (Spearman=0.86 sobre umbral seguro 0.98; desvío relativo medio 57.3%, máximo 189.6%). `kernel_size=15` dio -40% de tiempo en timing crudo pero **nunca se validó** con el mismo criterio riguroso.
 - HPSS es, por sí solo, >95% del tiempo de extracción por segmento (2.89s de ~3.03s en un segmento de 25s). Consolidar HPSS a una sola llamada por canción completa (en vez de por segmento) fue probado y **descartado**: resultó más lento (15.93s vs 13.30s) — el costo escala con muestras procesadas, no hay overhead fijo por llamada que amortizar.
-- Paralelismo: una medición preliminar temprana (12.04s promedio por tarea de HPSS con 3 workers vs. 45.66s con 16, midiendo tiempo de CPU por tarea individual) sugería que 3 workers era el punto óptimo. Un benchmark posterior, más riguroso y sobre el dataset actual (ver `music-tagger-benchmark.md`), midió tiempo real por canción en vez de tiempo por tarea y encontró lo contrario **con HPSS presente**: 16 workers es el más rápido (3.70s/canción) pese a que cada tarea individual sea más lenta por contención — la ganancia de correr más canciones en paralelo compensa esa pérdida por tarea. **Sin HPSS** (pipeline actual, tarea liviana) sí se sostiene la conclusión original: 3 workers es el más rápido y 16 el más lento, por overhead de gestión de procesos sobre tareas cortas.
+- Paralelismo: una medición preliminar temprana (12.04s promedio por tarea de HPSS con 3 workers vs. 45.66s con 16, midiendo tiempo de CPU por tarea individual) sugería que 3 workers era el punto óptimo. Un benchmark posterior, más riguroso y sobre el dataset actual (ver `music-tagger-benchmark.md`), midió tiempo real por canción en vez de tiempo por tarea y encontró lo contrario **con HPSS presente**: 16 workers es el más rápido (3.70s/canción) pese a que cada tarea individual sea más lenta por contención — la ganancia de correr más canciones en paralelo compensa esa pérdida por tarea. **Sin HPSS** (pipeline actual, tarea liviana) el paralelismo deja de pagar: 16 workers es el más lento por overhead de gestión de procesos sobre tareas cortas, y la conclusión original de que 3 es el óptimo tampoco se sostiene con claridad (ver `music-tagger-benchmark.md` para el orden medido).
 
 
 
@@ -83,12 +86,12 @@ Optimizar accuracy global sobre clases desbalanceadas produce un punto ciego rea
 
 - Fuente de verdad actual: hoja de un Excel de canciones, columnas `music_name`, `genre`, `album`, `categorico` (etiqueta humana), `procesar` (flag de cola de extracción — **no** es lo mismo que "ya categorizado", son ejes independientes que casi no se superponen).
 - El CSV curado a mano usado originalmente ya no se usa — reemplazado de punta a punta por la lectura del Excel.
-- `filename` se guarda **con extensión** `.mp3` en todo el pipeline actual.
+- `filename` se guardaba **con extensión** `.mp3` en todo el pipeline de ese momento.
 - El filtro por `procesar` fue removido de la carga de datos: hoy se cargan todas las canciones con `categorico` asignado (antes solo las marcadas para procesar). Esto también cambia qué canciones entran al batch de extracción de features, no solo al de evaluación.
 
 
 
-## 6. Bugs conocidos activos (sin corregir, con impacto real)
+## 6. Bugs conocidos al momento de este documento (con impacto real)
 
 - **Mismatch de esquema de columnas**: el summary de features más reciente usa columnas de un esquema viejo (`music_name`/`spotify_url`), pero buena parte del clasificador asume el esquema nuevo (`filename`/`album`) → `KeyError: 'filename'`. Hoy ningún script de Route A (lineal o árbol) corre de punta a punta contra el summary más nuevo sin apuntar a mano a un ID de summary anterior.
 - **Resumibilidad rota entre corridas**: el chequeo de "canción ya procesada" compara un campo con extensión `.mp3` contra una lista sin extensión — nunca matchean, así que cada corrida reprocesa canciones ya hechas.
@@ -119,7 +122,7 @@ Antes del modelo de dos ejes (`score_energia`/`score_ritmo`, sección 2), la pri
 
 ### Peso de `(1-dyn_spread)` reducido de 0.25 a 0.10
 
-En una iteración intermedia del score de energía, un peso alto en el componente de dispersión dinámica castigaba canciones con estructura verso-quieto/coro-fuerte (dinámica alta por diseño de la canción, no por intensidad pareja) — se bajó a 0.10 para no penalizar esa estructura legítima. El valor vigente (sección 2) ya refleja este ajuste.
+En una iteración intermedia del score de energía, un peso alto en el componente de dispersión dinámica castigaba canciones con estructura verso-quieto/coro-fuerte (dinámica alta por diseño de la canción, no por intensidad pareja) — se bajó a 0.10 para no penalizar esa estructura legítima. El valor de la sección 2 ya refleja este ajuste.
 
 ### Reducción de 12 a 9 parámetros en la calibración lineal — no resolvió el sobreajuste
 

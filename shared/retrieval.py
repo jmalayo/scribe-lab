@@ -177,28 +177,61 @@ def reciprocal_rank_fusion(
         } for cid in fused_ids
     ]
 
+class LocalReranker:
+
+    def __init__(self, model_name: str):
+
+        from sentence_transformers import CrossEncoder
+
+        self._model = CrossEncoder(model_name)
+
+    def score(self, question: str, texts: list[str]) -> list[float]:
+
+        pairs = [(question, t) for t in texts]
+
+        return [float(s) for s in self._model.predict(pairs, batch_size=16, show_progress_bar=False)]
+
+
+class RemoteReranker:
+
+    def __init__(self, url: str, timeout: tuple[float, float] = (5, 30)):
+
+        self._url = url.rstrip("/")
+        self._timeout = timeout
+
+    def score(self, question: str, texts: list[str]) -> list[float]:
+
+        import requests
+
+        resp = requests.post(
+            f"{self._url}/rerank",
+            json={"query": question, "texts": texts, "truncate": True},
+            timeout=self._timeout,
+        )
+        resp.raise_for_status()
+
+        scores = [0.0] * len(texts)
+
+        for item in resp.json():
+            scores[item["index"]] = item["score"]
+
+        return scores
+
+
 @functools.lru_cache(maxsize=1)
-def get_rerank():
+def get_rerank() -> LocalReranker | RemoteReranker:
 
-    from sentence_transformers import CrossEncoder
+    if settings.reranker_mode == "server":
+        return RemoteReranker(settings.reranker_url)
 
-    return CrossEncoder(settings.cross_encoder_model)
+    return LocalReranker(settings.cross_encoder_model)
 
 def rerank(question: str, candidates: list[dict], top_k: int) -> list[dict]:
 
     if not candidates:
         return []
     
-    reranker = get_rerank()
-
-    scores = reranker.predict(
-        [
-            (question, c["text"]) 
-                for c in candidates
-        ],
-        batch_size=16,
-        show_progress_bar=False
-    )
+    scores = get_rerank().score(question, [c["text"] for c in candidates])
 
     order = sorted(range(len(candidates)), key=lambda i: scores[i], reverse=True)[:top_k]
 

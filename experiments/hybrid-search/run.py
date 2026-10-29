@@ -31,10 +31,13 @@ from shared.tracking import get_best_run, log_metrics, tracked_run
 
 K_MAX = 10
 COLLECTION = qualified_collection_name("exp_hybrid_search")
+CHUNKING_STAGE = "exp_chunking_dynamic_tables_135q"
+STAGE = "hybrid-search-135q"
+RESULTS_FILE = "results_135q.json"
 OUT_DIR = Path(__file__).resolve().parent
 
 _best_chunking_run = get_best_run(
-    "exp_chunking_dynamic_tables",
+    CHUNKING_STAGE,
     recall_at_k="recall_at_10",
     tiebreak="mrr_at_10",
     filter_string="attributes.status = 'FINISHED'"
@@ -151,7 +154,7 @@ def main():
     ]
 
     for row in rows:
-        with tracked_run("hybrid-search", row["method"], {**BEST_CHUNKING, "method": row["method"]}):
+        with tracked_run(STAGE, row["method"], {**BEST_CHUNKING, "method": row["method"]}):
             log_metrics(row)
 
     rows.sort(key=lambda r: (r["recall@10"], r["mrr@10"]), reverse=True)
@@ -178,7 +181,7 @@ def main():
         "negative_finding": adopted == "dense" and best["method"] != "dense",
     }
     
-    (OUT_DIR / "results" / "results.json").write_text(
+    (OUT_DIR / "results" / RESULTS_FILE).write_text(
         json.dumps(
             results, 
             indent=2, 
@@ -190,7 +193,7 @@ def main():
         print(f"{r['method']:>10}: recall@10={r['recall@10']:.3f} mrr@10={r['mrr@10']:.3f} "
               f"p50={r['p50_ms']}ms")
 
-    print(f"\nMejor método: {best['method']} -> registrado en MLflow (rag-system-eval-hybrid-search), usar get_best_run('hybrid-search')")
+    print(f"\nMejor método: {best['method']} -> registrado en MLflow (rag-system-eval-{STAGE}), usar get_best_run('{STAGE}')")
 
 
 if __name__ == "__main__":

@@ -107,7 +107,7 @@ Después de la corrección, los 45 spans de las 34 preguntas son literales (`tes
 
 ## Latencias (p50 / p95)
 
-`percentile()` (`shared/eval/metrics.py`) interpola linealmente entre los dos valores vecinos de la posición `k = (n − 1) · p / 100`, igual que `np.percentile` por defecto. Lo usan `latency_summary()` (los `p50_ms`/`p95_ms` de cada run en MLflow) y los scripts de `experiments/evaluation/generative/` (`detector_vs_labels.py` y `relevance_qwen.py`).
+`percentile()` (`shared/eval/metrics.py`) interpola linealmente entre los dos valores vecinos de la posición `k = (n − 1) · p / 100`, igual que `np.percentile` por defecto. Lo usan `latency_summary()` (los `p50_ms`/`p95_ms` de cada run en MLflow) y los tiempos de grounding y de relevancia de `experiments/evaluation/generative/llama_3_1_8_B/`.
 
 > **Cambio del 2026-10-08** — antes tomaba el valor observado en `round(k)`, con el redondeo al par de Python. Con `n` par (las 34 preguntas) su p50 no era la mediana: en `[10, 20, 30, 40]` daba `30` en vez de `25`. Las latencias registradas antes de esa fecha (MLflow, `results.json` y reportes) usan el método anterior y no se recalcularon, porque no se guardaron las latencias por pregunta. La diferencia es de décimas de ms y ninguna decisión del proyecto se tomó por latencia.
 
@@ -122,6 +122,6 @@ Los tests unitarios corren con [`ci.yml`](../../.github/workflows/ci.yml) en cad
 Contra las versiones anteriores del criterio, `fuzzy_sin_guardas` falla los 7 sintéticos de dato alterado y el real `q011`, y el `in` estricto falla los sintéticos de backticks y typo y los reales `q002`, `q014` y `q028`. Una regresión en cualquiera de las dos direcciones rompe el CI.
 - [`tests/data/test_gold_spans.py`](../../tests/data/test_gold_spans.py) — **data quality check** que exige que todo gold span sea literal en su fuente y, si falla, lista cuáles. Detecta el drift del corpus automáticamente. Necesita el corpus (`shared/corpus/`, fuera del repo), por eso corre localmente y no en CI.
 
-Para reproducir la comparación de criterios, `python -m experiments.chunking.results.compare_matchers` (requiere Qdrant y el embedder levantados).
+La comparación de criterios está en `experiments/chunking/results/matcher_comparison.csv`: `recall@1`, `recall@3`, `recall@5`, `recall@10` y `mrr@10` de cada criterio sobre el top-10 congelado de cada configuración, con las 34 preguntas de entonces.
 
 > Los resultados de hybrid search y reranking (`experiments/hybrid-search/results/results.json`, `experiments/reranking/results/results.json`) se recalcularon con `fuzzy_actual` y el ground truth auditado el 2026-10-06, y de nuevo el 2026-10-09 con los gold spans de `q033` y `q034`.

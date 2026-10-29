@@ -9,7 +9,12 @@ from pydantic import BaseModel
 
 from shared.eval.grounding import GroundingResult, should_abstain
 from shared.llm import LLMClient
-from shared.prompts import ANSWER_PROMPTS, build_context_text, chunk_block
+from shared.prompts import (
+    ABSTENTION_ANSWER,
+    ANSWER_PROMPTS,
+    build_context_text,
+    chunk_block,
+)
 from shared.retrieval import (
     BM25Index,
     dense_search_vector,
@@ -19,8 +24,6 @@ from shared.retrieval import (
 
 if TYPE_CHECKING:
     from qdrant_client import QdrantClient
-
-ABSTENTION_ANSWER = "No lo sé según el contexto proporcionado."
 
 class LLMConfig(BaseModel):
     provider: Literal["ollama"] = "ollama"

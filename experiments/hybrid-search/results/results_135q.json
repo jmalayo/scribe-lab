@@ -1,0 +1,54 @@
+{
+  "chunking_config": {
+    "chunk_size": 293,
+    "chunk_overlap": 73
+  },
+  "n_questions": 135,
+  "rows": [
+    {
+      "method": "hybrid_rrf",
+      "recall@1": 0.3704,
+      "recall@3": 0.5481,
+      "recall@5": 0.5926,
+      "recall@10": 0.6593,
+      "recall@10_ci95_low": 0.5778,
+      "recall@10_ci95_high": 0.7407,
+      "mrr@10": 0.4659,
+      "p50_ms": 13.3,
+      "p95_ms": 16.0,
+      "mean_ms": 13.4
+    },
+    {
+      "method": "dense",
+      "recall@1": 0.3111,
+      "recall@3": 0.4667,
+      "recall@5": 0.5037,
+      "recall@10": 0.637,
+      "recall@10_ci95_low": 0.5481,
+      "recall@10_ci95_high": 0.7185,
+      "mrr@10": 0.4082,
+      "p50_ms": 12.5,
+      "p95_ms": 15.1,
+      "mean_ms": 12.6
+    },
+    {
+      "method": "bm25",
+      "recall@1": 0.2667,
+      "recall@3": 0.4,
+      "recall@5": 0.4889,
+      "recall@10": 0.6148,
+      "recall@10_ci95_low": 0.5259,
+      "recall@10_ci95_high": 0.6963,
+      "mrr@10": 0.3654,
+      "p50_ms": 0.8,
+      "p95_ms": 1.1,
+      "mean_ms": 0.8
+    }
+  ],
+  "best_method": "hybrid_rrf",
+  "dense_recall@10": 0.637,
+  "delta_recall@10": 0.0223,
+  "latency_delta_p50_ms": 0.8,
+  "adopted_method": "hybrid_rrf",
+  "negative_finding": false
+}

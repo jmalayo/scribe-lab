@@ -24,7 +24,7 @@ FRONT_MATTER_RE = re.compile(r"^---\n.*?\n---\n\n?", re.DOTALL)
 
 @dataclass
 class SourceDoc:
-    doc_id: str  # p.ej. "qdrant/hybrid-search.md" -- coincide con source_doc en questions.jsonl
+    doc_id: str  # p.ej. "qdrant/hybrid-search.md" -- coincide con source_doc en shared/eval/questions/
     library: str
     text: str
 

@@ -43,3 +43,35 @@ def prompt_v2():
     }
 
     return dedent(RELEVANCE_PROMPT), RELEVANCE_SCHEMA
+
+
+def prompt_v3():
+
+    CORRECTNESS_PROMPT = """\
+    Pregunta: {question}
+
+    Respuesta de referencia: {expected}
+
+    Respuesta a evaluar: {answer}
+
+    Compara la respuesta a evaluar con la de referencia y elige un veredicto:
+    - "abstencion": la respuesta dice que no tiene la información o que no puede responder, sin importar lo que diga la referencia.
+    - "correcta": contiene lo esencial de la referencia y no la contradice.
+    - "parcial": acierta una parte de lo esencial y omite otra, sin contradecir la referencia.
+    - "incorrecta": contradice la referencia, da como respuesta datos que la referencia no respalda, o responde algo concreto cuando la referencia dice que el corpus no tiene esa información.
+
+    Devuelve JSON con las claves "veredicto" (str) y "motivo" (str)."""
+
+    CORRECTNESS_SCHEMA = {
+        "type": "object",
+        "required": ["veredicto", "motivo"],
+        "properties": {
+            "veredicto": {
+                "type": "string",
+                "enum": ["correcta", "parcial", "incorrecta", "abstencion"]
+            },
+            "motivo": {"type": "string"}
+        }
+    }
+
+    return dedent(CORRECTNESS_PROMPT), CORRECTNESS_SCHEMA

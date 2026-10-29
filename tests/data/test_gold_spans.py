@@ -54,3 +54,28 @@ def test_gold_spans_are_literal_in_source():
         f"{len(failures)} de {total} gold spans no aparecen literal en su source_doc:\n"
         + "\n".join(failures)
     )
+
+
+def test_question_ids_are_unique():
+
+    ids = [q["id"] for q in load_questions()]
+
+    assert len(ids) == len(set(ids))
+
+
+def test_gold_span_count_matches_the_question_type():
+
+    expected = {
+        "simple": lambda n: n >= 1,
+        "comparativa_mismo_doc": lambda n: n >= 2,
+        "comparativa_entre_docs": lambda n: n >= 2,
+        "sin_respuesta": lambda n: n == 0,
+    }
+
+    failures = [
+        f"  {q['id']} ({q['tipo']}): {len(q['gold_spans'])} gold spans"
+            for q in load_questions()
+                if not expected[q["tipo"]](len(q["gold_spans"]))
+    ]
+
+    assert not failures, "\n".join(failures)

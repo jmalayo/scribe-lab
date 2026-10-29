@@ -4,12 +4,15 @@ from shared.eval.metrics import (
     _find_numbers,
     bootstrap_ci,
     calculate_hit_at_k,
+    cohen_kappa,
     groundedness_rate,
     hallucination_rate,
     latency_summary,
+    mcnemar_exact,
     mrr,
     percentile,
     recall_at_k,
+    wilson_ci,
 )
 
 DOC = "doc/benchmark.md"
@@ -109,3 +112,38 @@ def test_groundedness_and_hallucination_rate():
 
     assert groundedness_rate([]) == 0.0
     assert hallucination_rate([]) == 0.0
+
+
+@pytest.mark.parametrize(
+    ("only_a", "only_b", "expected"),
+    [
+        (6, 6, 1.0),
+        (7, 3, 0.344),
+        (0, 6, 0.031),
+        (0, 0, 1.0),
+    ],
+)
+def test_mcnemar_exact(only_a, only_b, expected):
+
+    assert mcnemar_exact(only_a, only_b) == expected
+
+
+def test_cohen_kappa():
+
+    assert cohen_kappa(["x", "x", "y", "y"], ["x", "y", "y", "y"]) == 0.5
+    assert cohen_kappa(["x", "y"], ["x", "y"]) == 1.0
+    assert cohen_kappa(["x", "x"], ["x", "x"]) == 1.0
+
+
+@pytest.mark.parametrize(
+    ("successes", "n", "expected"),
+    [
+        (0, 30, (0.0, 0.1135)),
+        (3, 30, (0.0346, 0.2562)),
+        (16, 20, (0.584, 0.9193)),
+        (0, 0, (0.0, 0.0)),
+    ],
+)
+def test_wilson_ci(successes, n, expected):
+
+    assert wilson_ci(successes, n) == expected

@@ -32,10 +32,14 @@ from shared.tracking import get_best_run, log_metrics, tracked_run
 POOL_SIZE = 20  # cuántos candidatos trae el retriever base antes de rerankear
 TOP_K = 10
 COLLECTION = "exp_reranking"
+CHUNKING_STAGE = "exp_chunking_dynamic_tables_135q"
+HYBRID_STAGE = "hybrid-search-135q"
+STAGE = "reranking-135q"
+RESULTS_FILE = "results_135q.json"
 OUT_DIR = Path(__file__).resolve().parent
 
 _best_chunking_run = get_best_run(
-    "exp_chunking_dynamic_tables",
+    CHUNKING_STAGE,
     recall_at_k="recall_at_10",
     tiebreak="mrr_at_10",
     filter_string="attributes.status = 'FINISHED'"
@@ -45,7 +49,7 @@ BEST_CHUNKING = {
     "chunk_overlap": int(_best_chunking_run["metrics.overlap_tokens"]),
 }
 BEST_METHOD = get_best_run(
-    "hybrid-search",
+    HYBRID_STAGE,
     recall_at_k="recall_at_10",
     tiebreak="mrr_at_10",
     filter_string=(
@@ -147,7 +151,7 @@ def main():
 
     for row in rows:
         with tracked_run(
-            "reranking",
+            STAGE,
             row["config"],
             {
                 **BEST_CHUNKING, 
@@ -169,7 +173,7 @@ def main():
     }
 
     (OUT_DIR / "results").mkdir(parents=True, exist_ok=True)
-    (OUT_DIR / "results" / "results.json").write_text(
+    (OUT_DIR / "results" / RESULTS_FILE).write_text(
         json.dumps(
             results, 
             indent=2, 
@@ -181,7 +185,7 @@ def main():
         print(f"{r['config']:>10}: recall@10={r['recall@10']:.3f} mrr@10={r['mrr@10']:.3f} "
               f"p50={r['p50_ms']}ms p95={r['p95_ms']}ms")
 
-    print(f"\n¿Se adopta el reranker?: {delta_recall_at_10 > 0} -> guardado en reranking/results/results.json")
+    print(f"\n¿Se adopta el reranker?: {delta_recall_at_10 > 0} -> guardado en reranking/results/{RESULTS_FILE}")
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,8 @@
 [importlinter]
 root_packages =
+    agent
     app
+    mcp_server
     shared
 include_external_packages = True
 
@@ -8,7 +10,9 @@ include_external_packages = True
 name = Producción no importa código de laboratorio
 type = forbidden
 source_modules =
+    agent
     app
+    mcp_server
     shared.pipeline
     shared.llm
     shared.retrieval
@@ -21,3 +25,16 @@ forbidden_modules =
     shared.eval.data
     mlflow
     pandas
+
+[importlinter:contract:clientes-por-protocolo]
+name = Agente y servidor MCP solo usan la API por protocolo
+type = forbidden
+source_modules =
+    agent
+    mcp_server
+forbidden_modules =
+    app
+    shared.pipeline
+    shared.retrieval
+    shared.llm
+    mlflow

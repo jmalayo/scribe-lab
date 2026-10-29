@@ -25,7 +25,7 @@ Las 14: `q001`, `q002`, `q003`, `q005`, `q006`, `q007`, `q009`, `q010`, `q013`, 
 
 | Pieza | Valor | Dónde |
 |---|---|---|
-| Modelo que responde | `llama3.1:8b-instruct-q4_K_M`, `temperature=0`, `num_predict=500`, `repeat_penalty=1.0` | [ollama-judge-evaluation.py](./benchmark-models/ollama-judge-evaluation.py) con `--use-judge False` |
+| Modelo que responde | `llama3.1:8b-instruct-q4_K_M`, `temperature=0`, `num_predict=500`, `repeat_penalty=1.0` | [ollama-judge-evaluation.py](./benchmark-models/ollama-judge-evaluation.py) con `USE_JUDGE = False` |
 | Contexto del LLM (con el que se generó `exp_7`) | Chunking `284/25%` → `hybrid_rrf` → pool de 20 → cross-encoder → **10 chunks**, con las tablas del payload reinsertadas al final de su chunk | `retrieve_context()` y `build_context_text()` en [run.py](./run.py), parámetros importados de [reranking](../reranking/README.md) |
 | Respuestas | 34, una por pregunta, deterministas | `benchmark-models/results/exp_7/llama31_base/`: `base_answers.csv` (`id`, `question`, `answer`) y `base_chunks.csv` (`id`, `context` y `score`: una fila por chunk, en orden de recuperación, con su texto exacto, sus tablas y el score con el que se ordenó), leídos con `load_answers` y `load_chunks` de [data.py](../../shared/eval/data.py). En `exp_7`, `base_chunks.csv` se derivó el 2026-10-09 de la columna `context` del `base_answers.csv` original, que luego se quitó. Su `score` se recalculó el 2026-10-10 con el pipeline que generó esas respuestas (`hybrid_rrf`, pool de 20, `ms-marco`), que reprodujo los 340 chunks en el mismo orden; es el logit crudo de `ms-marco` (entre −10.26 y 6.89), no una probabilidad. Las generaciones nuevas escriben ambos archivos directamente |
 | Unidad de evaluación | Oración, cortada con `split_sentences` | [grounding.py](../../shared/eval/grounding.py) |
@@ -47,6 +47,7 @@ Por respuesta se etiqueta además la relevancia (`si`/`no`), si la abstención f
 
 ## Dónde estamos
 
+- **Medido con el set anterior: 34 preguntas sobre los 2 documentos de entonces.** Desde el 2026-10-18 el set tiene 135 preguntas, un archivo por tipo en `shared/eval/questions/`, sobre los 5 documentos de `corpus_demo/music-tagger/`, y estos resultados no se recalcularon. El [experimento N.º 5](../agent/README.md) ya usa el set nuevo. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **Llama 3.1 y Qwen3 no entran juntos en los 8 GB de VRAM.** Primero se generan todas las respuestas y después se juzgan.
 - **LettuceDetect con el umbral por defecto (0.5) marca 1 de las 14 respuestas no sustentadas**, sin falsas alarmas en las otras 20. Por oración marca 2 de 17 (`recall` 0.118, IC95 0–0.294), las dos de `q007`. El rango de su score explica por qué ([ANALYSIS.md §6](./ANALYSIS.md)):
 
@@ -59,11 +60,11 @@ Por respuesta se etiqueta además la relevancia (`si`/`no`), si la abstención f
 
   15 de las 17 oraciones problemáticas puntúan por debajo de 0.05, en el mismo rango que las soportadas. El problema no es solo el umbral: con este corpus el modelo casi no separa una clase de la otra. Solo 3 de las 17 superan el máximo de las soportadas (dos de `q007` y una de `q016`).
 - **El chequeo de cifras** (toda cifra de la oración tiene que estar en el contexto o en la pregunta) marca 1 de 17 (`~1.5 minutos` en `q007`), sin falsas alarmas, y esa oración ya la marcaba LettuceDetect.
-- **Desde el 2026-10-09 el pipeline vigente es `dense` top-10, sin reranker** ([reranking](../reranking/README.md)). `run.py` ya arma el contexto así, pero las respuestas de `exp_7` y todo lo de esta sección se hicieron con el pipeline anterior. La abstención se calibraba con el score del reranker, que ya no está en el pipeline: hay que calibrarla con la similitud de `dense`, sobre respuestas generadas con ese pipeline. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
-- **La abstención se mide desde 2026-10-10 con el score guardado en `base_chunks.csv`**, es decir, sobre el contexto exacto que vio el LLM, sin volver a recuperar (`abstention_scores()` en `detector_vs_labels.py`, activado con `RUN_ABSTENTION = True`). Con el contexto real de `exp_7` (logit crudo de `ms-marco`), las 4 preguntas sin respuesta en el corpus tienen un score máximo entre −1.03 y 2.62, y las 30 con respuesta, entre −0.78 y 6.89. Los rangos se solapan: el único corte sin abstenciones falsas (entre −1.03 y −0.78) abstiene solo en `q032`. `q021` (0.31), `q004` (1.49) y `q005` (2.62) quedan por encima de preguntas con respuesta como `q006` (−0.78). No hay umbral adoptado ([ANALYSIS.md §6](./ANALYSIS.md)).
+- **Desde el 2026-10-25 el pipeline vigente es chunking `293/25%` → `hybrid_rrf` top-10, sin reranker en local** ([reranking](../reranking/README.md)). `run.py` arma el contexto igual que el servicio: chunking y método base del recálculo con 135 preguntas, y el reranker de `app/config/pipeline.yaml`. Las respuestas de `exp_7` y todo lo de esta sección se hicieron con un pipeline anterior y con 34 preguntas. La abstención se calibraba con el score del reranker, que no está en el pipeline local: hay que calibrarla con el `rrf_score`, sobre respuestas generadas con ese pipeline. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
+- **La abstención se mide desde 2026-10-10 con el score guardado en `base_chunks.csv`**, es decir, sobre el contexto exacto que vio el LLM, sin volver a recuperar (resultado en `abstention.csv` de cada carpeta de grounding). Con el contexto real de `exp_7` (logit crudo de `ms-marco`), las 4 preguntas sin respuesta en el corpus tienen un score máximo entre −1.03 y 2.62, y las 30 con respuesta, entre −0.78 y 6.89. Los rangos se solapan: el único corte sin abstenciones falsas (entre −1.03 y −0.78) abstiene solo en `q032`. `q021` (0.31), `q004` (1.49) y `q005` (2.62) quedan por encima de preguntas con respuesta como `q006` (−0.78). No hay umbral adoptado ([ANALYSIS.md §6](./ANALYSIS.md)).
 - **La medición anterior, con una segunda recuperación** (`hybrid_rrf` + `bge`, que no es el contexto que vio el LLM), daba un score máximo entre 0.001 y 0.928 para las 4 sin respuesta y entre 0.130 y 0.998 para las 30 con respuesta, y un umbral provisional de 0.05 abstenía en `q032` y `q021`. En las dos mediciones, `q004` y `q005` no se detectan por score (el retrieval encuentra chunks del mismo tema): ahí tiene que abstenerse el LLM.
 - **Los umbrales son provisionales:** el de LettuceDetect (0.5) es el valor por defecto y el de abstención (0.05) se eligió mirando estos mismos datos, con 17 oraciones positivas y 4 preguntas sin respuesta. Calibrarlos necesita más etiquetas. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
-- **Las respuestas de `exp_7` se generaron con contextos rerankeados por `ms-marco`.** El pipeline vigente es `dense` top-10, sin reranker ([reranking](../reranking/README.md)). Las etiquetas humanas y las mediciones de esta sección usan esos contextos. Regenerarlos con el pipeline vigente obliga a etiquetar de nuevo. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
+- **Las respuestas de `exp_7` se generaron con contextos rerankeados por `ms-marco`.** El pipeline vigente es `293/25%` → `hybrid_rrf` top-10, sin reranker en local ([reranking](../reranking/README.md)). Las etiquetas humanas y las mediciones de esta sección usan esos contextos. Regenerarlos con el pipeline vigente obliga a etiquetar de nuevo. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **Segunda pasada de etiquetas** sin mirar la primera, y acuerdo entre pasadas. Todas las cifras de arriba usan solo la primera. **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **El NLI (mDeBERTa) encuentra 14 de las 17 oraciones problemáticas, pero marca también 32 de las 49 soportadas** ([ANALYSIS.md §7](./ANALYSIS.md)). Por oración y contra cada uno de los 10 chunks, toma la mayor probabilidad de implicación y la mayor de contradicción. Marca la oración si ningún chunk la implica (`entailment ≤ 0.5`) o si alguno la contradice (`contradiction > 0.5`). Los umbrales se fijaron en 0.5 antes de correr y no se ajustaron:
 
@@ -100,22 +101,23 @@ Por respuesta se etiqueta además la relevancia (`si`/`no`), si la abstención f
 - **Falta verificar caso por caso lo que dice el juez.** Los acuerdos se calcularon solo sobre el `TRUE`/`FALSE`. Falta leer el `motivo` de cada veredicto (`generative/llama_3_1_8_B/relevance_qwen3/verdicts.csv`) y confirmar que el juez coincide con la etiqueta humana por la razón correcta, en los 34 casos de cada modo y no solo en los 3 desacuerdos.
 - **Variantes v2 de LettuceDetect** (`lettucedect-v2-qwen-2b`, `v2-mmbert-base`). **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
 - **Las 20 respuestas de `exp_6/deepseek_base` tienen un borrador del agente**, pero todavía no tienen etiqueta humana (`generative/deepseek_r1_7B/`). **Diferido:** con el tiempo acotado, antes de mejorarlo se avanza con la arquitectura de servicio y el despliegue.
-- **El juez LLM configurado es `qwen3:8b`** (`shared/settings.py`). [ollama-judge-evaluation.py](./benchmark-models/ollama-judge-evaluation.py) lo usa con la clave `qwen`, y [juzge-evaluate-errors.py](./benchmark-models/juzge-evaluate-errors.py) fija `deepseek-r1:7b` porque reproduce `exp_5`.
+- **El juez LLM configurado es `qwen3:8b`** (`shared/settings.py`). [ollama-judge-evaluation.py](./benchmark-models/ollama-judge-evaluation.py) lo usa con la clave `qwen`. La re-evaluación de las filas inválidas de `exp_5` usa `deepseek-r1:7b`, el juez de esa corrida.
 - **[run.py](./run.py) ya tiene implementados `groundedness_rate` y `hallucination_rate`** (`shared/eval/metrics.py`) y parsea el veredicto del juez con `parse_verdict`. Todavía usa el juez LLM por respuesta de la [fase 1](./PHASES.md).
 
 ## Reproducir
 
 ```bash
 docker compose up -d qdrant embedder ollama
-python experiments/evaluation/benchmark-models/ollama-judge-evaluation.py --use-judge False   # genera; EXP, TAG, ANSWER_MODEL, REUSE_ANSWERS y JUDGES se configuran al inicio del script
-docker compose --profile eval up -d detector                                                  # LettuceDetect
-docker compose --profile nli up -d nli                                                        # NLI (mDeBERTa)
-python experiments/evaluation/generative/context_stats.py                                     # estadísticas del contexto
-python experiments/evaluation/generative/detector_vs_labels.py                                # capas anti-alucinación contra la etiqueta humana y tiempos, con los contenedores detector y nli; escribe en llama_3_1_8_B/grounding_v3/ (abstención con RUN_ABSTENTION = True)
-python experiments/evaluation/generative/relevance_qwen.py                                    # juez de relevancia qwen3:8b en los dos modos; escribe en llama_3_1_8_B/relevance_qwen3/
+python experiments/evaluation/benchmark-models/ollama-judge-evaluation.py   # genera; EXP, TAG, ANSWER_MODEL, REUSE_ANSWERS, USE_JUDGE y JUDGES se configuran al inicio del script
 ```
 
-Los scripts insertan la raíz del repo en `sys.path` y hacen `os.chdir` a ella, así que se pueden lanzar desde cualquier directorio.
+Con `USE_JUDGE = False` (valor actual) solo genera o reutiliza `base_answers.csv`; con `True` también lo juzga con `JUDGES`. El script inserta la raíz del repo en `sys.path` y hace `os.chdir` a ella, así que se puede lanzar desde cualquier directorio.
+
+Los análisis de la fase 2 se apoyan en estos resultados, sobre las respuestas de `exp_7`:
+
+- [context_stats.csv](./generative/context_stats.csv): tokens de contexto y de prompt por pregunta, contados por Ollama para `llama3.1:8b`.
+- `generative/llama_3_1_8_B/grounding_v3/`: las capas anti-alucinación (LettuceDetect, NLI con mDeBERTa, cifras y abstención) contra la etiqueta humana por oración, con sus tiempos, medidas con los contenedores `detector` y `nli` (`docker compose --profile eval up -d detector` y `docker compose --profile nli up -d nli`).
+- `generative/llama_3_1_8_B/relevance_qwen3/`: el veredicto de relevancia de `qwen3:8b` en modo razonamiento y en modo JSON forzado, con su motivo.
 
 ## Documentos
 

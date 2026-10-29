@@ -1,0 +1,35 @@
+{
+  "chunking_config": {
+    "chunk_size": 293,
+    "chunk_overlap": 73
+  },
+  "base_method": "hybrid_rrf",
+  "n_questions": 135,
+  "rows": [
+    {
+      "config": "baseline",
+      "recall@5": 0.6222,
+      "recall@10": 0.6593,
+      "recall@10_ci95_low": 0.5778,
+      "recall@10_ci95_high": 0.7407,
+      "mrr@10": 0.4694,
+      "p50_ms": 13.6,
+      "p95_ms": 22.2,
+      "mean_ms": 14.6
+    },
+    {
+      "config": "reranked",
+      "recall@5": 0.7185,
+      "recall@10": 0.7333,
+      "recall@10_ci95_low": 0.6593,
+      "recall@10_ci95_high": 0.8074,
+      "mrr@10": 0.5916,
+      "p50_ms": 201.7,
+      "p95_ms": 243.4,
+      "mean_ms": 300.8
+    }
+  ],
+  "delta_recall@10": 0.074,
+  "delta_p95_ms": 221.2,
+  "negative_finding": false
+}

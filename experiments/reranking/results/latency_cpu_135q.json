@@ -1,0 +1,13 @@
+{
+  "device": "cpu",
+  "torch_threads": 10,
+  "pool_size": 20,
+  "n_questions": 135,
+  "recall@10": 0.7333,
+  "mrr@10": 0.5916,
+  "rerank_latency": {
+    "p50_ms": 4050.0,
+    "p95_ms": 4932.9,
+    "mean_ms": 4083.7
+  }
+}

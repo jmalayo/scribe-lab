@@ -74,7 +74,7 @@ En esta reproducción puntual se resuelven 6 de 9. Las 3 que no (`q018`, `q019`,
 
 ## 3. Contexto que recibe el LLM
 
-Por pregunta, sobre las 34 de `exp_7` (`generative/context_stats.py`, tokens contados por Ollama para `llama3.1:8b`; resultado en [context_stats.csv](./generative/context_stats.csv)):
+Por pregunta, sobre las 34 de `exp_7` (tokens contados por Ollama para `llama3.1:8b`; resultado en [context_stats.csv](./generative/context_stats.csv)):
 
 ```
 chunks por contexto         10 en 34/34
@@ -121,7 +121,7 @@ Con ese umbral, LettuceDetect tiene un recall de 1/14 sobre las respuestas no su
 
 ## 6. Capas anti-alucinación contra la etiqueta humana
 
-Script: `generative/detector_vs_labels.py`. Salida: `generative/llama_3_1_8_B/detector_v1/` (`sentences.csv`, `abstention.csv`, `summary.json`). Positivo = oración etiquetada `no_soportada` o `contradice` en la primera pasada. Se excluye la oración `no_aplica`, así que quedan 66 de las 67.
+Salida: `generative/llama_3_1_8_B/detector_v1/` (`sentences.csv`, `abstention.csv`, `summary.json`). Positivo = oración etiquetada `no_soportada` o `contradice` en la primera pasada. Se excluye la oración `no_aplica`, así que quedan 66 de las 67.
 
 El contenedor `detector` devuelve la probabilidad de cada token con su rango de caracteres (`output_format="tokens"`). El score de una oración es el máximo de sus tokens. Los tramos de más de 0.5 reconstruidos desde los tokens coinciden con la salida `spans` en 34/34 respuestas.
 
@@ -171,7 +171,7 @@ Máximo de las 30 con respuesta: 6.890. Solo un corte entre −1.031 y −0.776 
 
 ## 7. NLI contra la etiqueta humana y tiempo del módulo
 
-Script: `generative/detector_vs_labels.py`. Salida: `generative/llama_3_1_8_B/grounding_v2/` (`sentences.csv`, `timings.csv`, `abstention.csv`, `summary.json`). Mismas 66 oraciones y mismos positivos que el §6. Modelo: `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`, commit `b5113eb38ab63efdd7f280f8c144ea8b13f978ce`, en CPU. Cada oración se evalúa contra cada uno de los 10 chunks (el chunk es la premisa y la oración, la hipótesis; si el par no entra en 512 tokens se trunca el chunk), y por oración se toman la mayor probabilidad de implicación y la mayor de contradicción. Los tres umbrales (LettuceDetect, implicación y contradicción) se fijaron en 0.5 antes de correr.
+Salida: `generative/llama_3_1_8_B/grounding_v2/` (`sentences.csv`, `timings.csv`, `abstention.csv`, `summary.json`). Mismas 66 oraciones y mismos positivos que el §6. Modelo: `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`, commit `b5113eb38ab63efdd7f280f8c144ea8b13f978ce`, en CPU. Cada oración se evalúa contra cada uno de los 10 chunks (el chunk es la premisa y la oración, la hipótesis; si el par no entra en 512 tokens se trunca el chunk), y por oración se toman la mayor probabilidad de implicación y la mayor de contradicción. Los tres umbrales (LettuceDetect, implicación y contradicción) se fijaron en 0.5 antes de correr.
 
 **Rango por etiqueta humana:**
 
@@ -220,7 +220,7 @@ Carga del NLI: 4.7 s, una vez por proceso. El NLI es el 96 % del total, porque c
 
 ## 8. Juez de relevancia `qwen3:8b`
 
-Script: `generative/relevance_qwen.py`. Salida: `generative/llama_3_1_8_B/relevance_qwen3/` (`verdicts.csv` con veredicto, motivo y respuesta cruda por caso, y `summary.json`). Mismo prompt, esquema JSON y opciones que la medición de consumo del §4 (`temperature=0`, `num_ctx=4096`, `num_predict=3000`), sobre las 34 respuestas de `exp_7`. Referencia: `humano_relevancia` de `labels_answers.csv`, que es `si` en las 34.
+Salida: `generative/llama_3_1_8_B/relevance_qwen3/` (`verdicts.csv` con veredicto, motivo y respuesta cruda por caso, y `summary.json`). Mismo prompt, esquema JSON y opciones que la medición de consumo del §4 (`temperature=0`, `num_ctx=4096`, `num_predict=3000`), sobre las 34 respuestas de `exp_7`. Referencia: `humano_relevancia` de `labels_answers.csv`, que es `si` en las 34.
 
 | Modo | Inválidos | Acuerdo con humano (IC95) | Marca no relevante | p50 | p95 | máx. | Set (34) |
 |---|---|---|---|---|---|---|---|

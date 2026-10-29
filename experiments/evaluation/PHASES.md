@@ -59,7 +59,7 @@ En ese momento la etapa LLM del pipeline principal (`experiments/evaluation/run.
   ```
 - El script [ollama-judge-evaluation.py](./benchmark-models/ollama-judge-evaluation.py) inserta la raíz del repo en `sys.path`. En esta fase las respuestas base se cacheaban apenas se generaban. Salida en pandas/CSV, separador `;`.
 - `generate()` (`shared/llm.py`) usa `repeat_penalty=1.3` en las llamadas de juicio, para evitar que el modelo quede repitiendo el mismo token en loop.
-- **Fix:** `num_predict` de `judge_answers()` subió de 1500 a 3000. Con 1500, DeepSeek gastaba todo el presupuesto en su bloque de razonamiento oculto (`thinking`) antes de escribir el veredicto, y dejaba `response` vacío (`done_reason: "length"`). Con 3000 el fallo bajó a la mitad en ambas direcciones; las cifras y las tablas por pregunta están en [ANALYSIS.md §2](./ANALYSIS.md). Estos casos quedan marcados con columnas `{judge}_asw_valido` en `per_question_judge_verdicts.csv`, y son reproducibles con [juzge-evaluate-errors.py](./benchmark-models/juzge-evaluate-errors.py).
+- **Fix:** `num_predict` de `judge_answers()` subió de 1500 a 3000. Con 1500, DeepSeek gastaba todo el presupuesto en su bloque de razonamiento oculto (`thinking`) antes de escribir el veredicto, y dejaba `response` vacío (`done_reason: "length"`). Con 3000 el fallo bajó a la mitad en ambas direcciones; las cifras y las tablas por pregunta están en [ANALYSIS.md §2](./ANALYSIS.md). Estos casos quedan marcados con columnas `{judge}_asw_valido` en `per_question_judge_verdicts.csv`, y su re-evaluación queda en `judge_errors_deepseek_1500.csv` y `judge_errors_deepseek_3000.csv` de `results/exp_5/deepseek_base/`.
 
 ### Prompt engineering — `GROUNDEDNESS_PROMPT` / `RELEVANCE_PROMPT`
 
@@ -101,7 +101,7 @@ Cada respuesta se corta en oraciones con `split_sentences` (`shared/eval/groundi
 
 ### Generación con el pipeline de retrieval vigente
 
-Script: `experiments/evaluation/benchmark-models/ollama-judge-evaluation.py --use-judge False` (configuración en las variables del inicio del script: `EXP`, `TAG`, `ANSWER_MODEL`, `REUSE_ANSWERS`, `JUDGES`).  
+Script: `experiments/evaluation/benchmark-models/ollama-judge-evaluation.py` con `USE_JUDGE = False` (configuración en las variables del inicio del script: `EXP`, `TAG`, `ANSWER_MODEL`, `REUSE_ANSWERS`, `USE_JUDGE`, `JUDGES`).  
 Salida: `benchmark-models/results/exp_7/llama31_base/base_answers.csv`.
 
 El contexto se arma igual que en `experiments/evaluation/run.py`, que toma chunking, método base y tamaño del pool de [reranking](../reranking/README.md): `284/25%`, `hybrid_rrf`, pool de 20 → cross-encoder → **10 chunks**, con las tablas del payload reinsertadas al final de su chunk (`build_context_text`). Generación con `temperature=0`, `num_predict=500` y `repeat_penalty=1.0`. Las respuestas de `exp_7` se generaron cuando el cross-encoder era `ms-marco-MiniLM-L-6-v2`.
@@ -140,4 +140,4 @@ Después se agregó el NLI: `nli_predictor` carga mDeBERTa con su commit fijo y 
 
 ### Juez de relevancia `qwen3:8b`
 
-`generative/relevance_qwen.py` juzga las 34 respuestas de `exp_7` en modo razonamiento y en modo JSON forzado, con `prompt_v2()` de [prompts.py](./prompts.py) (el prompt y el esquema de la medición de consumo), y guarda veredicto, motivo y respuesta cruda por caso. Resultados en [ANALYSIS.md §8](./ANALYSIS.md).
+El juez de relevancia `qwen3:8b` juzga las 34 respuestas de `exp_7` en modo razonamiento y en modo JSON forzado, con `prompt_v2()` de [prompts.py](./prompts.py) (el prompt y el esquema de la medición de consumo), y guarda veredicto, motivo y respuesta cruda por caso. Resultados en [ANALYSIS.md §8](./ANALYSIS.md).
