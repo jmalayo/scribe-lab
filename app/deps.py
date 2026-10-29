@@ -22,8 +22,18 @@ def build_pipeline() -> Pipeline:
     grounder = (
         http_grounder(settings.detector_url, settings.nli_url, config.grounding) if config.grounding.enabled else None
     )
+    rewriter = None
 
-    return Pipeline(config, build_qdrant_client(), get_embedder(), llm, grounder)
+    if config.memory.enabled:
+        rewriter = build_llm(
+            config.llm.provider,
+            config.memory.model,
+            max_tokens=config.memory.max_tokens,
+            base_url=config.llm.base_url,
+            repeat_penalty=None,
+        )
+
+    return Pipeline(config, build_qdrant_client(), get_embedder(), llm, grounder, rewriter)
 
 
 @asynccontextmanager

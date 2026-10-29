@@ -1,4 +1,4 @@
-pipeline_version: 2026-10-25-cd48358
+pipeline_version: 2026-10-29-19cf2f4
 collection: corpus_demo
 corpus_dir: corpus_demo
 chunk_size: 293
@@ -19,3 +19,9 @@ grounding:
   threshold: 0.5
   entailment_threshold: 0.5
   contradiction_threshold: 0.5
+memory:
+  enabled: true
+  model: llama3.2:3b
+  max_tokens: 120
+  prompt_version: v2
+  rrf_k: 60

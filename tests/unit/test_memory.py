@@ -2,7 +2,10 @@ import json
 
 import pytest
 import requests
+from fastapi.testclient import TestClient
 
+from app.deps import get_pipeline
+from app.main import app
 from shared.llm import LLMResult
 from shared.memory import MAX_TURNS, build_messages, parse_rewrite
 from shared.prompts import REWRITE_PROMPTS
@@ -180,3 +183,45 @@ def test_unknown_memory_prompt_is_rejected():
     with pytest.raises(ValueError, match="memory.prompt_version"):
         make_pipeline(config=make_config(memory={"prompt_version": "v9"}))
 
+
+@pytest.fixture
+def api_with_memory():
+
+    pipeline = memory_pipeline()
+    app.dependency_overrides[get_pipeline] = lambda: pipeline
+
+    yield TestClient(app, raise_server_exceptions=False)
+
+    app.dependency_overrides.clear()
+
+
+def test_query_accepts_history_and_returns_the_rewrite(api_with_memory):
+
+    resp = api_with_memory.post(
+        "/v1/query",
+        json={
+            "question": "¿Y por qué varía tanto?",
+            "history": [{"question": HISTORY[0][0], "answer": HISTORY[0][1]}],
+        },
+    )
+
+    assert resp.status_code == 200
+    assert resp.json()["rewritten_question"] == "¿Por qué varía tanto la balanced accuracy?"
+
+
+def test_query_without_history_keeps_the_previous_contract(api_with_memory):
+
+    resp = api_with_memory.post("/v1/query", json={"question": "¿pregunta?"})
+
+    assert resp.status_code == 200
+    assert resp.json()["rewritten_question"] is None
+
+
+def test_history_turns_are_validated(api_with_memory):
+
+    resp = api_with_memory.post(
+        "/v1/query",
+        json={"question": "¿Y eso?", "history": [{"question": "", "answer": "x"}]},
+    )
+
+    assert resp.status_code == 422

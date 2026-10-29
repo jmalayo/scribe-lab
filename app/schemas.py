@@ -3,9 +3,15 @@ from pydantic import BaseModel, Field
 from shared.eval.grounding import GroundingResult
 
 
+class HistoryTurn(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+    answer: str = Field(max_length=8000)
+
+
 class QueryRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     top_k: int | None = Field(default=None, ge=1, le=50)
+    history: list[HistoryTurn] = Field(default_factory=list, max_length=20)
 
 
 class RetrieveRequest(BaseModel):
@@ -39,6 +45,7 @@ class QueryResponse(BaseModel):
     model: str | None
     pipeline_version: str
     prompt_version: str
+    rewritten_question: str | None = None
 
 
 class RetrieveResponse(BaseModel):
