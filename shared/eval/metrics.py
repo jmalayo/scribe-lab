@@ -169,6 +169,26 @@ def bootstrap_ci(values: list[float], n_resamples: int = 1000, ci: float = 0.95,
 
     return (round(means[lo_idx], 4), round(means[hi_idx], 4))
 
+def auroc(scores: list[float], positive: list[bool]) -> float:
+
+    pos = [s for s, is_pos in zip(scores, positive, strict=True) if is_pos]
+    neg = [s for s, is_pos in zip(scores, positive, strict=True) if not is_pos]
+
+    if not pos or not neg:
+        raise ValueError("auroc necesita al menos un positivo y un negativo")
+
+    wins = 0.0
+
+    for p in pos:
+        for q in neg:
+
+            if p > q:
+                wins += 1.0
+            elif p == q:
+                wins += 0.5
+
+    return round(wins / (len(pos) * len(neg)), 3)
+
 def wilson_ci(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
     from math import sqrt

@@ -163,7 +163,7 @@ def reciprocal_rank_fusion(
         for rank, chunk in enumerate(ranking):
             cid = chunk["chunk_id"]
             scores[cid] = scores.get(cid, 0.0) + 1.0 / (k_constant + rank + 1)
-            payloads[cid] = chunk
+            payloads[cid] = {**payloads.get(cid, {}), **chunk}
 
     fused_ids = sorted(scores, key=lambda cid: scores[cid], reverse=True)
 

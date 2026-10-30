@@ -2,6 +2,7 @@ import pytest
 
 from shared.eval.metrics import (
     _find_numbers,
+    auroc,
     bootstrap_ci,
     calculate_hit_at_k,
     cohen_kappa,
@@ -147,3 +148,23 @@ def test_cohen_kappa():
 def test_wilson_ci(successes, n, expected):
 
     assert wilson_ci(successes, n) == expected
+
+
+@pytest.mark.parametrize(
+    ("scores", "positive", "expected"),
+    [
+        ([0.9, 0.8, 0.2, 0.1], [True, True, False, False], 1.0),
+        ([0.1, 0.2, 0.8, 0.9], [True, True, False, False], 0.0),
+        ([0.5, 0.5], [True, False], 0.5),
+        ([0.9, 0.3, 0.5, 0.1], [True, True, False, False], 0.75),
+    ],
+)
+def test_auroc(scores, positive, expected):
+
+    assert auroc(scores, positive) == expected
+
+
+def test_auroc_needs_both_classes():
+
+    with pytest.raises(ValueError):
+        auroc([0.1, 0.2], [True, True])

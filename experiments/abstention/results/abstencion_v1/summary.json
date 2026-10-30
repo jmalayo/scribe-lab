@@ -1,0 +1,237 @@
+{
+ "exp": "abstencion_v1",
+ "n_preguntas": 135,
+ "n_por_split": {
+  "calibracion|False": 59,
+  "calibracion|True": 10,
+  "verificacion|False": 56,
+  "verificacion|True": 10
+ },
+ "auroc": {
+  "todas": {
+   "embedder": 0.581,
+   "cross_encoder": 0.751,
+   "rrf": 0.669
+  },
+  "calibracion": {
+   "embedder": 0.632,
+   "cross_encoder": 0.7,
+   "rrf": 0.58
+  },
+  "verificacion": {
+   "embedder": 0.529,
+   "cross_encoder": 0.802,
+   "rrf": 0.761
+  }
+ },
+ "rangos": {
+  "embedder": {
+   "sin_respuesta": [
+    0.424,
+    0.8236
+   ],
+   "con_respuesta": [
+    0.4627,
+    0.8648
+   ]
+  },
+  "cross_encoder": {
+   "sin_respuesta": [
+    0.0002,
+    0.9979
+   ],
+   "con_respuesta": [
+    0.0099,
+    0.9999
+   ]
+  },
+  "rrf": {
+   "sin_respuesta": [
+    0.0164,
+    0.0328
+   ],
+   "con_respuesta": [
+    0.0164,
+    0.0328
+   ]
+  }
+ },
+ "umbrales": {
+  "embedder": {
+   "umbral": 0.54504395,
+   "atrapadas": 2,
+   "bloqueadas": 2,
+   "bloqueos_permitidos": 2
+  },
+  "cross_encoder": {
+   "umbral": 0.0098729496821761,
+   "atrapadas": 1,
+   "bloqueadas": 0,
+   "bloqueos_permitidos": 2
+  },
+  "rrf": {
+   "umbral": null,
+   "atrapadas": 0,
+   "bloqueadas": 0,
+   "bloqueos_permitidos": 2
+  }
+ },
+ "verificacion": {
+  "embedder": {
+   "sin_respuesta_n": 10,
+   "con_respuesta_n": 56,
+   "ganadas": 1,
+   "ganadas_ic95": [
+    0.0179,
+    0.4042
+   ],
+   "perdidas": 5,
+   "perdidas_ic95": [
+    0.0387,
+    0.1926
+   ],
+   "alucinaciones_evitadas": 0,
+   "respuestas_perdidas": 4,
+   "respuestas_perdidas_con_gold": 3,
+   "ids_ganadas": [
+    "q127"
+   ],
+   "ids_perdidas": [
+    "q031",
+    "q062",
+    "q069",
+    "q086",
+    "q110"
+   ]
+  },
+  "cross_encoder": {
+   "sin_respuesta_n": 10,
+   "con_respuesta_n": 56,
+   "ganadas": 0,
+   "ganadas_ic95": [
+    0.0,
+    0.2775
+   ],
+   "perdidas": 0,
+   "perdidas_ic95": [
+    0.0,
+    0.0642
+   ],
+   "alucinaciones_evitadas": 0,
+   "respuestas_perdidas": 0,
+   "respuestas_perdidas_con_gold": 0,
+   "ids_ganadas": [],
+   "ids_perdidas": []
+  },
+  "rrf": {
+   "sin_respuesta_n": 10,
+   "con_respuesta_n": 56,
+   "ganadas": 0,
+   "ganadas_ic95": [
+    0.0,
+    0.2775
+   ],
+   "perdidas": 0,
+   "perdidas_ic95": [
+    0.0,
+    0.0642
+   ],
+   "alucinaciones_evitadas": 0,
+   "respuestas_perdidas": 0,
+   "respuestas_perdidas_con_gold": 0,
+   "ids_ganadas": [],
+   "ids_perdidas": []
+  }
+ },
+ "solo_llm": {
+  "todas": {
+   "sin_respuesta_abstiene": 17,
+   "sin_respuesta_abstiene_ic95": [
+    0.6396,
+    0.9476
+   ],
+   "con_respuesta_abstiene": 33,
+   "con_respuesta_abstiene_ic95": [
+    0.2122,
+    0.3755
+   ],
+   "con_respuesta_abstiene_con_gold": 20,
+   "con_respuesta_sin_gold": 26
+  },
+  "verificacion": {
+   "sin_respuesta_abstiene": 10,
+   "sin_respuesta_abstiene_ic95": [
+    0.7225,
+    1.0
+   ],
+   "con_respuesta_abstiene": 17,
+   "con_respuesta_abstiene_ic95": [
+    0.199,
+    0.4334
+   ],
+   "con_respuesta_abstiene_con_gold": 11,
+   "con_respuesta_sin_gold": 12
+  },
+  "sin_respuesta_no_se_abstiene": {
+   "q118": {
+    "split": "calibracion",
+    "embedder": {
+     "score": 0.8236,
+     "con_respuesta_por_debajo": 0.965
+    },
+    "cross_encoder": {
+     "score": 0.9979,
+     "con_respuesta_por_debajo": 0.904
+    },
+    "rrf": {
+     "score": 0.0328,
+     "con_respuesta_por_debajo": 0.739
+    }
+   },
+   "q123": {
+    "split": "calibracion",
+    "embedder": {
+     "score": 0.6403,
+     "con_respuesta_por_debajo": 0.348
+    },
+    "cross_encoder": {
+     "score": 0.2004,
+     "con_respuesta_por_debajo": 0.096
+    },
+    "rrf": {
+     "score": 0.0323,
+     "con_respuesta_por_debajo": 0.496
+    }
+   },
+   "q135": {
+    "split": "calibracion",
+    "embedder": {
+     "score": 0.5943,
+     "con_respuesta_por_debajo": 0.165
+    },
+    "cross_encoder": {
+     "score": 0.04,
+     "con_respuesta_por_debajo": 0.026
+    },
+    "rrf": {
+     "score": 0.0315,
+     "con_respuesta_por_debajo": 0.217
+    }
+   }
+  }
+ },
+ "costo": {
+  "latencia_busqueda_ms": {
+   "p50": 20.9,
+   "p95": 49.8
+  },
+  "latencia_rerank_ms": {
+   "p50": 95.4,
+   "p95": 191.1
+  },
+  "latencia_llm_ms": {
+   "p50": 600.1,
+   "p95": 13185.0
+  }
+ }
+}

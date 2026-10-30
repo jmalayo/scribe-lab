@@ -89,6 +89,16 @@ def test_rrf_score_matches_formula():
     assert fused[0]["rrf_score"] == pytest.approx(2 / 61)
     assert fused[1]["rrf_score"] == pytest.approx(1 / 62)
 
+def test_rrf_keeps_fields_from_every_ranking():
+
+    dense = [{**chunk("a"), "dense_score": 0.8}]
+    sparse = [{**chunk("a"), "score": 12.5}]
+
+    fused = reciprocal_rank_fusion([dense, sparse])
+
+    assert fused[0]["dense_score"] == 0.8
+    assert fused[0]["score"] == 12.5
+
 def test_rrf_rewards_agreement_over_single_top_rank():
 
     # "b" es 2.º en ambas listas y supera a "a", 1.º posición tras fused

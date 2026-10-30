@@ -200,7 +200,10 @@ class Pipeline:
             latencies["embedding"] = _get_time_ms(t0)
 
             t0 = time.perf_counter()
-            dense = dense_search_vector(self.client, self.config.collection, vector, pool)
+            dense = [
+                {**c, "dense_score": c["score"]}
+                    for c in dense_search_vector(self.client, self.config.collection, vector, pool)
+            ]
 
             if self.config.method == "hybrid_rrf":
                 candidates = reciprocal_rank_fusion(

@@ -109,6 +109,13 @@ def test_retrieve_respects_top_k_override():
     assert pipeline.client.calls[-1] == ("corpus_demo", 5)
 
 
+def test_dense_retrieval_keeps_the_embedder_similarity():
+
+    chunks = make_pipeline().retrieve("¿pregunta?").chunks
+
+    assert [c["dense_score"] for c in chunks] == [c["score"] for c in chunks]
+
+
 def test_abstention_skips_llm_when_best_score_is_below_threshold():
 
     llm = FakeLLM()
