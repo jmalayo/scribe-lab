@@ -1,4 +1,5 @@
 import re
+import unicodedata
 
 import requests
 from pydantic import BaseModel
@@ -101,6 +102,18 @@ def unsupported_numbers(sentence: str, context: str, question: str = "") -> list
         n for n in found 
         if n.replace(",", ".") not in allowed
     ]
+
+def strip_accents(text: str) -> str:
+
+    text = unicodedata.normalize("NFKD", text.lower())
+
+    return "".join(ch for ch in text if not unicodedata.combining(ch))
+
+
+def abstained(answer: str) -> bool:
+
+    return "no lo se" in strip_accents(answer)
+
 
 def should_abstain(chunks: list[dict], min_score: float, score_key: str = "rerank_score") -> bool:
 

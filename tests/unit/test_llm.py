@@ -70,15 +70,3 @@ def test_build_llm_selects_provider():
     for provider in ("groq", "openai", "bedrock"):
         with pytest.raises(ValueError, match="no soportado"):
             llm.build_llm(provider, "m")
-
-
-def test_legacy_generate_does_not_retry(posts):
-
-    calls, queue = posts
-    queue.append(FakeResponse(503))
-
-    with pytest.raises(requests.HTTPError):
-        llm.generate("p")
-
-    assert len(calls) == 1
-    assert calls[0]["timeout"] == 120

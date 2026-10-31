@@ -1,0 +1,48 @@
+origen;id;condicion;respuesta;abstencion
+multiturno;c31;literal;Se eliminó porque la ruta CLAP (Route B) se eliminó del proyecto en la reestructuración de `dsp/` a `features/` + `ml/`, y el pipeline actual es solo DSP + ML supervisado.;False
+multiturno;c31;concat;Se eliminó la ruta CLAP (Route B) en la reestructuración de `dsp/` a `features/` + `ml` porque ya no era necesaria en la arquitectura actual, que solo utiliza DSP + ML supervisado. La ruta CLAP era parte de la arquitectura original del proyecto, pero se eliminó en la reestructuración.;False
+multiturno;c31;reescritura_3b;Se eliminó Route B en la reestructuración de dsp/ a features/ + ml/ porque se reemplazó por la ruta CLAP zero-shot, que es una ruta few-shot con MERT. Esta ruta se utilizó como desempate en casos ambiguos, pero se eliminó del proyecto en la reestructuración.;False
+multiturno;c31;reescritura_8b;Se eliminó Route B en la reestructuración de dsp/ a features/ + ml/ porque se reemplazó por la ruta CLAP zero-shot, que es una ruta few-shot con MERT. Esta ruta se utilizaba solo como desempate en casos ambiguos y se eliminó para dar lugar a la ruta CLAP zero-shot, que es una ruta más eficiente y efectiva.;False
+multiturno;c31;oraculo;Se eliminó la ruta CLAP (Route B) en la reestructuración de `dsp/` a `features/` + `ml/` porque se consideró que su uso era solo como desempate en casos ambiguos y no era esencial para el funcionamiento del pipeline.;False
+multiturno;c32;literal;No lo sé según el contexto proporcionado.;True
+multiturno;c32;concat;No lo sé según el contexto proporcionado.;True
+multiturno;c32;reescritura_3b;No lo sé según el contexto proporcionado.;True
+multiturno;c32;reescritura_8b;No lo sé según el contexto proporcionado.;True
+multiturno;c32;oraculo;No lo sé según el contexto proporcionado.;True
+multiturno;c33;literal;"No lo sé según el contexto proporcionado. El contexto proporciona información sobre la evaluación de la música y las limitaciones del modelo, pero no proporciona información sobre la cantidad de canciones de la playlist ""rock_english"" que quedaron así.";True
+multiturno;c33;concat;No lo sé según el contexto proporcionado.;True
+multiturno;c33;reescritura_3b;"No lo sé según el contexto proporcionado. El contexto proporciona información sobre la evaluación de la música, incluyendo la cantidad de canciones que se evaluaron y la cantidad de canciones que se consideraron ""incorrectas"" en general, pero no proporciona información específica sobre la cantidad de canciones de la playlist ""rock_english"" que se consideraron incorrectas.";True
+multiturno;c33;reescritura_8b;"No lo sé según el contexto proporcionado. El contexto proporciona información sobre la evaluación de la música, incluyendo la cantidad de canciones que se evaluaron y la cantidad de canciones que se consideraron ""incorrectas"" en general, pero no proporciona información específica sobre la cantidad de canciones de la playlist ""rock_english"" que se consideraron incorrectas.";True
+multiturno;c33;oraculo;No lo sé según el contexto proporcionado. El contexto proporciona información sobre la evaluación de un modelo de música, pero no proporciona información sobre el número de canciones incorrectas de la playlist rock_english.;True
+multiturno;c34;literal;No lo sé según el contexto proporcionado.;True
+multiturno;c34;concat;No lo sé según el contexto proporcionado.;True
+multiturno;c34;reescritura_3b;No lo sé según el contexto proporcionado.;True
+multiturno;c34;reescritura_8b;"Según el contexto proporcionado, el 40.6% de las canciones caen en ""confiable"", el 25.0% en ""ambigua"" y el 34.4% en ""revisar"".";False
+multiturno;c34;oraculo;No lo sé según el contexto proporcionado.;True
+multiturno;c35;literal;No lo sé según el contexto proporcionado. El contexto proporciona información sobre el modelo de música y sus características, pero no menciona el número de árboles que utiliza.;True
+multiturno;c35;concat;No lo sé según el contexto proporcionado.;True
+multiturno;c35;reescritura_3b;No lo sé según el contexto proporcionado.;True
+multiturno;c35;reescritura_8b;No lo sé según el contexto proporcionado.;True
+multiturno;c35;oraculo;No lo sé según el contexto proporcionado.;True
+un_turno;q005;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q032;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q118;literal;Se eliminó la ruta CLAP (Route B) en la reestructuración de `dsp/` a `features/` + `ml/` porque se consideró que su uso era solo como desempate en casos ambiguos y no era esencial para el funcionamiento del pipeline.;False
+un_turno;q119;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q120;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q121;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q122;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q123;literal;"Según el contexto proporcionado, los umbrales de score_energia que separan las categorías de alta y baja energía son los siguientes:
+
+* `SPEARMAN_SEGURO=0.98` (seguro) y `SPEARMAN_LIMITE=0.95` (límite).";False
+un_turno;q124;literal;No lo sé según el contexto proporcionado. El contexto proporciona información sobre la evaluación de un modelo de música, pero no proporciona información sobre el número de canciones incorrectas de la playlist rock_english.;True
+un_turno;q125;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q126;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q127;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q128;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q129;literal;No lo sé según el contexto proporcionado. El contexto proporciona información sobre la implementación de la herramienta async-music-fetch-engine, pero no proporciona información sobre el éxito de descargas de playlists de Spotify.;True
+un_turno;q130;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q131;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q132;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q133;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q134;literal;No lo sé según el contexto proporcionado.;True
+un_turno;q135;literal;El proyecto music-tagger (audio-intensity-lab) se publica bajo la licencia MIT.;False

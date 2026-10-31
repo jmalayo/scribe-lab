@@ -15,6 +15,7 @@ source_modules =
     mcp_server
     shared.pipeline
     shared.llm
+    shared.memory
     shared.retrieval
     shared.ingest
     shared.prompts

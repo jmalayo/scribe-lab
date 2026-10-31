@@ -13,12 +13,27 @@ from shared.settings import settings
 def build_pipeline() -> Pipeline:
 
     config = PipelineConfig.from_yaml(settings.pipeline_config_path)
-    llm = build_llm(config.llm.provider, config.llm.model, config.llm.max_tokens, config.llm.base_url)
+    llm = build_llm(
+        config.llm.provider,
+        config.llm.model,
+        max_tokens=config.llm.max_tokens,
+        base_url=config.llm.base_url,
+    )
     grounder = (
         http_grounder(settings.detector_url, settings.nli_url, config.grounding) if config.grounding.enabled else None
     )
+    rewriter = None
 
-    return Pipeline(config, build_qdrant_client(), get_embedder(), llm, grounder)
+    if config.memory.enabled:
+        rewriter = build_llm(
+            config.llm.provider,
+            config.memory.model,
+            max_tokens=config.memory.max_tokens,
+            base_url=config.llm.base_url,
+            repeat_penalty=None,
+        )
+
+    return Pipeline(config, build_qdrant_client(), get_embedder(), llm, grounder, rewriter)
 
 
 @asynccontextmanager

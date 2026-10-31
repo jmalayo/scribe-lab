@@ -36,7 +36,8 @@ def _citations(chunks: list[dict], score_key: str) -> list[Citation]:
 @router.post("/v1/query", response_model=QueryResponse)
 def query(req: QueryRequest, pipeline: PipelineDep) -> QueryResponse:
 
-    result = pipeline.run(req.question, top_k=req.top_k)
+    history = [(turn.question, turn.answer) for turn in req.history]
+    result = pipeline.run(req.question, top_k=req.top_k, history=history)
 
     return QueryResponse(
         answer=result.answer,
@@ -50,6 +51,7 @@ def query(req: QueryRequest, pipeline: PipelineDep) -> QueryResponse:
         model=result.model,
         pipeline_version=pipeline.config.pipeline_version,
         prompt_version=pipeline.config.prompt_version,
+        rewritten_question=result.rewritten_question,
     )
 
 

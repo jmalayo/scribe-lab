@@ -26,7 +26,7 @@ from shared.ingest import (
     index_chunks,
     load_corpus,
 )
-from shared.llm import generate
+from shared.llm import LLMClient, build_llm
 from shared.prompts import build_context_text, chunk_block
 from shared.retrieval import BM25Index, fetch_all_chunks
 from shared.settings import settings
@@ -39,7 +39,7 @@ EXP = "exp_7"
 TAG = "llama31_base"
 
 ANSWER_MODEL = settings.llm_model_answer
-NUM_PREDICT = 500        # defaults de shared.llm.generate; exp_6 usó 1500 / 1.3 con DeepSeek
+NUM_PREDICT = 500        # defaults de shared.llm.build_llm; exp_6 usó 1500 / 1.3 con DeepSeek
 REPEAT_PENALTY = 1.0
 
 # True: juzga el base_answers.csv existente en vez de generarlo
@@ -55,8 +55,7 @@ JUDGES = {
 JUDGE_NUM_PREDICT = 1500
 JUDGE_REPEAT_PENALTY = 1.3
 
-def build_answers(questions: list[dict], answer_model: str, answers_path: Path, chunks_path: Path,
-                  num_predict: int, repeat_penalty: float) -> list[dict]:
+def build_answers(questions: list[dict], answerer: LLMClient, answers_path: Path, chunks_path: Path) -> list[dict]:
 
     docs = load_corpus()
     client = build_qdrant_client()
@@ -78,15 +77,10 @@ def build_answers(questions: list[dict], answer_model: str, answers_path: Path, 
         context_text = build_context_text(context_chunks)
 
         t0 = time.perf_counter()
-        answer = generate(
-            ANSWER_PROMPT.format(context=context_text, question=q["question"]),
-            model=answer_model,
-            num_predict=num_predict,
-            repeat_penalty=repeat_penalty,
-        )
+        answer = answerer.complete(ANSWER_PROMPT.format(context=context_text, question=q["question"])).text
         elapsed = time.perf_counter() - t0
 
-        print(f"  [{i}/{len(questions)}] {q['id']} ({answer_model}): {elapsed:.1f}s", flush=True)
+        print(f"  [{i}/{len(questions)}] {q['id']} ({answerer.model}): {elapsed:.1f}s", flush=True)
 
         rows.append(
             {
@@ -111,7 +105,7 @@ def build_answers(questions: list[dict], answer_model: str, answers_path: Path, 
 
     return rows
 
-def judge_answers(rows: list[dict], judge_model: str) -> tuple[list[dict], list[float]]:
+def judge_answers(rows: list[dict], judge: LLMClient) -> tuple[list[dict], list[float]]:
 
     verdicts, latencies = [], []
 
@@ -119,23 +113,13 @@ def judge_answers(rows: list[dict], judge_model: str) -> tuple[list[dict], list[
 
         t0 = time.perf_counter()
 
-        grounded_raw = generate(
-            GROUNDEDNESS_PROMPT.format(context=row["context"], answer=row["answer"]),
-            model=judge_model,
-            num_predict=JUDGE_NUM_PREDICT,
-            repeat_penalty=JUDGE_REPEAT_PENALTY,
-        )
-        relevant_raw = generate(
-            RELEVANCE_PROMPT.format(question=row["question"], answer=row["answer"]),
-            model=judge_model,
-            num_predict=JUDGE_NUM_PREDICT,
-            repeat_penalty=JUDGE_REPEAT_PENALTY,
-        )
+        grounded_raw = judge.complete(GROUNDEDNESS_PROMPT.format(context=row["context"], answer=row["answer"])).text
+        relevant_raw = judge.complete(RELEVANCE_PROMPT.format(question=row["question"], answer=row["answer"])).text
 
         elapsed = time.perf_counter() - t0
         latencies.append(elapsed * 1000)
 
-        print(f"  [{i}/{len(rows)}] {row['id']} ({judge_model}): {elapsed:.1f}s", flush=True)
+        print(f"  [{i}/{len(rows)}] {row['id']} ({judge.model}): {elapsed:.1f}s", flush=True)
 
         grounded_verdict, grounded_valid = parse_verdict(grounded_raw)
         relevant_verdict, relevant_valid = parse_verdict(relevant_raw)
@@ -194,7 +178,8 @@ def main():
 
         print(f"Generando {len(questions)} respuestas base con {ANSWER_MODEL}...", flush=True)
 
-        rows = build_answers(questions, ANSWER_MODEL, answers_path, chunks_path, NUM_PREDICT, REPEAT_PENALTY)
+        answerer = build_llm("ollama", ANSWER_MODEL, max_tokens=NUM_PREDICT, repeat_penalty=REPEAT_PENALTY)
+        rows = build_answers(questions, answerer, answers_path, chunks_path)
 
     if not USE_JUDGE:
         print(f"\n{len(rows)} respuestas -> {answers_path}")
@@ -207,7 +192,8 @@ def main():
 
         print(f"Juzgando respuestas con {judge_name} ({judge_model})...", flush=True)
 
-        verdicts, latencies = judge_answers(rows, judge_model)
+        judge = build_llm("ollama", judge_model, max_tokens=JUDGE_NUM_PREDICT, repeat_penalty=JUDGE_REPEAT_PENALTY)
+        verdicts, latencies = judge_answers(rows, judge)
 
         verdicts_by_judge[judge_name] = verdicts
 

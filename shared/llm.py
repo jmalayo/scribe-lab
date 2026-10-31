@@ -21,6 +21,8 @@ class LLMClient(Protocol):
 
     def complete(self, prompt: str) -> LLMResult: ...
 
+    def chat(self, messages: list[dict], json_format: bool | dict = False) -> LLMResult: ...
+
     def ping(self) -> bool: ...
 
 class OllamaClient:
@@ -33,7 +35,7 @@ class OllamaClient:
         model: str,
         num_predict: int = 500,
         num_ctx: int = 4096,
-        repeat_penalty: float = 1.0,
+        repeat_penalty: float | None = 1.0,
         stop: list[str] | None = None,
         timeout: float = 120,
     ):
@@ -73,6 +75,30 @@ class OllamaClient:
             tokens_out=body.get("eval_count"),
         )
 
+    def chat(self, messages: list[dict], json_format: bool | dict = False) -> LLMResult:
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "stream": False,
+            "think": False,
+            "options": self.options,
+        }
+
+        if json_format:
+            payload["format"] = json_format if isinstance(json_format, dict) else "json"
+
+        resp = requests.post(f"{self.host}/api/chat", json=payload, timeout=self.timeout)
+        resp.raise_for_status()
+
+        body = resp.json()
+
+        return LLMResult(
+            text=body.get("message", {}).get("content", "").strip(),
+            tokens_in=body.get("prompt_eval_count"),
+            tokens_out=body.get("eval_count"),
+        )
+
     def ping(self) -> bool:
 
         try:
@@ -86,34 +112,20 @@ class OllamaClient:
                 for m in tags.get("models", [])
         )
 
-def build_llm(provider: str, model: str, max_tokens: int = 500, base_url: str | None = None) -> LLMClient:
+def build_llm(
+    provider: str,
+    model: str,
+    max_tokens: int = 500,
+    base_url: str | None = None,
+    repeat_penalty: float | None = 1.0,
+) -> LLMClient:
 
     if provider == "ollama":
         return OllamaClient(
-            host=base_url or settings.llm_host, 
-            model=model, 
-            num_predict=max_tokens
+            host=base_url or settings.llm_host,
+            model=model,
+            num_predict=max_tokens,
+            repeat_penalty=repeat_penalty,
         )
 
     raise ValueError(f"LLM provider no soportado: {provider}")
-
-def generate(
-    prompt: str,
-    model: str | None = None,
-    num_predict: int = 500,
-    repeat_penalty: float = 1.0,
-    stop: list[str] | None = None,
-) -> str:
-
-    if settings.llm_backend is None:
-        raise ValueError("LLM backend is not set, please set RAG_LLM_BACKEND in your environment.")
-
-    client = OllamaClient(
-        host=settings.llm_host,
-        model=model or settings.llm_model_base,
-        num_predict=num_predict,
-        repeat_penalty=repeat_penalty,
-        stop=stop,
-    )
-
-    return client.complete(prompt).text

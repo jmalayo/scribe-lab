@@ -1,0 +1,17 @@
+conv_id;condicion;pregunta;respuesta;abstencion
+c34;literal;¿Qué margen entre la primera y la segunda probabilidad separa una canción confiable de una ambigua?;No lo sé según el contexto proporcionado.;True
+c34;multi_consulta;¿Qué margen entre la probabilidad de confianza y la probabilidad de ambigua separa una cancion confiable de una ambigua?;No lo sé según el contexto proporcionado.;True
+n37;literal;¿Y cuál es el loudness integrado promedio de las 96 canciones?;No lo sé según el contexto proporcionado.;True
+n37;multi_consulta;¿Qué loudness es el promedio de las 96 canciones después de aplicar los gates?;No lo sé según el contexto proporcionado.;True
+n39;literal;¿Y cuánto tarda en calcular el embedding de una canción?;No lo sé según el contexto proporcionado.;True
+n39;multi_consulta;¿Cuánto tiempo tarda en calcular el embedding de una canción el script embed_mert.py?;No lo sé según el contexto proporcionado.;True
+n40;literal;¿Y qué umbrales de ese score separan alta de baja energía?;No lo sé según el contexto proporcionado. El contexto proporciona información sobre el algoritmo de etiquetado de música y sus características, pero no menciona los umbrales específicos que se utilizan para separar la energía alta de la baja en el score.;True
+n40;multi_consulta;¿Qué umbrales de score_energia separan alta de baja energía?;No lo sé según el contexto proporcionado. El contexto proporciona información sobre las fórmulas de score y las categorías de energía/ritmo, pero no proporciona información sobre los umbrales de score_energia que separan la alta de la baja energía.;True
+n41;literal;¿Y qué acuerdo entre anotadores hubo en ese etiquetado de las 96?;No lo sé según el contexto proporcionado.;True
+n41;multi_consulta;¿Qué acuerdo entre anotadores hubo en el etiquetado de las 96 canciones?;No lo sé según el contexto proporcionado.;True
+n42;literal;¿Y qué versión de librosa usa el pipeline?;No lo sé según el contexto proporcionado.;True
+n42;multi_consulta;¿Qué versión de librosa usa el pipeline?;No lo sé según el contexto proporcionado.;True
+n45;literal;¿Qué parámetros de UMAP se usaron para proyectarlos?;"No lo sé según el contexto proporcionado. El contexto menciona que se proyectaron las 96 canciones con UMAP ""dos veces"", una vez por categoría y otra por género/familia de género, pero no se especifica qué parámetros de UMAP se utilizaron en cada caso.";True
+n45;multi_consulta;¿Qué parámetros de UMAP se usaron para proyectar las 5 categorías en el espacio de embeddings de MERT?;No lo sé según el contexto proporcionado.;True
+n50;literal;¿Y qué accuracy obtuvo el modelo Qwen2-Audio en el dataset de 96 canciones?;No lo sé según el contexto proporcionado.;True
+n50;multi_consulta;¿Qué accuracy obtuvo el modelo Qwen2-Audio en el dataset de 96 canciones?;No lo sé según el contexto proporcionado.;True

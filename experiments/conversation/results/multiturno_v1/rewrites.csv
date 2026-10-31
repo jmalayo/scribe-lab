@@ -1,0 +1,83 @@
+conv_id;condicion;modelo;valido;pregunta;tokens_in;tokens_out;latencia_ms;tokens_embedder
+c01;reescritura_3b;llama3.2:3b;True;¿Cuál es la fracción del tiempo de extracción por segmento que se atribuye a cada documento actualmente?;353;32;242.6;22
+c02;reescritura_3b;llama3.2:3b;True;Segón como era la distribución de confianza en genesis, comparada con la actual?;364;36;260.4;18
+c03;reescritura_3b;llama3.2:3b;True;¿Cuál es la precisión de accuracy del árbol de decisión en la tabla histórica de genesis frente a la actual?;371;35;251.4;26
+c04;reescritura_3b;llama3.2:3b;True;¿Y la fase siguiente se llegó a ejecutar? ¿Contra el modelo de separabilidad por categor© se debi¡ comparar?;435;43;314.2;30
+c05;reescritura_3b;llama3.2:3b;True;¿Sobre cuántos segmentos se habían calibrado los rangos LO/HI de normalización de cada feature, según genesis, frente a los que tiene el dataset hoy?;374;46;340.0;39
+c06;reescritura_3b;llama3.2:3b;True;¿Dónde vive hoy ese extractor de features?;407;18;147.5;12
+c07;reescritura_3b;llama3.2:3b;True;¿Se llegó a validar con 31? ¿Qué valores reducidos se probaron al final y cómo les fue?;346;34;239.9;24
+c08;reescritura_3b;llama3.2:3b;True;¿Cuántas features usa el modelo después de que se renormalizaron y redondearon los pesos de onset y tempo a 0.70/0.30 en features/extract.py?;400;48;338.5;42
+c09;reescritura_3b;llama3.2:3b;True;¿Cuáles tres features del Random Forest pesan más y cuánto suman?;305;26;209.5;16
+c10;reescritura_3b;llama3.2:3b;True;¿Cuál es la primera feature que se vuelve a meter si se elimina la feature eliminada y cómo se compara con las tres de timbre?;372;49;342.7;29
+c11;reescritura_3b;llama3.2:3b;True;Segón se calculó el intervalo de confianza de la prueba, y no se explica por qué el árbol se ve más afectado que el Random Forest?;431;64;443.7;33
+c12;reescritura_3b;llama3.2:3b;True;¿Por qué la desviación estándar de 48.9% ± 13.3 (Random Forest, 5-fold CV, 96 canciones) es tan amplia?;441;51;394.4;34
+c13;reescritura_3b;llama3.2:3b;True;¿Qué fórmula tiene la desviación estándar de balanced accuracy en el proyecto y por qué se prefirió?;384;35;277.8;27
+c14;reescritura_3b;llama3.2:3b;True;¿Qué solución propone el PLAN para la categoría de incrementable-decreciente y cómo funciona?;401;30;220.8;20
+c15;reescritura_3b;llama3.2:3b;True;¿Con qué distancia se calcula el valor de Silhouette score? ¿Se puede leer igual que la tabla de distancias por categoría?;389;36;261.0;28
+c16;reescritura_3b;llama3.2:3b;True;¿Qué accuracy obtuvo CLAP zero-shot al usar prompts largos y densos en palabras clave y qué accuracy quedó sin evaluar?;370;36;259.0;34
+c17;reescritura_3b;llama3.2:3b;True;¿Cuándo entra en notube como respaldo en cada caso y si hay fallos que nunca lo activan?;362;32;232.8;24
+c18;reescritura_3b;llama3.2:3b;True;¿Qué bugs tenía ese script y qué duda de calidad quedó abierta?;382;25;190.9;16
+c19;reescritura_3b;llama3.2:3b;True;¿Cuáles son los números y cuál es más confiable para el kernel 9 frente al kernel 17 de HPSS?;414;35;260.7;27
+c20;reescritura_3b;llama3.2:3b;True;¿Cuántos segundos por cancion tarda la extraccion con 16, 3 y 1 workers, y cuantos mas rapido es 16 workers que 1 y que 3?;392;50;361.6;36
+c21;reescritura_3b;llama3.2:3b;True;¿Qué cuenta y credenciales necesita la ruta de autorización de Spotify?;409;23;202.3;15
+c22;reescritura_3b;llama3.2:3b;True;¿Qué sucede con el tiempo transcurrido del job cuando se reintenta?;417;24;191.1;16
+c23;reescritura_3b;llama3.2:3b;True;¿Cómo le fue al kernel 17 de HPSS frente al umbral seguro y al umbral límite de Spearman, y frente al criterio de desvío?;414;43;335.7;35
+c24;reescritura_3b;llama3.2:3b;True;¿Qué hardware y qué dependencias nuevas requiere el PLAN few-shot?;405;22;194.2;15
+c25;reescritura_3b;llama3.2:3b;True;Con la configuración por defecto, ¿cuántos intentos máximos recibe un track de Spotify y cuántos una URL directa de YouTube?;439;41;300.9;29
+c26;reescritura_3b;llama3.2:3b;True;¿Por qué se redujo el peso de (1-dyn_spread) en el score de energía de 0.25 a 0.10?;399;43;332.6;29
+c27;reescritura_3b;llama3.2:3b;True;¿Por qué se establece journal_mode=DELETE en SQLite y por qué no es conveniente correr la API local y el contenedor Docker al mismo tiempo?;419;40;301.9;35
+c28;reescritura_3b;llama3.2:3b;True;¿Qué balanced accuracy obtuvo el sistema de prototipos few-shot usando k=5 canciones de soporte por categoría?;384;35;281.4;27
+c29;reescritura_3b;llama3.2:3b;True;¿Por qué se canceló el etiquetado de género musical vía API de LLM externa?;399;30;223.5;19
+c30;reescritura_3b;llama3.2:3b;True;¿Cómo se calcula el rango de volumen (LRA) por segmento y qué gating aplica?;313;31;217.5;20
+c31;reescritura_3b;llama3.2:3b;True;¿Por qué se eliminó Route B en la reestructuración de dsp/ a features/ + ml/?;395;30;226.4;24
+c32;reescritura_3b;llama3.2:3b;True;¿Qué GPU se usó para calcular los embeddings de las 96 canciones?;351;24;182.2;20
+c33;reescritura_3b;llama3.2:3b;True;¿Cuántas canciones de la playlist rock_english quedaron como incorrectas?;421;25;197.2;19
+c34;reescritura_3b;llama3.2:3b;True;¿Qué margen entre la primera y la segunda probabilidad separa una canción confiable de una ambigua?;372;31;248.0;22
+c35;reescritura_3b;llama3.2:3b;True;¿Cuántos árboles utiliza el modelo de producción sin perc_ratio?;358;24;180.9;17
+c36;reescritura_3b;llama3.2:3b;True;¿Por qué la desviación estándar del Random Forest es tan amplia?;382;25;192.8;17
+c37;reescritura_3b;llama3.2:3b;True;¿Dónde vivía su extractor y dónde vive hoy?;403;21;170.5;14
+c38;reescritura_3b;llama3.2:3b;True;¿Por qué cada corrida de extracción volvía a procesar canciones que ya estaban hechas?;368;31;226.2;22
+c39;reescritura_3b;llama3.2:3b;True;¿Qué pasa si el script que calcula los embeddings no respeta la regla de segmentación?;517;28;239.9;21
+c40;reescritura_3b;llama3.2:3b;True;¿Hubo alguna interaccion documentada entre ese cambio de sample rate y fold_tempo()?;570;26;260.2;23
+c41;reescritura_3b;llama3.2:3b;True;¿Qué diferencia se midió entre el checkpoint degenerado y el que sí discrimina, y cómo se validó el bug de logit_scale de CLAP?;531;41;347.2;36
+c01;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué fracción del tiempo de extracción por segmento le atribuye cada documento? ¿Cuál vale hoy?;338;31;565.1;22
+c02;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cómo era la distribución en genesis comparada con la actual?;349;21;339.9;14
+c03;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué accuracy tenía el árbol de decisión en la tabla histórica de Genesis frente a su accuracy actual?;356;31;564.9;24
+c04;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Se ejecutó la fase siguiente y contra qué se debía comparar?;420;24;403.4;15
+c05;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Sobre cuántos segmentos se habían calibrado según Genesis, frente a los que tiene el dataset hoy?;359;33;517.2;25
+c06;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Dónde vive hoy el extractor de features?;392;18;318.1;12
+c07;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Se llegó a validar con kernel_size=15? ¿Qué valores reducidos se probaron al final y cómo les fue?;331;36;525.2;29
+c08;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cuántas features usa el modelo después de que score_ritmo se convirtió en 0.70 * onset_n + 0.30 * tempo_n?;385;43;624.8;35
+c09;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cuáles tres features pesan más en el Random Forest y cuánto suman?;290;27;408.9;17
+c10;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué pasa si se vuelve a meter la feature eliminada, cuál queda primera y cómo se compara con zcr_n_mediana, cent_n_mediana y flat_n_mediana?;357;47;681.2;44
+c11;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cómo se calculó el intervalo de confianza de esa prueba?;416;23;381.1;14
+c12;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Por qué la desviación estándar del 48.9% de accuracy de Random Forest es tan amplia?;426;33;540.2;25
+c13;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué fórmula tiene la desviación estándar de balanced accuracy en el proyecto y por qué se prefirió?;369;35;543.2;27
+c14;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué solución propone el PLAN para la categoría incrementable-decreciente y cómo funciona?;386;29;448.8;19
+c15;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Con qué distancia se calcula el Silhouette score?;374;19;323.7;12
+c16;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué accuracy tuvo con los prompts cortos y qué quedó sin evaluar?;355;25;386.7;19
+c17;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cuándo entra notube como respaldo en un track de Spotify y en una URL directa de YouTube, y hay fallos que nunca lo activan?;347;41;584.7;32
+c18;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué bugs tenía ese script y qué duda de calidad quedó abierta?;367;25;392.6;16
+c19;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cómo le fue al kernel 9 frente al umbral 'seguro' y al umbral 'límite' de Spearman, y frente al criterio de desvío?;399;45;655.1;38
+c20;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cuál es el paralelismo efectivo sin HPSS con 16 workers y por qué es la más lenta?;377;34;541.4;21
+c21;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué cuenta y credenciales necesita la ruta de autorización de Spotify?;394;23;393.9;15
+c22;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué pasa con el tiempo transcurrido del job cuando se reintenta?;402;23;403.8;16
+c23;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cómo le fue al kernel 17 de HPSS frente a los umbrales de Spearman 0.98 y 0.99, y frente al criterio de desvío?;399;47;738.5;38
+c24;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué hardware y qué dependencias nuevas requiere el PLAN para few-shot?;390;23;402.1;16
+c25;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cuántos intentos máximos recibe un track de Spotify y cuántos una URL directa de YouTube con la configuración por defecto?;424;40;616.4;28
+c26;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Por qué se redujo el peso de (1-dyn_spread) en el score de energía de 0.25 a 0.10?;384;40;616.5;29
+c27;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Por qué database.py fuerza journal_mode=DELETE en SQLite y por qué no conviene correr la API local y el contenedor Docker al mismo tiempo?;404;40;594.1;36
+c28;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué balanced accuracy obtuvo el sistema de prototipos few-shot usando 5 canciones de soporte por categoría?;369;34;562.2;26
+c29;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Por qué se canceló el etiquetado de género musical a través de una API de LLM externa?;384;32;487.5;22
+c30;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cómo se calcula el Loudness Range (LRA) por segmento y qué gating aplica?;298;29;454.7;21
+c31;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Por qué se eliminó Route B en la reestructuración de dsp/ a features/ + ml/?;380;31;472.5;24
+c32;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué GPU se usó realmente para calcular los embeddings de las 96 canciones?;336;27;453.1;21
+c33;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cuántas canciones de la playlist rock_english quedaron como incorrectas?;406;25;395.6;19
+c34;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué porcentaje de canciones cae en cada nivel del router de confianza (confiable, ambigua, revisar)?;357;36;554.7;27
+c35;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Cuántos árboles usa el modelo de producción sin perc_ratio?;343;24;361.6;17
+c36;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Por qué la desviación estándar del Random Forest es tan amplia?;367;25;401.3;17
+c37;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Dónde vivía el extractor de Route A y dónde vive hoy?;388;24;376.0;17
+c38;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Por qué una falla en una sola canción hacía que toda la corrida fallara?;353;28;438.4;17
+c39;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿El script que calcula los embeddings respeta el preprocesamiento de audio que exige MERT según el PLAN?;502;33;540.6;25
+c40;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Hubo alguna interacción documentada entre el cambio de sample rate a 44100 Hz y fold_tempo()?;555;31;579.5;25
+c41;reescritura_8b;llama3.1:8b-instruct-q4_K_M;True;¿Qué diferencia se midió entre el checkpoint de CLAP con logit_scale ≈ 1.03 y uno bien calibrado, y cómo se validó?;516;41;684.1;36

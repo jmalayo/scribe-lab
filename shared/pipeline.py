@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Protocol
 
+import requests
 from pydantic import BaseModel
 
 from shared.eval.grounding import GroundingResult, should_abstain
 from shared.llm import LLMClient
+from shared.memory import build_messages, parse_rewrite
 from shared.prompts import (
     ABSTENTION_ANSWER,
     ANSWER_PROMPTS,
+    REWRITE_PROMPTS,
     build_context_text,
     chunk_block,
 )
@@ -41,6 +45,13 @@ class GroundingConfig(BaseModel):
     entailment_threshold: float = 0.5
     contradiction_threshold: float = 0.5
 
+class MemoryConfig(BaseModel):
+    enabled: bool = False
+    model: str = "llama3.2:3b"
+    max_tokens: int = 120
+    prompt_version: str = "v2"
+    rrf_k: int = 60
+
 class PipelineConfig(BaseModel):
     pipeline_version: str
     collection: str
@@ -55,6 +66,7 @@ class PipelineConfig(BaseModel):
     llm: LLMConfig = LLMConfig()
     abstention: AbstentionConfig = AbstentionConfig()
     grounding: GroundingConfig = GroundingConfig()
+    memory: MemoryConfig = MemoryConfig()
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> PipelineConfig:
@@ -76,6 +88,7 @@ class PipelineResult:
     tokens_out: int | None = None
     provider: str | None = None
     model: str | None = None
+    rewritten_question: str | None = None
 
 @dataclass
 class RetrievalResult:
@@ -132,6 +145,7 @@ class Pipeline:
         embedder,
         llm: LLMClient,
         grounder: Grounder | None = None,
+        rewriter: LLMClient | None = None,
     ):
         if config.prompt_version not in ANSWER_PROMPTS:
             raise ValueError(f"prompt_version desconocida: {config.prompt_version}")
@@ -142,11 +156,18 @@ class Pipeline:
         if config.grounding.enabled and grounder is None:
             raise ValueError("grounding.enabled requiere un grounder")
 
+        if config.memory.enabled and rewriter is None:
+            raise ValueError("memory.enabled requiere un rewriter")
+
+        if config.memory.prompt_version not in REWRITE_PROMPTS:
+            raise ValueError(f"memory.prompt_version desconocida: {config.memory.prompt_version}")
+
         self.config = config
         self.client = client
         self.embedder = embedder
         self.llm = llm
         self.grounder = grounder
+        self.rewriter = rewriter
         self._bm25: BM25Index | None = None
 
     @property
@@ -179,7 +200,10 @@ class Pipeline:
             latencies["embedding"] = _get_time_ms(t0)
 
             t0 = time.perf_counter()
-            dense = dense_search_vector(self.client, self.config.collection, vector, pool)
+            dense = [
+                {**c, "dense_score": c["score"]}
+                    for c in dense_search_vector(self.client, self.config.collection, vector, pool)
+            ]
 
             if self.config.method == "hybrid_rrf":
                 candidates = reciprocal_rank_fusion(
@@ -211,11 +235,69 @@ class Pipeline:
             latencies_ms=latencies
         )
 
-    def run(self, question: str, top_k: int | None = None) -> PipelineResult:
+    def rewrite(self, question: str, history: Sequence[tuple[str, str]]) -> str:
+
+        messages = build_messages(history, question, self.config.memory.prompt_version)
+
+        try:
+            raw = self.rewriter.chat(messages, json_format=True).text
+        except requests.RequestException:
+            return question
+
+        return parse_rewrite(raw, history, question)["pregunta"]
+
+    def retrieve_fused(self, question: str, rewritten: str, top_k: int | None = None) -> RetrievalResult:
+
+        literal = self.retrieve(question, top_k)
+        second = self.retrieve(rewritten, top_k)
+
+        latencies = dict(literal.latencies_ms)
+
+        for stage, ms in second.latencies_ms.items():
+            latencies[stage] = round(latencies.get(stage, 0.0) + ms, 2)
+
+        chunks = reciprocal_rank_fusion(
+            rankings=[literal.chunks, second.chunks],
+            k_constant=self.config.memory.rrf_k,
+            top_k=top_k or self.config.top_k,
+        )
+
+        return RetrievalResult(chunks=chunks, latencies_ms=latencies)
+
+    def retrieve_with_history(
+        self,
+        question: str,
+        history: Sequence[tuple[str, str]],
+        top_k: int | None = None,
+    ) -> tuple[RetrievalResult, str | None]:
+
+        if not (self.config.memory.enabled and history):
+            return self.retrieve(question, top_k), None
+
+        t0 = time.perf_counter()
+        rewritten = self.rewrite(question, history)
+        rewrite_ms = _get_time_ms(t0)
+
+        if rewritten == question:
+            retrieved = self.retrieve(question, top_k)
+        else:
+            retrieved = self.retrieve_fused(question, rewritten, top_k)
+
+        latencies = {"rewrite": rewrite_ms, **retrieved.latencies_ms}
+
+        return RetrievalResult(chunks=retrieved.chunks, latencies_ms=latencies), rewritten
+
+    def run(
+        self,
+        question: str,
+        top_k: int | None = None,
+        history: Sequence[tuple[str, str]] = (),
+    ) -> PipelineResult:
 
         t_total = time.perf_counter()
 
-        retrieved = self.retrieve(question, top_k)
+        retrieved, rewritten = self.retrieve_with_history(question, history, top_k)
+        question_to_answer = rewritten or question
         latencies = dict(retrieved.latencies_ms)
         chunks = retrieved.chunks
 
@@ -236,11 +318,12 @@ class Pipeline:
                 latencies_ms=latencies,
                 provider=self.llm.provider,
                 model=self.llm.model,
+                rewritten_question=rewritten,
             )
 
         prompt = ANSWER_PROMPTS[self.config.prompt_version].format(
-            context=build_context_text(chunks), 
-            question=question
+            context=build_context_text(chunks),
+            question=question_to_answer,
         )
 
         t0 = time.perf_counter()
@@ -253,7 +336,7 @@ class Pipeline:
         if self.config.grounding.enabled:
             t0 = time.perf_counter()
 
-            grounding = self.grounder(question, completion.text, [chunk_block(c) for c in chunks])
+            grounding = self.grounder(question_to_answer, completion.text, [chunk_block(c) for c in chunks])
             latencies["grounding"] = _get_time_ms(t0)
 
         latencies["total"] = _get_time_ms(t_total)
@@ -268,4 +351,5 @@ class Pipeline:
             tokens_out=completion.tokens_out,
             provider=self.llm.provider,
             model=self.llm.model,
+            rewritten_question=rewritten,
         )

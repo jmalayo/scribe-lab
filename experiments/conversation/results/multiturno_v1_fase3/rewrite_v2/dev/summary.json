@@ -1,0 +1,520 @@
+{
+ "exp": "multiturno_v1_fase3",
+ "prompt": "rewrite_v2",
+ "split": "dev",
+ "modelo": "llama3.2:3b",
+ "metodo": "hybrid_rrf",
+ "n_conversaciones": 27,
+ "condiciones": [
+  "literal",
+  "concat",
+  "reescritura_v1",
+  "reescritura_v2",
+  "reescritura_terminos",
+  "multi_consulta",
+  "oraculo"
+ ],
+ "aciertos": {
+  "n_usa_historial": 16,
+  "n_no_usa_historial": 7,
+  "aciertos_usa_historial": {
+   "literal": 10,
+   "concat": 12,
+   "reescritura_v1": 11,
+   "reescritura_v2": 13,
+   "reescritura_terminos": 12,
+   "multi_consulta": 14,
+   "oraculo": 14
+  },
+  "fraccion_del_oraculo": {
+   "literal": 0.714,
+   "concat": 0.857,
+   "reescritura_v1": 0.786,
+   "reescritura_v2": 0.929,
+   "reescritura_terminos": 0.857,
+   "multi_consulta": 1.0,
+   "oraculo": 1.0
+  },
+  "aciertos_no_usa_historial": {
+   "literal": 5,
+   "concat": 6,
+   "reescritura_v1": 5,
+   "reescritura_v2": 5,
+   "reescritura_terminos": 5,
+   "multi_consulta": 5,
+   "oraculo": 5
+  },
+  "pares_usa_historial": [
+   {
+    "a": "literal",
+    "b": "reescritura_v2",
+    "aciertos_a": 10,
+    "aciertos_b": 13,
+    "solo_a": 2,
+    "solo_b": 5,
+    "p_mcnemar": 0.453,
+    "dif_media_b_menos_a": 0.188,
+    "ic95_bootstrap": [
+     -0.125,
+     0.5
+    ]
+   },
+   {
+    "a": "concat",
+    "b": "reescritura_v2",
+    "aciertos_a": 12,
+    "aciertos_b": 13,
+    "solo_a": 1,
+    "solo_b": 2,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": 0.062,
+    "ic95_bootstrap": [
+     -0.125,
+     0.25
+    ]
+   },
+   {
+    "a": "reescritura_v1",
+    "b": "reescritura_v2",
+    "aciertos_a": 11,
+    "aciertos_b": 13,
+    "solo_a": 1,
+    "solo_b": 3,
+    "p_mcnemar": 0.625,
+    "dif_media_b_menos_a": 0.125,
+    "ic95_bootstrap": [
+     -0.125,
+     0.375
+    ]
+   },
+   {
+    "a": "oraculo",
+    "b": "reescritura_v2",
+    "aciertos_a": 14,
+    "aciertos_b": 13,
+    "solo_a": 2,
+    "solo_b": 1,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": -0.062,
+    "ic95_bootstrap": [
+     -0.25,
+     0.125
+    ]
+   },
+   {
+    "a": "literal",
+    "b": "reescritura_terminos",
+    "aciertos_a": 10,
+    "aciertos_b": 12,
+    "solo_a": 3,
+    "solo_b": 5,
+    "p_mcnemar": 0.727,
+    "dif_media_b_menos_a": 0.125,
+    "ic95_bootstrap": [
+     -0.25,
+     0.4375
+    ]
+   },
+   {
+    "a": "concat",
+    "b": "reescritura_terminos",
+    "aciertos_a": 12,
+    "aciertos_b": 12,
+    "solo_a": 2,
+    "solo_b": 2,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": 0.0,
+    "ic95_bootstrap": [
+     -0.25,
+     0.25
+    ]
+   },
+   {
+    "a": "reescritura_v1",
+    "b": "reescritura_terminos",
+    "aciertos_a": 11,
+    "aciertos_b": 12,
+    "solo_a": 2,
+    "solo_b": 3,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": 0.062,
+    "ic95_bootstrap": [
+     -0.1875,
+     0.3125
+    ]
+   },
+   {
+    "a": "oraculo",
+    "b": "reescritura_terminos",
+    "aciertos_a": 14,
+    "aciertos_b": 12,
+    "solo_a": 3,
+    "solo_b": 1,
+    "p_mcnemar": 0.625,
+    "dif_media_b_menos_a": -0.125,
+    "ic95_bootstrap": [
+     -0.375,
+     0.125
+    ]
+   },
+   {
+    "a": "literal",
+    "b": "multi_consulta",
+    "aciertos_a": 10,
+    "aciertos_b": 14,
+    "solo_a": 0,
+    "solo_b": 4,
+    "p_mcnemar": 0.125,
+    "dif_media_b_menos_a": 0.25,
+    "ic95_bootstrap": [
+     0.0625,
+     0.5
+    ]
+   },
+   {
+    "a": "concat",
+    "b": "multi_consulta",
+    "aciertos_a": 12,
+    "aciertos_b": 14,
+    "solo_a": 0,
+    "solo_b": 2,
+    "p_mcnemar": 0.5,
+    "dif_media_b_menos_a": 0.125,
+    "ic95_bootstrap": [
+     0.0,
+     0.3125
+    ]
+   },
+   {
+    "a": "reescritura_v1",
+    "b": "multi_consulta",
+    "aciertos_a": 11,
+    "aciertos_b": 14,
+    "solo_a": 1,
+    "solo_b": 4,
+    "p_mcnemar": 0.375,
+    "dif_media_b_menos_a": 0.188,
+    "ic95_bootstrap": [
+     -0.0625,
+     0.4375
+    ]
+   },
+   {
+    "a": "oraculo",
+    "b": "multi_consulta",
+    "aciertos_a": 14,
+    "aciertos_b": 14,
+    "solo_a": 1,
+    "solo_b": 1,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": 0.0,
+    "ic95_bootstrap": [
+     -0.1875,
+     0.1875
+    ]
+   },
+   {
+    "a": "literal",
+    "b": "oraculo",
+    "aciertos_a": 10,
+    "aciertos_b": 14,
+    "solo_a": 1,
+    "solo_b": 5,
+    "p_mcnemar": 0.219,
+    "dif_media_b_menos_a": 0.25,
+    "ic95_bootstrap": [
+     0.0,
+     0.5
+    ]
+   }
+  ],
+  "pares_no_usa_historial": [
+   {
+    "a": "literal",
+    "b": "concat",
+    "aciertos_a": 5,
+    "aciertos_b": 6,
+    "solo_a": 0,
+    "solo_b": 1,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": 0.143,
+    "ic95_bootstrap": [
+     0.0,
+     0.4286
+    ]
+   },
+   {
+    "a": "literal",
+    "b": "reescritura_v1",
+    "aciertos_a": 5,
+    "aciertos_b": 5,
+    "solo_a": 0,
+    "solo_b": 0,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": 0.0,
+    "ic95_bootstrap": [
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "a": "literal",
+    "b": "reescritura_v2",
+    "aciertos_a": 5,
+    "aciertos_b": 5,
+    "solo_a": 0,
+    "solo_b": 0,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": 0.0,
+    "ic95_bootstrap": [
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "a": "literal",
+    "b": "reescritura_terminos",
+    "aciertos_a": 5,
+    "aciertos_b": 5,
+    "solo_a": 0,
+    "solo_b": 0,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": 0.0,
+    "ic95_bootstrap": [
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "a": "literal",
+    "b": "multi_consulta",
+    "aciertos_a": 5,
+    "aciertos_b": 5,
+    "solo_a": 0,
+    "solo_b": 0,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": 0.0,
+    "ic95_bootstrap": [
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "a": "literal",
+    "b": "oraculo",
+    "aciertos_a": 5,
+    "aciertos_b": 5,
+    "solo_a": 0,
+    "solo_b": 0,
+    "p_mcnemar": 1.0,
+    "dif_media_b_menos_a": 0.0,
+    "ic95_bootstrap": [
+     0.0,
+     0.0
+    ]
+   }
+  ]
+ },
+ "reescritura": {
+  "n": 27,
+  "fallbacks": 0,
+  "tasa_fallback": 0.0,
+  "motivos_fallback": {},
+  "necesita_historial_coincide_con_gold": 18,
+  "terminos_anclados": 67,
+  "terminos_descartados": 5,
+  "reescrituras_con_descartados": 5,
+  "descartados": {
+   "c12": [
+    "desviacion estándar"
+   ],
+   "c19": [
+    "desvío de 10%"
+   ],
+   "c30": [
+    "librosa.feature.zero_crossing_rate"
+   ],
+   "c36": [
+    "desviacion estándar"
+   ],
+   "c38": [
+    "bug de falla"
+   ]
+  },
+  "latencia_p50_ms": 468.7,
+  "latencia_p95_ms": 637.7,
+  "tokens_in_p50": 1299.0,
+  "tokens_out_p50": 63.0
+ },
+ "fallos_fase2": {
+  "c04": {
+   "terminos": [
+    "Fase 1"
+   ],
+   "conserva_terminos": {
+    "literal": false,
+    "concat": false,
+    "reescritura_v1": false,
+    "reescritura_v2": false,
+    "reescritura_terminos": false,
+    "multi_consulta": false
+   },
+   "aciertos": {
+    "literal": true,
+    "concat": true,
+    "reescritura_v1": false,
+    "reescritura_v2": true,
+    "reescritura_terminos": true,
+    "multi_consulta": true,
+    "oraculo": true
+   }
+  },
+  "c10": {
+   "terminos": [
+    "perc_ratio"
+   ],
+   "conserva_terminos": {
+    "literal": false,
+    "concat": true,
+    "reescritura_v1": false,
+    "reescritura_v2": true,
+    "reescritura_terminos": true,
+    "multi_consulta": true
+   },
+   "aciertos": {
+    "literal": false,
+    "concat": true,
+    "reescritura_v1": false,
+    "reescritura_v2": true,
+    "reescritura_terminos": true,
+    "multi_consulta": true,
+    "oraculo": true
+   }
+  },
+  "c12": {
+   "terminos": [
+    "balanced accuracy"
+   ],
+   "conserva_terminos": {
+    "literal": false,
+    "concat": false,
+    "reescritura_v1": false,
+    "reescritura_v2": false,
+    "reescritura_terminos": false,
+    "multi_consulta": false
+   },
+   "aciertos": {
+    "literal": true,
+    "concat": false,
+    "reescritura_v1": false,
+    "reescritura_v2": false,
+    "reescritura_terminos": false,
+    "multi_consulta": true,
+    "oraculo": true
+   }
+  },
+  "c36": {
+   "terminos": [
+    "balanced accuracy"
+   ],
+   "conserva_terminos": {
+    "literal": false,
+    "concat": false,
+    "reescritura_v1": false,
+    "reescritura_v2": false,
+    "reescritura_terminos": false,
+    "multi_consulta": false
+   },
+   "aciertos": {
+    "literal": false,
+    "concat": false,
+    "reescritura_v1": false,
+    "reescritura_v2": true,
+    "reescritura_terminos": true,
+    "multi_consulta": true,
+    "oraculo": true
+   }
+  },
+  "c40": {
+   "terminos": [
+    "22050",
+    "44100"
+   ],
+   "conserva_terminos": {
+    "literal": false,
+    "concat": true,
+    "reescritura_v1": false,
+    "reescritura_v2": false,
+    "reescritura_terminos": false,
+    "multi_consulta": false
+   },
+   "aciertos": {
+    "literal": false,
+    "concat": false,
+    "reescritura_v1": false,
+    "reescritura_v2": false,
+    "reescritura_terminos": false,
+    "multi_consulta": false,
+    "oraculo": true
+   }
+  }
+ },
+ "costo_busqueda": {
+  "concat": {
+   "latencia_busqueda_p50_ms": 13.4,
+   "tokens_embedder_p50": 41.0,
+   "tokens_embedder_max": 72
+  },
+  "literal": {
+   "latencia_busqueda_p50_ms": 10.9,
+   "tokens_embedder_p50": 22.0,
+   "tokens_embedder_max": 36
+  },
+  "multi_consulta": {
+   "latencia_busqueda_p50_ms": 21.8,
+   "tokens_embedder_p50": 26.0,
+   "tokens_embedder_max": 42
+  },
+  "oraculo": {
+   "latencia_busqueda_p50_ms": 12.1,
+   "tokens_embedder_p50": 32.0,
+   "tokens_embedder_max": 41
+  },
+  "reescritura_terminos": {
+   "latencia_busqueda_p50_ms": 11.3,
+   "tokens_embedder_p50": 26.0,
+   "tokens_embedder_max": 48
+  },
+  "reescritura_v1": {
+   "latencia_busqueda_p50_ms": 11.2,
+   "tokens_embedder_p50": 24.0,
+   "tokens_embedder_max": 39
+  },
+  "reescritura_v2": {
+   "latencia_busqueda_p50_ms": 10.8,
+   "tokens_embedder_p50": 23.0,
+   "tokens_embedder_max": 42
+  }
+ },
+ "ganadora": "multi_consulta",
+ "regla_eleccion": {
+  "reescritura_v2": {
+   "aciertos_usa_historial": 13,
+   "perdidas_en_autocontenidas": 0,
+   "tasa_fallback": 0.0,
+   "elegible": true
+  },
+  "reescritura_terminos": {
+   "aciertos_usa_historial": 12,
+   "perdidas_en_autocontenidas": 0,
+   "tasa_fallback": 0.0,
+   "elegible": true
+  },
+  "multi_consulta": {
+   "aciertos_usa_historial": 14,
+   "perdidas_en_autocontenidas": 0,
+   "tasa_fallback": 0.0,
+   "elegible": true
+  }
+ }
+}

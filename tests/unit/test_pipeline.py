@@ -77,11 +77,11 @@ def make_config(**overrides) -> PipelineConfig:
     return PipelineConfig.model_validate(base)
 
 
-def make_pipeline(config=None, llm=None, grounder=None, chunks=None):
+def make_pipeline(config=None, llm=None, grounder=None, chunks=None, rewriter=None):
 
     chunks = chunks if chunks is not None else [make_chunk(i, 0.9 - i * 0.1) for i in range(5)]
 
-    return Pipeline(config or make_config(), FakeClient(chunks), FakeEmbedder(), llm or FakeLLM(), grounder)
+    return Pipeline(config or make_config(), FakeClient(chunks), FakeEmbedder(), llm or FakeLLM(), grounder, rewriter)
 
 
 def test_run_dense_builds_prompt_and_reports_stages():
@@ -107,6 +107,13 @@ def test_retrieve_respects_top_k_override():
 
     assert len(pipeline.retrieve("q", top_k=5).chunks) == 5
     assert pipeline.client.calls[-1] == ("corpus_demo", 5)
+
+
+def test_dense_retrieval_keeps_the_embedder_similarity():
+
+    chunks = make_pipeline().retrieve("¿pregunta?").chunks
+
+    assert [c["dense_score"] for c in chunks] == [c["score"] for c in chunks]
 
 
 def test_abstention_skips_llm_when_best_score_is_below_threshold():

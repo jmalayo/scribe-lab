@@ -1,0 +1,190 @@
+conv_id;metodo;condicion;acierto;latencia_busqueda_ms;tokens_embedder;consulta
+c04;hybrid_rrf;literal;True;11.4;20;¿Y la fase siguiente se llegó a ejecutar? ¿Contra qué se debía comparar?
+c04;hybrid_rrf;concat;True;11.5;27;¿Y la fase siguiente se llegó a ejecutar? ¿Contra qué se debía comparar? pedía plan fase ejecutó realmente
+c04;hybrid_rrf;reescritura_v1;False;12.0;30;¿Y la fase siguiente se llegó a ejecutar? ¿Contra el modelo de separabilidad por categor© se debi¡ comparar?
+c04;hybrid_rrf;reescritura_v2;True;11.6;26;¿Se llegó a ejecutar la fase siguiente y contra qué se debía comparar según fewshot-resultados.md?
+c04;hybrid_rrf;reescritura_terminos;True;11.2;26;¿Se llegó a ejecutar la fase siguiente y contra qué se debía comparar según fewshot-resultados.md?
+c04;hybrid_rrf;multi_consulta;True;21.8;26;¿Y la fase siguiente se llegó a ejecutar? ¿Contra qué se debía comparar? || ¿Se llegó a ejecutar la fase siguiente y contra qué se debía comparar según fewshot-resultados.md?
+c04;hybrid_rrf;oraculo;True;11.9;32;¿Se ejecutó la Fase 1 del PLAN (leave-one-out con multi-prototipo) y contra qué referencia debía compararse?
+c05;hybrid_rrf;literal;True;11.2;26;¿Y sobre cuántos segmentos se habían calibrado según genesis, frente a los que tiene el dataset hoy?
+c05;hybrid_rrf;concat;True;13.9;43;¿Y sobre cuántos segmentos se habían calibrado según genesis, frente a los que tiene el dataset hoy? método estadístico usó calibrar rangos lo/hi normalización feature datos
+c05;hybrid_rrf;reescritura_v1;True;16.7;39;¿Sobre cuántos segmentos se habían calibrado los rangos LO/HI de normalización de cada feature, según genesis, frente a los que tiene el dataset hoy?
+c05;hybrid_rrf;reescritura_v2;False;11.4;25;¿Cuántos segmentos se habían calibrado según genesis, frente a los que tiene el dataset hoy?
+c05;hybrid_rrf;reescritura_terminos;False;11.3;25;¿Cuántos segmentos se habían calibrado según genesis, frente a los que tiene el dataset hoy?
+c05;hybrid_rrf;multi_consulta;True;22.5;26;¿Y sobre cuántos segmentos se habían calibrado según genesis, frente a los que tiene el dataset hoy? || ¿Cuántos segmentos se habían calibrado según genesis, frente a los que tiene el dataset hoy?
+c05;hybrid_rrf;oraculo;False;12.3;37;¿Sobre cuántos segmentos se calibraron los rangos p5/p95 según genesis, y cuántos segmentos tiene el dataset actual según el benchmark?
+c10;hybrid_rrf;literal;False;10.9;24;¿Y si se vuelve a meter la feature eliminada, cuál queda primera y cómo se compara con esas tres?
+c10;hybrid_rrf;concat;True;13.2;41;¿Y si se vuelve a meter la feature eliminada, cuál queda primera y cómo se compara con esas tres? modelo producción perc_ratio tres features concentran mitad importancia random forest suman
+c10;hybrid_rrf;reescritura_v1;False;11.7;29;¿Cuál es la primera feature que se vuelve a meter si se elimina la feature eliminada y cómo se compara con las tres de timbre?
+c10;hybrid_rrf;reescritura_v2;True;12.8;35;¿Cuál es la importancia de zcr_n_mediana en el modelo de producción sin perc_ratio y cómo se compara con las tres features de timbre?
+c10;hybrid_rrf;reescritura_terminos;True;14.4;47;¿Cuál es la importancia de zcr_n_mediana en el modelo de producción sin perc_ratio y cómo se compara con las tres features de timbre? cent_n_mediana flat_n_mediana
+c10;hybrid_rrf;multi_consulta;True;24.5;35;¿Y si se vuelve a meter la feature eliminada, cuál queda primera y cómo se compara con esas tres? || ¿Cuál es la importancia de zcr_n_mediana en el modelo de producción sin perc_ratio y cómo se compara con las tres features de timbre?
+c10;hybrid_rrf;oraculo;True;16.5;38;¿Qué feature ocupa el primer puesto de importancia en el Random Forest una vez reincorporado perc_ratio, y cómo se compara contra las tres features de timbre juntas?
+c11;hybrid_rrf;literal;True;10.2;14;¿Cómo se calculó el intervalo de confianza de esa prueba?
+c11;hybrid_rrf;concat;True;13.7;41;¿Cómo se calculó el intervalo de confianza de esa prueba? music-tagger-benchmark.md justificación estadística eliminar perc_ratio describe débil pese decisión final eliminarla
+c11;hybrid_rrf;reescritura_v1;True;12.4;33;Segón se calculó el intervalo de confianza de la prueba, y no se explica por qué el árbol se ve más afectado que el Random Forest?
+c11;hybrid_rrf;reescritura_v2;True;11.1;27;¿Cómo se calculó el intervalo de confianza en la prueba mencionada en music-tagger-benchmark.md?
+c11;hybrid_rrf;reescritura_terminos;False;11.8;31;¿Cómo se calculó el intervalo de confianza en la prueba mencionada en music-tagger-benchmark.md? árbol Random Forest
+c11;hybrid_rrf;multi_consulta;True;20.6;27;¿Cómo se calculó el intervalo de confianza de esa prueba? || ¿Cómo se calculó el intervalo de confianza en la prueba mencionada en music-tagger-benchmark.md?
+c11;hybrid_rrf;oraculo;True;11.7;30;¿Cómo se calculó el intervalo de confianza usado para decidir si el ablation test de perc_ratio era una diferencia real o ruido?
+c12;hybrid_rrf;literal;True;10.0;17;¿Y por qué la desviación estándar de ese resultado es tan amplia?
+c12;hybrid_rrf;concat;False;13.4;46;¿Y por qué la desviación estándar de ese resultado es tan amplia? 73.9% accuracy random forest reportado mejor resultado histórico tagger-music-genesis.md sigue siendo válido estado actual proyecto
+c12;hybrid_rrf;reescritura_v1;False;17.5;34;¿Por qué la desviación estándar de 48.9% ± 13.3 (Random Forest, 5-fold CV, 96 canciones) es tan amplia?
+c12;hybrid_rrf;reescritura_v2;False;11.4;28;¿Por qué la desviación estándar de 13.3 en el reporte de accuracy de Random Forest es tan amplia?
+c12;hybrid_rrf;reescritura_terminos;False;11.3;28;¿Por qué la desviación estándar de 13.3 en el reporte de accuracy de Random Forest es tan amplia?
+c12;hybrid_rrf;multi_consulta;True;21.0;28;¿Y por qué la desviación estándar de ese resultado es tan amplia? || ¿Por qué la desviación estándar de 13.3 en el reporte de accuracy de Random Forest es tan amplia?
+c12;hybrid_rrf;oraculo;True;12.9;41;¿Por qué la desviación estándar de balanced accuracy es tan amplia (±13.3 en Random Forest, ±13.1 en árbol de decisión) según el propio documento?
+c13;hybrid_rrf;literal;False;9.8;18;¿Qué fórmula tiene esa métrica en el proyecto y por qué se prefirió?
+c13;hybrid_rrf;concat;False;13.4;41;¿Qué fórmula tiene esa métrica en el proyecto y por qué se prefirió? desviación estándar balanced accuracy tan amplia 13.3 random forest 13.1 árbol decisión propio documento
+c13;hybrid_rrf;reescritura_v1;True;11.5;27;¿Qué fórmula tiene la desviación estándar de balanced accuracy en el proyecto y por qué se prefirió?
+c13;hybrid_rrf;reescritura_v2;True;10.8;23;¿Qué fórmula utiliza la métrica balanced accuracy en el proyecto y por qué se prefirió?
+c13;hybrid_rrf;reescritura_terminos;True;19.7;29;¿Qué fórmula utiliza la métrica balanced accuracy en el proyecto y por qué se prefirió? varianza validación cruzada
+c13;hybrid_rrf;multi_consulta;False;20.8;23;¿Qué fórmula tiene esa métrica en el proyecto y por qué se prefirió? || ¿Qué fórmula utiliza la métrica balanced accuracy en el proyecto y por qué se prefirió?
+c13;hybrid_rrf;oraculo;False;11.2;25;¿Qué fórmula define balanced accuracy en este proyecto y por qué se prefirió sobre accuracy global?
+c14;hybrid_rrf;literal;True;9.2;13;¿Qué solución propone el PLAN para esa categoría y cómo funciona?
+c14;hybrid_rrf;concat;True;12.4;32;¿Qué solución propone el PLAN para esa categoría y cómo funciona? espacio embeddings mert categoría confunden alta-ritmica baja-ritmica ocurre documento
+c14;hybrid_rrf;reescritura_v1;True;10.4;20;¿Qué solución propone el PLAN para la categoría de incrementable-decreciente y cómo funciona?
+c14;hybrid_rrf;reescritura_v2;True;13.4;39;¿Qué solución propone el PLAN para confundir la categoría incrementable-decreciente con alta-ritmica y baja-ritmica en el espacio de embeddings MERT?
+c14;hybrid_rrf;reescritura_terminos;True;13.0;39;¿Qué solución propone el PLAN para confundir la categoría incrementable-decreciente con alta-ritmica y baja-ritmica en el espacio de embeddings MERT?
+c14;hybrid_rrf;multi_consulta;True;22.5;39;¿Qué solución propone el PLAN para esa categoría y cómo funciona? || ¿Qué solución propone el PLAN para confundir la categoría incrementable-decreciente con alta-ritmica y baja-ritmica en el espacio de embeddings MERT?
+c14;hybrid_rrf;oraculo;True;12.9;36;El benchmark explica por qué MERT confunde las categorías rítmicas con incrementable-decreciente. ¿Qué solución propone el PLAN para esa categoría y cómo funciona?
+c17;hybrid_rrf;literal;True;10.5;22;¿Y cuándo entra notube como respaldo en cada caso? ¿Hay fallos que nunca lo activan?
+c17;hybrid_rrf;concat;True;12.6;37;¿Y cuándo entra notube como respaldo en cada caso? ¿Hay fallos que nunca lo activan? configuración defecto intentos máximos recibe track spotify url directa youtube
+c17;hybrid_rrf;reescritura_v1;True;10.9;24;¿Cuándo entra en notube como respaldo en cada caso y si hay fallos que nunca lo activan?
+c17;hybrid_rrf;reescritura_v2;True;12.5;34;¿Cuándo entra en notube como respaldo en cada caso (track de Spotify y URL directa de YouTube) y si hay fallos que nunca lo activan?
+c17;hybrid_rrf;reescritura_terminos;True;14.0;45;¿Cuándo entra en notube como respaldo en cada caso (track de Spotify y URL directa de YouTube) y si hay fallos que nunca lo activan? TOP_N CLIENT_CHAIN_LEN
+c17;hybrid_rrf;multi_consulta;True;23.1;34;¿Y cuándo entra notube como respaldo en cada caso? ¿Hay fallos que nunca lo activan? || ¿Cuándo entra en notube como respaldo en cada caso (track de Spotify y URL directa de YouTube) y si hay fallos que nunca lo activan?
+c17;hybrid_rrf;oraculo;True;13.0;36;¿Cuándo se usa notube como proveedor de fallback para un candidato de Spotify y para una URL directa de YouTube, y qué motivos de fallo nunca lo activan?
+c19;hybrid_rrf;literal;True;11.5;28;¿Y con el kernel 9? Los dos documentos dan números distintos: ¿cuáles son y cuál es más confiable?
+c19;hybrid_rrf;concat;True;14.9;49;¿Y con el kernel 9? Los dos documentos dan números distintos: ¿cuáles son y cuál es más confiable? kernel 17 hpss frente umbral seguro umbral límite spearman frente criterio desvío
+c19;hybrid_rrf;reescritura_v1;True;11.5;27;¿Cuáles son los números y cuál es más confiable para el kernel 9 frente al kernel 17 de HPSS?
+c19;hybrid_rrf;reescritura_v2;True;13.5;40;¿Cuáles son los números de desvío y segmentos con desvío mayor a 10 % para el kernel 9 de HPSS y cuál es más confiable según los documentos?
+c19;hybrid_rrf;reescritura_terminos;True;14.7;48;¿Cuáles son los números de desvío y segmentos con desvío mayor a 10 % para el kernel 9 de HPSS y cuál es más confiable según los documentos? desvío máximo desvío medio
+c19;hybrid_rrf;multi_consulta;True;24.8;40;¿Y con el kernel 9? Los dos documentos dan números distintos: ¿cuáles son y cuál es más confiable? || ¿Cuáles son los números de desvío y segmentos con desvío mayor a 10 % para el kernel 9 de HPSS y cuál es más confiable según los documentos?
+c19;hybrid_rrf;oraculo;True;12.9;39;Ambos documentos reportan la validación de kernel_size=9 para HPSS con números distintos. ¿Cuáles son esos números en cada documento, y cuál merece más confianza?
+c20;hybrid_rrf;literal;True;11.1;23;¿Y sin HPSS, qué paralelismo efectivo logra con 16 workers y por qué igual es la más lenta?
+c20;hybrid_rrf;concat;True;12.7;36;¿Y sin HPSS, qué paralelismo efectivo logra con 16 workers y por qué igual es la más lenta? hpss segundos canción tarda extracción 16 workers rápido 16 workers
+c20;hybrid_rrf;reescritura_v1;True;14.7;36;¿Cuántos segundos por cancion tarda la extraccion con 16, 3 y 1 workers, y cuantos mas rapido es 16 workers que 1 y que 3?
+c20;hybrid_rrf;reescritura_v2;True;10.6;20;¿Qué paralelismo efectivo logra con 16 workers sin HPSS y por qué es la más lenta?
+c20;hybrid_rrf;reescritura_terminos;True;10.3;20;¿Qué paralelismo efectivo logra con 16 workers sin HPSS y por qué es la más lenta?
+c20;hybrid_rrf;multi_consulta;True;21.0;23;¿Y sin HPSS, qué paralelismo efectivo logra con 16 workers y por qué igual es la más lenta? || ¿Qué paralelismo efectivo logra con 16 workers sin HPSS y por qué es la más lenta?
+c20;hybrid_rrf;oraculo;True;12.4;33;Sin HPSS, ¿qué paralelismo efectivo alcanza la extracción con 16 workers sobre las 96 canciones y por qué aun así es la configuración más lenta?
+c21;hybrid_rrf;literal;False;9.0;13;¿Y qué cuenta y credenciales necesita esa misma ruta?
+c21;hybrid_rrf;concat;True;12.4;34;¿Y qué cuenta y credenciales necesita esa misma ruta? obtiene url login spotify cuando api corre docker cuando corre local autorización interactiva hace sola vez
+c21;hybrid_rrf;reescritura_v1;True;9.5;15;¿Qué cuenta y credenciales necesita la ruta de autorización de Spotify?
+c21;hybrid_rrf;reescritura_v2;True;9.3;14;¿Qué cuenta y credenciales necesita la ruta app/db/
+c21;hybrid_rrf;reescritura_terminos;True;11.0;14;¿Qué cuenta y credenciales necesita la ruta app/db/
+c21;hybrid_rrf;multi_consulta;True;18.7;14;¿Y qué cuenta y credenciales necesita esa misma ruta? || ¿Qué cuenta y credenciales necesita la ruta app/db/
+c21;hybrid_rrf;oraculo;True;12.6;34;¿Qué cuenta y qué credenciales necesita la ruta de Spotify, y por qué las credenciales usadas en el login se guardan junto al token?
+c22;hybrid_rrf;literal;True;10.1;17;¿Y qué pasa con el tiempo transcurrido del job cuando se reintenta?
+c22;hybrid_rrf;concat;True;11.9;32;¿Y qué pasa con el tiempo transcurrido del job cuando se reintenta? existe endpoint /retry reintenta job cuenta ronda reintento
+c22;hybrid_rrf;reescritura_v1;True;9.7;16;¿Qué sucede con el tiempo transcurrido del job cuando se reintenta?
+c22;hybrid_rrf;reescritura_v2;True;9.4;16;¿Cuánta como tiempo transcurrido del job cuando se reintenta?
+c22;hybrid_rrf;reescritura_terminos;True;9.9;19;¿Cuánta como tiempo transcurrido del job cuando se reintenta? reintento
+c22;hybrid_rrf;multi_consulta;True;20.1;17;¿Y qué pasa con el tiempo transcurrido del job cuando se reintenta? || ¿Cuánta como tiempo transcurrido del job cuando se reintenta?
+c22;hybrid_rrf;oraculo;True;12.7;38;¿Cuándo se calcula y guarda jobs.elapsed_time_s, cómo se muestra mientras el job está en curso y qué pasa con ese valor al reintentar?
+c23;hybrid_rrf;literal;True;13.1;35;¿Cómo le fue al kernel 17 de HPSS frente al umbral seguro y al umbral límite de Spearman, y frente al criterio de desvío?
+c23;hybrid_rrf;concat;True;15.0;52;¿Cómo le fue al kernel 17 de HPSS frente al umbral seguro y al umbral límite de Spearman, y frente al criterio de desvío? cambio implementación propuso abaratar hpss umbrales aceptación debía cumplir
+c23;hybrid_rrf;reescritura_v1;True;12.6;35;¿Cómo le fue al kernel 17 de HPSS frente al umbral seguro y al umbral límite de Spearman, y frente al criterio de desvío?
+c23;hybrid_rrf;reescritura_v2;True;13.4;42;¿Cómo se comportó el kernel 17 de HPSS frente a Spearman ≥ 0.98, desvío medio ≤ 2 % y desvío máximo ≤ 10 %?
+c23;hybrid_rrf;reescritura_terminos;True;13.4;42;¿Cómo se comportó el kernel 17 de HPSS frente a Spearman ≥ 0.98, desvío medio ≤ 2 % y desvío máximo ≤ 10 %?
+c23;hybrid_rrf;multi_consulta;True;26.2;42;¿Cómo le fue al kernel 17 de HPSS frente al umbral seguro y al umbral límite de Spearman, y frente al criterio de desvío? || ¿Cómo se comportó el kernel 17 de HPSS frente a Spearman ≥ 0.98, desvío medio ≤ 2 % y desvío máximo ≤ 10 %?
+c23;hybrid_rrf;oraculo;True;13.3;41;¿Cómo le fue al kernel 17 de HPSS frente al umbral 'seguro' y al umbral 'límite' de Spearman, y frente al criterio de desvío?
+c24;hybrid_rrf;literal;False;9.8;15;¿Qué hardware y qué dependencias nuevas requiere el PLAN few-shot?
+c24;hybrid_rrf;concat;True;12.1;29;¿Qué hardware y qué dependencias nuevas requiere el PLAN few-shot? preprocesamiento audio exige mert plan pasa respeta convertir mono afecta tarea
+c24;hybrid_rrf;reescritura_v1;False;9.6;15;¿Qué hardware y qué dependencias nuevas requiere el PLAN few-shot?
+c24;hybrid_rrf;reescritura_v2;False;9.8;15;¿Qué hardware y qué dependencias nuevas requiere el PLAN few-shot?
+c24;hybrid_rrf;reescritura_terminos;False;9.6;15;¿Qué hardware y qué dependencias nuevas requiere el PLAN few-shot?
+c24;hybrid_rrf;multi_consulta;False;19.1;15;¿Qué hardware y qué dependencias nuevas requiere el PLAN few-shot? || ¿Qué hardware y qué dependencias nuevas requiere el PLAN few-shot?
+c24;hybrid_rrf;oraculo;False;9.5;15;¿Qué hardware y qué dependencias nuevas requiere el PLAN few-shot?
+c25;hybrid_rrf;literal;True;12.0;29;Con la configuración por defecto, ¿cuántos intentos máximos recibe un track de Spotify y cuántos una URL directa de YouTube?
+c25;hybrid_rrf;concat;True;15.5;56;Con la configuración por defecto, ¿cuántos intentos máximos recibe un track de Spotify y cuántos una URL directa de YouTube? decide async-music-fetch-engine track descargado queda successful incorrect pasó the eyes chico. they never lie
+c25;hybrid_rrf;reescritura_v1;True;12.0;29;Con la configuración por defecto, ¿cuántos intentos máximos recibe un track de Spotify y cuántos una URL directa de YouTube?
+c25;hybrid_rrf;reescritura_v2;True;11.6;28;¿Cuántos intentos máximos recibe un track de Spotify y cuántos una URL directa de YouTube con la configuración por defecto?
+c25;hybrid_rrf;reescritura_terminos;True;11.9;32;¿Cuántos intentos máximos recibe un track de Spotify y cuántos una URL directa de YouTube con la configuración por defecto? MIN_SCORE
+c25;hybrid_rrf;multi_consulta;True;23.5;29;Con la configuración por defecto, ¿cuántos intentos máximos recibe un track de Spotify y cuántos una URL directa de YouTube? || ¿Cuántos intentos máximos recibe un track de Spotify y cuántos una URL directa de YouTube con la configuración por defecto?
+c25;hybrid_rrf;oraculo;True;11.8;29;Con la configuración por defecto, ¿cuántos intentos máximos recibe un track de Spotify y cuántos una URL directa de YouTube?
+c26;hybrid_rrf;literal;True;11.9;29;¿Por qué se redujo de 0.25 a 0.10 el peso de (1-dyn_spread) en el score de energía?
+c26;hybrid_rrf;concat;True;13.5;44;¿Por qué se redujo de 0.25 a 0.10 el peso de (1-dyn_spread) en el score de energía? aplicó transformación sqrt vez normalización lineal dyn_spread
+c26;hybrid_rrf;reescritura_v1;True;11.8;29;¿Por qué se redujo el peso de (1-dyn_spread) en el score de energía de 0.25 a 0.10?
+c26;hybrid_rrf;reescritura_v2;True;12.2;29;¿Por qué se redujo el peso de (1-dyn_spread) en el score de energía de 0.25 a 0.10?
+c26;hybrid_rrf;reescritura_terminos;True;13.4;29;¿Por qué se redujo el peso de (1-dyn_spread) en el score de energía de 0.25 a 0.10?
+c26;hybrid_rrf;multi_consulta;True;22.9;29;¿Por qué se redujo de 0.25 a 0.10 el peso de (1-dyn_spread) en el score de energía? || ¿Por qué se redujo el peso de (1-dyn_spread) en el score de energía de 0.25 a 0.10?
+c26;hybrid_rrf;oraculo;True;11.6;29;¿Por qué se redujo de 0.25 a 0.10 el peso de (1-dyn_spread) en el score de energía?
+c27;hybrid_rrf;literal;True;12.3;36;¿Por qué database.py fuerza journal_mode=DELETE en SQLite y por qué no conviene correr la API local y el contenedor Docker al mismo tiempo?
+c27;hybrid_rrf;concat;True;15.1;55;¿Por qué database.py fuerza journal_mode=DELETE en SQLite y por qué no conviene correr la API local y el contenedor Docker al mismo tiempo? quedó fórmula eje ritmo score_ritmo pipeline actual después eliminar perc_ratio
+c27;hybrid_rrf;reescritura_v1;True;12.7;35;¿Por qué se establece journal_mode=DELETE en SQLite y por qué no es conveniente correr la API local y el contenedor Docker al mismo tiempo?
+c27;hybrid_rrf;reescritura_v2;True;12.4;33;¿Por qué SQLite fuerza journal_mode=DELETE y por qué no es recomendable correr la API local y el contenedor Docker al mismo tiempo?
+c27;hybrid_rrf;reescritura_terminos;True;12.8;33;¿Por qué SQLite fuerza journal_mode=DELETE y por qué no es recomendable correr la API local y el contenedor Docker al mismo tiempo?
+c27;hybrid_rrf;multi_consulta;True;29.3;36;¿Por qué database.py fuerza journal_mode=DELETE en SQLite y por qué no conviene correr la API local y el contenedor Docker al mismo tiempo? || ¿Por qué SQLite fuerza journal_mode=DELETE y por qué no es recomendable correr la API local y el contenedor Docker al mismo tiempo?
+c27;hybrid_rrf;oraculo;True;12.9;36;¿Por qué database.py fuerza journal_mode=DELETE en SQLite y por qué no conviene correr la API local y el contenedor Docker al mismo tiempo?
+c29;hybrid_rrf;literal;False;10.4;20;¿Por qué se canceló el etiquetado de género musical vía una API de LLM externa?
+c29;hybrid_rrf;concat;False;12.8;37;¿Por qué se canceló el etiquetado de género musical vía una API de LLM externa? calcula embed_mert.py embedding segmento canción elige capa modelo
+c29;hybrid_rrf;reescritura_v1;False;10.4;19;¿Por qué se canceló el etiquetado de género musical vía API de LLM externa?
+c29;hybrid_rrf;reescritura_v2;False;10.4;20;¿Por qué se canceló el etiquetado de género musical vía una API de LLM externa?
+c29;hybrid_rrf;reescritura_terminos;False;10.2;20;¿Por qué se canceló el etiquetado de género musical vía una API de LLM externa?
+c29;hybrid_rrf;multi_consulta;False;21.2;20;¿Por qué se canceló el etiquetado de género musical vía una API de LLM externa? || ¿Por qué se canceló el etiquetado de género musical vía una API de LLM externa?
+c29;hybrid_rrf;oraculo;False;10.4;20;¿Por qué se canceló el etiquetado de género musical vía una API de LLM externa?
+c30;hybrid_rrf;literal;True;10.4;21;¿Cómo se calcula el Loudness Range (LRA) por segmento y qué gating aplica?
+c30;hybrid_rrf;concat;True;13.3;41;¿Cómo se calcula el Loudness Range (LRA) por segmento y qué gating aplica? error produce pasar n_fft librosa.feature.rms zero_crossing_rate
+c30;hybrid_rrf;reescritura_v1;True;10.2;20;¿Cómo se calcula el rango de volumen (LRA) por segmento y qué gating aplica?
+c30;hybrid_rrf;reescritura_v2;True;10.4;21;¿Cómo se calcula el Loudness Range (LRA) por segmento y qué gating aplica?
+c30;hybrid_rrf;reescritura_terminos;True;11.6;29;¿Cómo se calcula el Loudness Range (LRA) por segmento y qué gating aplica? librosa.feature.rms
+c30;hybrid_rrf;multi_consulta;True;21.4;21;¿Cómo se calcula el Loudness Range (LRA) por segmento y qué gating aplica? || ¿Cómo se calcula el Loudness Range (LRA) por segmento y qué gating aplica?
+c30;hybrid_rrf;oraculo;True;10.6;21;¿Cómo se calcula el Loudness Range (LRA) por segmento y qué gating aplica?
+c31;hybrid_rrf;literal;False;10.9;23;¿Y por qué se eliminó en la reestructuración de dsp/ a features/ + ml/?
+c31;hybrid_rrf;concat;False;13.2;40;¿Y por qué se eliminó en la reestructuración de dsp/ a features/ + ml/? arquitectura original proyecto papel cumplía route clap zero-shot dentro clasificación combinada
+c31;hybrid_rrf;reescritura_v1;False;10.7;24;¿Por qué se eliminó Route B en la reestructuración de dsp/ a features/ + ml/?
+c31;hybrid_rrf;reescritura_v2;False;12.2;30;¿Por qué se eliminó Route B (CLAP zero-shot) en la reestructuración de dsp/ a features/ + ml?
+c31;hybrid_rrf;reescritura_terminos;False;12.6;30;¿Por qué se eliminó Route B (CLAP zero-shot) en la reestructuración de dsp/ a features/ + ml?
+c31;hybrid_rrf;multi_consulta;False;24.2;30;¿Y por qué se eliminó en la reestructuración de dsp/ a features/ + ml/? || ¿Por qué se eliminó Route B (CLAP zero-shot) en la reestructuración de dsp/ a features/ + ml?
+c31;hybrid_rrf;oraculo;False;11.9;31;¿Por qué se eliminó la ruta CLAP (Route B) en la reestructuración de dsp/ a features/ + ml/?
+c32;hybrid_rrf;literal;False;11.1;22;¿Y qué GPU se usó realmente para calcular los embeddings de las 96 canciones?
+c32;hybrid_rrf;concat;False;11.7;31;¿Y qué GPU se usó realmente para calcular los embeddings de las 96 canciones? hardware dependencias nuevas requiere plan few-shot
+c32;hybrid_rrf;reescritura_v1;False;10.2;20;¿Qué GPU se usó para calcular los embeddings de las 96 canciones?
+c32;hybrid_rrf;reescritura_v2;False;10.6;21;¿Qué GPU se usó realmente para calcular los embeddings de las 96 canciones?
+c32;hybrid_rrf;reescritura_terminos;False;10.6;21;¿Qué GPU se usó realmente para calcular los embeddings de las 96 canciones?
+c32;hybrid_rrf;multi_consulta;False;21.1;22;¿Y qué GPU se usó realmente para calcular los embeddings de las 96 canciones? || ¿Qué GPU se usó realmente para calcular los embeddings de las 96 canciones?
+c32;hybrid_rrf;oraculo;False;10.6;22;¿Qué GPU se usó para calcular los embeddings MERT de las 96 canciones?
+c33;hybrid_rrf;literal;False;10.0;17;¿Cuántas canciones de la playlist rock_english quedaron así?
+c33;hybrid_rrf;concat;False;13.8;44;¿Cuántas canciones de la playlist rock_english quedaron así? decide async-music-fetch-engine track descargado queda successful incorrect pasó the eyes chico. they never lie
+c33;hybrid_rrf;reescritura_v1;False;11.2;19;¿Cuántas canciones de la playlist rock_english quedaron como incorrectas?
+c33;hybrid_rrf;reescritura_v2;False;10.0;19;¿Cuántas canciones de la playlist rock_english quedaron como incorrectas?
+c33;hybrid_rrf;reescritura_terminos;False;10.7;24;¿Cuántas canciones de la playlist rock_english quedaron como incorrectas? score MIN_SCORE
+c33;hybrid_rrf;multi_consulta;False;21.1;19;¿Cuántas canciones de la playlist rock_english quedaron así? || ¿Cuántas canciones de la playlist rock_english quedaron como incorrectas?
+c33;hybrid_rrf;oraculo;False;12.1;21;¿Cuántas canciones de la playlist rock_english quedaron como incorrect al descargarse?
+c35;hybrid_rrf;literal;False;10.0;10;¿Cuántos árboles usa ese modelo?
+c35;hybrid_rrf;concat;False;11.8;27;¿Cuántos árboles usa ese modelo? modelo producción perc_ratio tres features concentran mitad importancia random forest suman
+c35;hybrid_rrf;reescritura_v1;False;10.2;17;¿Cuántos árboles utiliza el modelo de producción sin perc_ratio?
+c35;hybrid_rrf;reescritura_v2;False;10.0;17;¿Cuántos árboles usa el modelo de producción sin perc_ratio?
+c35;hybrid_rrf;reescritura_terminos;False;10.3;22;¿Cuántos árboles usa el modelo de producción sin perc_ratio? Random Forest timbre
+c35;hybrid_rrf;multi_consulta;False;19.3;17;¿Cuántos árboles usa ese modelo? || ¿Cuántos árboles usa el modelo de producción sin perc_ratio?
+c35;hybrid_rrf;oraculo;False;10.5;20;¿Cuántos árboles (n_estimators) usa el Random Forest de producción?
+c36;hybrid_rrf;literal;False;11.3;28;Perdón, no me refería al árbol sino al Random Forest: ¿por qué su desviación estándar es tan amplia?
+c36;hybrid_rrf;concat;False;13.5;45;Perdón, no me refería al árbol sino al Random Forest: ¿por qué su desviación estándar es tan amplia? empeora árbol decisión eliminar perc_ratio complejidad eliminó junto feature
+c36;hybrid_rrf;reescritura_v1;False;10.0;17;¿Por qué la desviación estándar del Random Forest es tan amplia?
+c36;hybrid_rrf;reescritura_v2;True;10.0;17;¿Por qué es tan amplia la desviación estándar del Random Forest?
+c36;hybrid_rrf;reescritura_terminos;True;9.7;17;¿Por qué es tan amplia la desviación estándar del Random Forest?
+c36;hybrid_rrf;multi_consulta;True;22.9;28;Perdón, no me refería al árbol sino al Random Forest: ¿por qué su desviación estándar es tan amplia? || ¿Por qué es tan amplia la desviación estándar del Random Forest?
+c36;hybrid_rrf;oraculo;True;14.5;41;¿Por qué la desviación estándar de balanced accuracy es tan amplia (±13.3 en Random Forest, ±13.1 en árbol de decisión) según el propio documento?
+c37;hybrid_rrf;literal;False;12.5;31;No, no la ruta de CLAP: la otra ruta, la de features. ¿Dónde vivía su extractor y dónde vive hoy?
+c37;hybrid_rrf;concat;True;15.0;48;No, no la ruta de CLAP: la otra ruta, la de features. ¿Dónde vivía su extractor y dónde vive hoy? arquitectura original proyecto papel cumplía route clap zero-shot dentro clasificación combinada
+c37;hybrid_rrf;reescritura_v1;True;9.3;14;¿Dónde vivía su extractor y dónde vive hoy?
+c37;hybrid_rrf;reescritura_v2;True;10.7;21;¿Dónde vivía el extractor de Route A en la arquitectura original y dónde vive hoy?
+c37;hybrid_rrf;reescritura_terminos;True;10.7;21;¿Dónde vivía el extractor de Route A en la arquitectura original y dónde vive hoy?
+c37;hybrid_rrf;multi_consulta;True;22.7;31;No, no la ruta de CLAP: la otra ruta, la de features. ¿Dónde vivía su extractor y dónde vive hoy? || ¿Dónde vivía el extractor de Route A en la arquitectura original y dónde vive hoy?
+c37;hybrid_rrf;oraculo;True;10.9;23;¿Dónde vivía el extractor de features de Route A en la arquitectura original y dónde vive hoy?
+c38;hybrid_rrf;literal;True;11.0;23;Eso no, el otro bug: el que hacía que la falla de una sola canción matara toda la corrida.
+c38;hybrid_rrf;concat;True;14.4;45;Eso no, el otro bug: el que hacía que la falla de una sola canción matara toda la corrida. tagger-music-genesis.md corrida extracción volvía procesar canciones estaban hechas
+c38;hybrid_rrf;reescritura_v1;True;10.5;22;¿Por qué cada corrida de extracción volvía a procesar canciones que ya estaban hechas?
+c38;hybrid_rrf;reescritura_v2;True;10.6;21;¿Qué bug hacía que la falla de una sola cancón matara toda la corrida de extracción?
+c38;hybrid_rrf;reescritura_terminos;True;10.6;22;¿Qué bug hacía que la falla de una sola cancón matara toda la corrida de extracción? canción
+c38;hybrid_rrf;multi_consulta;True;22.0;23;Eso no, el otro bug: el que hacía que la falla de una sola canción matara toda la corrida. || ¿Qué bug hacía que la falla de una sola cancón matara toda la corrida de extracción?
+c38;hybrid_rrf;oraculo;True;12.2;32;¿Qué bug hacía que la falla de una sola canción matara toda la corrida, y qué otro bug hacía que cada corrida repitiera trabajo ya hecho?
+c40;hybrid_rrf;literal;False;10.6;21;¿Hubo alguna interacción documentada entre ese cambio de sample rate y fold_tempo()?
+c40;hybrid_rrf;concat;False;17.7;72;¿Hubo alguna interacción documentada entre ese cambio de sample rate y fold_tempo()? valores n_fft hop_length fijaron subir sr 44100 hz ventana temporal mantenían hoy aparecen features/extract.py efecto tuvo cambiar sr 22050 44100 ajustar n_fft/hop_length inicialmente sigue vigente cambio
+c40;hybrid_rrf;reescritura_v1;False;11.6;23;¿Hubo alguna interaccion documentada entre ese cambio de sample rate y fold_tempo()?
+c40;hybrid_rrf;reescritura_v2;False;10.2;20;¿Se documentó alguna interacción entre el cambio de sample rate y fold_tempo()?
+c40;hybrid_rrf;reescritura_terminos;False;10.2;20;¿Se documentó alguna interacción entre el cambio de sample rate y fold_tempo()?
+c40;hybrid_rrf;multi_consulta;False;20.5;21;¿Hubo alguna interacción documentada entre ese cambio de sample rate y fold_tempo()? || ¿Se documentó alguna interacción entre el cambio de sample rate y fold_tempo()?
+c40;hybrid_rrf;oraculo;True;11.3;28;¿Existe alguna interacción documentada entre fold_tempo() y el cambio de sample rate de 22050 a 44100 Hz?

@@ -1,0 +1,71 @@
+conv_id;metodo;condicion;acierto;latencia_busqueda_ms;tokens_embedder;consulta
+c01;hybrid_rrf;literal;True;21.2;23;¿Y qué fracción del tiempo de extracción por segmento le atribuye cada documento? ¿Cuál vale hoy?
+c01;hybrid_rrf;concat;True;12.8;35;¿Y qué fracción del tiempo de extracción por segmento le atribuye cada documento? ¿Cuál vale hoy? resultado dio consolidar hpss sola llamada canción completa lugar segmento
+c01;hybrid_rrf;reescritura_v1;True;10.9;22;¿Cuál es la fracción del tiempo de extracción por segmento que se atribuye a cada documento actualmente?
+c01;hybrid_rrf;multi_consulta;True;22.0;24;¿Y qué fracción del tiempo de extracción por segmento le atribuye cada documento? ¿Cuál vale hoy? || ¿Cuál es la fracción del tiempo de extracción por segmento que se atribuye a cada documento en HPSS?
+c01;hybrid_rrf;oraculo;True;12.6;34;Genesis y el benchmark reportan qué fracción del tiempo de extracción por segmento consume HPSS. ¿Qué cifra da cada documento y cuál es la vigente?
+c02;hybrid_rrf;literal;False;9.9;16;¿Y cómo era esa distribución en genesis, comparada con la actual?
+c02;hybrid_rrf;concat;True;14.2;40;¿Y cómo era esa distribución en genesis, comparada con la actual? music-tagger-benchmark.md porcentaje canciones cae nivel router confianza confiable ambigua revisar
+c02;hybrid_rrf;reescritura_v1;True;11.2;18;Segón como era la distribución de confianza en genesis, comparada con la actual?
+c02;hybrid_rrf;multi_consulta;True;23.2;25;¿Y cómo era esa distribución en genesis, comparada con la actual? || ¿Cómo era la distribución de canciones en cada nivel del router de confianza en genesis, comparada con la actual?
+c02;hybrid_rrf;oraculo;True;11.9;28;¿Cómo cambió la distribución de canciones por nivel de confianza del router entre el resultado histórico de genesis y el benchmark actual?
+c03;hybrid_rrf;literal;True;10.7;21;¿Y qué accuracy tenía ese mismo árbol en la tabla histórica de genesis frente a hoy?
+c03;hybrid_rrf;concat;True;12.7;38;¿Y qué accuracy tenía ese mismo árbol en la tabla histórica de genesis frente a hoy? empeora árbol decisión eliminar perc_ratio complejidad eliminó junto feature
+c03;hybrid_rrf;reescritura_v1;True;11.7;26;¿Cuál es la precisión de accuracy del árbol de decisión en la tabla histórica de genesis frente a la actual?
+c03;hybrid_rrf;multi_consulta;True;21.4;21;¿Y qué accuracy tenía ese mismo árbol en la tabla histórica de genesis frente a hoy? || ¿Qué accuracy tenía el árbol de decisión en genesis frente a la actual?
+c03;hybrid_rrf;oraculo;True;11.5;26;¿Qué accuracy tenía el árbol de decisión en la tabla histórica de genesis y cuál tiene en el benchmark actual?
+c06;hybrid_rrf;literal;True;8.8;9;¿Y dónde vive hoy ese extractor?
+c06;hybrid_rrf;concat;True;11.3;27;¿Y dónde vive hoy ese extractor? scripts formaban route arquitectura original bug impedía correrla punta punta contra summary features reciente
+c06;hybrid_rrf;reescritura_v1;True;9.2;12;¿Dónde vive hoy ese extractor de features?
+c06;hybrid_rrf;multi_consulta;True;18.8;18;¿Y dónde vive hoy ese extractor? || ¿Dónde vive hoy el extractor de características extract_features.py?
+c06;hybrid_rrf;oraculo;True;11.2;23;¿Dónde vivía el extractor de features de Route A en la arquitectura original y dónde vive hoy?
+c07;hybrid_rrf;literal;True;10.8;24;¿Se llegó a validar con 15? ¿Qué valores reducidos se probaron al final y cómo les fue?
+c07;hybrid_rrf;concat;False;12.8;38;¿Se llegó a validar con 15? ¿Qué valores reducidos se probaron al final y cómo les fue? parámetro hpss principal driver costo controla valor defecto
+c07;hybrid_rrf;reescritura_v1;True;11.0;24;¿Se llegó a validar con 31? ¿Qué valores reducidos se probaron al final y cómo les fue?
+c07;hybrid_rrf;multi_consulta;True;22.7;29;¿Se llegó a validar con 15? ¿Qué valores reducidos se probaron al final y cómo les fue? || ¿Se llegó a validar con kernel_size=15 y qué valores reducidos se probaron al final, y cómo les fue?
+c07;hybrid_rrf;oraculo;False;11.8;31;¿Se llegó a validar kernel_size=15 para HPSS? ¿Qué kernels reducidos se validaron finalmente y con qué resultado?
+c08;hybrid_rrf;literal;False;9.4;14;¿Y cuántas features usa el modelo después de ese cambio?
+c08;hybrid_rrf;concat;True;12.1;33;¿Y cuántas features usa el modelo después de ese cambio? quedó fórmula eje ritmo score_ritmo pipeline actual después eliminar perc_ratio
+c08;hybrid_rrf;reescritura_v1;True;13.7;42;¿Cuántas features usa el modelo después de que se renormalizaron y redondearon los pesos de onset y tempo a 0.70/0.30 en features/extract.py?
+c08;hybrid_rrf;multi_consulta;False;23.8;24;¿Y cuántas features usa el modelo después de ese cambio? || ¿Cuántas features usa el modelo de música después de eliminar perc_ratio y renormalizar los pesos?
+c08;hybrid_rrf;oraculo;True;10.2;18;¿Cuántas features usa el modelo de producción después de eliminar perc_ratio?
+c09;hybrid_rrf;literal;False;9.8;16;¿Cuáles tres pesan más en el Random Forest y cuánto suman?
+c09;hybrid_rrf;concat;True;11.3;26;¿Cuáles tres pesan más en el Random Forest y cuánto suman? features usa modelo producción después eliminar perc_ratio
+c09;hybrid_rrf;reescritura_v1;False;9.7;16;¿Cuáles tres features del Random Forest pesan más y cuánto suman?
+c09;hybrid_rrf;multi_consulta;True;20.2;20;¿Cuáles tres pesan más en el Random Forest y cuánto suman? || ¿Cuáles tres features del modelo de producción del Random Forest pesan más y cuánto suman?
+c09;hybrid_rrf;oraculo;True;12.5;33;En el modelo de producción sin perc_ratio, ¿qué tres features concentran más de la mitad de la importancia del Random Forest y cuánto suman?
+c15;hybrid_rrf;literal;True;10.9;23;¿Con qué distancia se calcula ese valor? ¿Se puede leer igual que la tabla de distancias por categoría?
+c15;hybrid_rrf;concat;True;13.3;43;¿Con qué distancia se calcula ese valor? ¿Se puede leer igual que la tabla de distancias por categoría? métrica usó medir categorías forman grupos separables espacio embeddings mert valor dio
+c15;hybrid_rrf;reescritura_v1;True;11.6;28;¿Con qué distancia se calcula el valor de Silhouette score? ¿Se puede leer igual que la tabla de distancias por categoría?
+c15;hybrid_rrf;multi_consulta;True;21.0;23;¿Con qué distancia se calcula ese valor? ¿Se puede leer igual que la tabla de distancias por categoría? || ¿Se calcula el Silhouette score sobre la distancia euclidiana o otra distancia?
+c15;hybrid_rrf;oraculo;True;14.0;42;¿Con qué métrica de distancia se calcula el silhouette global de 0.0085 y con cuál la tabla de distancias por categoría que usa el benchmark? ¿Se pueden leer como equivalentes?
+c16;hybrid_rrf;literal;False;10.2;17;¿Qué accuracy tuvo con esos prompts y qué quedó sin evaluar?
+c16;hybrid_rrf;concat;True;12.3;35;¿Qué accuracy tuvo con esos prompts y qué quedó sin evaluar? sesgo mostró clap zero-shot usar prompts largos densos palabras clave
+c16;hybrid_rrf;reescritura_v1;True;12.1;34;¿Qué accuracy obtuvo CLAP zero-shot al usar prompts largos y densos en palabras clave y qué accuracy quedó sin evaluar?
+c16;hybrid_rrf;multi_consulta;True;22.3;34;¿Qué accuracy tuvo con esos prompts y qué quedó sin evaluar? || ¿Qué accuracy obtuvo CLAP zero-shot con los prompts largos y densos en palabras clave y qué accuracy quedó sin evaluar?
+c16;hybrid_rrf;oraculo;True;12.0;33;¿Qué accuracy tuvo CLAP zero-shot con prompts largos y qué quedó sin evaluar sobre su uso para resolver los casos ambiguos?
+c18;hybrid_rrf;literal;True;9.8;16;¿Qué bugs tenía ese script y qué duda de calidad quedó abierta?
+c18;hybrid_rrf;concat;True;12.0;27;¿Qué bugs tenía ese script y qué duda de calidad quedó abierta? canceló etiquetado género musical vía api llm externa
+c18;hybrid_rrf;reescritura_v1;True;14.1;16;¿Qué bugs tenía ese script y qué duda de calidad quedó abierta?
+c18;hybrid_rrf;multi_consulta;True;23.0;27;¿Qué bugs tenía ese script y qué duda de calidad quedó abierta? || ¿Qué bugs tenía el script de etiquetado de género musical y qué duda de calidad quedó abierta después de corregirlos?
+c18;hybrid_rrf;oraculo;True;12.6;29;¿Qué tres bugs se encontraron en el script de etiquetado de género vía API externa y qué duda de calidad quedó sin resolver?
+c28;hybrid_rrf;literal;True;12.2;27;¿Qué balanced accuracy obtuvo el sistema de prototipos few-shot usando k=5 canciones de soporte por categoría?
+c28;hybrid_rrf;concat;True;14.4;43;¿Qué balanced accuracy obtuvo el sistema de prototipos few-shot usando k=5 canciones de soporte por categoría? descarga usa copia privada cookies.txt pasa recurso requiere autenticación cuando cookies válidas
+c28;hybrid_rrf;reescritura_v1;True;11.9;27;¿Qué balanced accuracy obtuvo el sistema de prototipos few-shot usando k=5 canciones de soporte por categoría?
+c28;hybrid_rrf;multi_consulta;True;23.3;27;¿Qué balanced accuracy obtuvo el sistema de prototipos few-shot usando k=5 canciones de soporte por categoría? || ¿Qué balanced accuracy obtuvo el sistema de prototipos few-shot usando k=5 canciones de soporte por categoría?
+c28;hybrid_rrf;oraculo;True;11.5;27;¿Qué balanced accuracy obtuvo el sistema de prototipos few-shot usando k=5 canciones de soporte por categoría?
+c34;hybrid_rrf;literal;False;10.8;22;¿Qué margen entre la primera y la segunda probabilidad separa una canción confiable de una ambigua?
+c34;hybrid_rrf;concat;False;14.1;46;¿Qué margen entre la primera y la segunda probabilidad separa una canción confiable de una ambigua? music-tagger-benchmark.md porcentaje canciones cae nivel router confianza confiable ambigua revisar
+c34;hybrid_rrf;reescritura_v1;False;10.7;22;¿Qué margen entre la primera y la segunda probabilidad separa una canción confiable de una ambigua?
+c34;hybrid_rrf;multi_consulta;False;22.5;28;¿Qué margen entre la primera y la segunda probabilidad separa una canción confiable de una ambigua? || ¿Qué margen entre la probabilidad de confianza y la probabilidad de ambigua separa una cancion confiable de una ambigua?
+c34;hybrid_rrf;oraculo;False;12.0;30;¿Qué margen entre top1 y top2 de predict_proba separa una canción confiable de una ambigua en el router de confianza?
+c39;hybrid_rrf;literal;False;9.4;14;¿Y el script que calcula los embeddings lo respeta?
+c39;hybrid_rrf;concat;False;13.4;43;¿Y el script que calcula los embeddings lo respeta? preprocesamiento audio exige mert plan pasa respeta convertir mono afecta tarea segmenta canción calcular embeddings mert segmentos dataset regla
+c39;hybrid_rrf;reescritura_v1;False;10.7;21;¿Qué pasa si el script que calcula los embeddings no respeta la regla de segmentación?
+c39;hybrid_rrf;multi_consulta;False;21.1;25;¿Y el script que calcula los embeddings lo respeta? || ¿El script que calcula los embeddings MERT respeta el preprocesamiento de audio requerido según el PLAN?
+c39;hybrid_rrf;oraculo;True;12.0;28;¿Respeta fewshot/embed_mert.py el preprocesamiento de audio que el PLAN exige para MERT?
+c41;hybrid_rrf;literal;True;12.4;33;Volviendo al bug del primero: ¿qué diferencia se midió entre el checkpoint degenerado y el que sí discrimina, y cómo se validó?
+c41;hybrid_rrf;concat;True;17.8;68;Volviendo al bug del primero: ¿qué diferencia se midió entre el checkpoint degenerado y el que sí discrimina, y cómo se validó? sesgo mostró clap zero-shot usar prompts largos densos palabras clave patrón general riesgo ilustra bug logit_scale clap aplicable otras partes pipeline
+c41;hybrid_rrf;reescritura_v1;True;12.8;36;¿Qué diferencia se midió entre el checkpoint degenerado y el que sí discrimina, y cómo se validó el bug de logit_scale de CLAP?
+c41;hybrid_rrf;multi_consulta;True;25.4;37;Volviendo al bug del primero: ¿qué diferencia se midió entre el checkpoint degenerado y el que sí discrimina, y cómo se validó? || ¿Qué diferencia se midió entre el checkpoint degenerado y el que sí discrimina en el bug de logit_scale de CLAP, y cómo se validó?
+c41;hybrid_rrf;oraculo;True;11.6;28;¿Qué diferencia concreta se midió entre el checkpoint CLAP degenerado y el que sí discrimina, y cómo se validó?

@@ -1,0 +1,802 @@
+{
+ "exp": "multiturno_v2",
+ "split": "dev",
+ "prompt": "rewrite_v2",
+ "modelo_reescritura": "llama3.2:3b",
+ "n_conversaciones": 63,
+ "recuperacion": {
+  "hybrid_rrf": {
+   "n_historial": 28,
+   "objetivos_historial": 27,
+   "n_autocontenidas": 23,
+   "aciertos_historial": {
+    "literal": 18,
+    "concat": 19,
+    "reescritura_v2": 21,
+    "multi_consulta": 24,
+    "oraculo": 23
+   },
+   "recall_historial": {
+    "literal": 0.643,
+    "concat": 0.679,
+    "reescritura_v2": 0.75,
+    "multi_consulta": 0.857,
+    "oraculo": 0.821
+   },
+   "aciertos_autocontenidas": {
+    "literal": 16,
+    "concat": 13,
+    "reescritura_v2": 18,
+    "multi_consulta": 16,
+    "oraculo": 16
+   },
+   "pares_historial": [
+    {
+     "a": "literal",
+     "b": "concat",
+     "aciertos_a": 18,
+     "aciertos_b": 19,
+     "solo_a": 3,
+     "solo_b": 4,
+     "p_mcnemar": 1.0,
+     "dif_media_b_menos_a": 0.036,
+     "ic95_bootstrap": [
+      -0.1429,
+      0.2143
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 3,
+     "objetivos_a_favor_b": 4,
+     "p_signo_por_objetivo": 1.0,
+     "ic95_bootstrap_por_objetivo": [
+      -0.1429,
+      0.2222
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "reescritura_v2",
+     "aciertos_a": 18,
+     "aciertos_b": 21,
+     "solo_a": 4,
+     "solo_b": 7,
+     "p_mcnemar": 0.549,
+     "dif_media_b_menos_a": 0.107,
+     "ic95_bootstrap": [
+      -0.1071,
+      0.3214
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 3,
+     "objetivos_a_favor_b": 6,
+     "p_signo_por_objetivo": 0.508,
+     "ic95_bootstrap_por_objetivo": [
+      -0.1034,
+      0.3214
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "multi_consulta",
+     "aciertos_a": 18,
+     "aciertos_b": 24,
+     "solo_a": 0,
+     "solo_b": 6,
+     "p_mcnemar": 0.031,
+     "dif_media_b_menos_a": 0.214,
+     "ic95_bootstrap": [
+      0.0714,
+      0.3571
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 0,
+     "objetivos_a_favor_b": 6,
+     "p_signo_por_objetivo": 0.031,
+     "ic95_bootstrap_por_objetivo": [
+      0.0741,
+      0.3704
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "oraculo",
+     "aciertos_a": 18,
+     "aciertos_b": 23,
+     "solo_a": 0,
+     "solo_b": 5,
+     "p_mcnemar": 0.062,
+     "dif_media_b_menos_a": 0.179,
+     "ic95_bootstrap": [
+      0.0357,
+      0.3214
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 0,
+     "objetivos_a_favor_b": 5,
+     "p_signo_por_objetivo": 0.062,
+     "ic95_bootstrap_por_objetivo": [
+      0.037,
+      0.3333
+     ]
+    },
+    {
+     "a": "concat",
+     "b": "multi_consulta",
+     "aciertos_a": 19,
+     "aciertos_b": 24,
+     "solo_a": 0,
+     "solo_b": 5,
+     "p_mcnemar": 0.062,
+     "dif_media_b_menos_a": 0.179,
+     "ic95_bootstrap": [
+      0.0357,
+      0.3214
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 0,
+     "objetivos_a_favor_b": 4,
+     "p_signo_por_objetivo": 0.125,
+     "ic95_bootstrap_por_objetivo": [
+      0.037,
+      0.3448
+     ]
+    },
+    {
+     "a": "reescritura_v2",
+     "b": "multi_consulta",
+     "aciertos_a": 21,
+     "aciertos_b": 24,
+     "solo_a": 1,
+     "solo_b": 4,
+     "p_mcnemar": 0.375,
+     "dif_media_b_menos_a": 0.107,
+     "ic95_bootstrap": [
+      -0.0357,
+      0.25
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 1,
+     "objetivos_a_favor_b": 4,
+     "p_signo_por_objetivo": 0.375,
+     "ic95_bootstrap_por_objetivo": [
+      -0.037,
+      0.2581
+     ]
+    },
+    {
+     "a": "multi_consulta",
+     "b": "oraculo",
+     "aciertos_a": 24,
+     "aciertos_b": 23,
+     "solo_a": 2,
+     "solo_b": 1,
+     "p_mcnemar": 1.0,
+     "dif_media_b_menos_a": -0.036,
+     "ic95_bootstrap": [
+      -0.1429,
+      0.0714
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 2,
+     "objetivos_a_favor_b": 1,
+     "p_signo_por_objetivo": 1.0,
+     "ic95_bootstrap_por_objetivo": [
+      -0.1613,
+      0.0741
+     ]
+    }
+   ],
+   "pares_autocontenidas": [
+    {
+     "a": "literal",
+     "b": "concat",
+     "aciertos_a": 16,
+     "aciertos_b": 13,
+     "solo_a": 5,
+     "solo_b": 2,
+     "p_mcnemar": 0.453,
+     "dif_media_b_menos_a": -0.13,
+     "ic95_bootstrap": [
+      -0.3478,
+      0.087
+     ],
+     "objetivos": 21,
+     "objetivos_a_favor_a": 5,
+     "objetivos_a_favor_b": 2,
+     "p_signo_por_objetivo": 0.453,
+     "ic95_bootstrap_por_objetivo": [
+      -0.3636,
+      0.0833
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "reescritura_v2",
+     "aciertos_a": 16,
+     "aciertos_b": 18,
+     "solo_a": 0,
+     "solo_b": 2,
+     "p_mcnemar": 0.5,
+     "dif_media_b_menos_a": 0.087,
+     "ic95_bootstrap": [
+      0.0,
+      0.2174
+     ],
+     "objetivos": 21,
+     "objetivos_a_favor_a": 0,
+     "objetivos_a_favor_b": 1,
+     "p_signo_por_objetivo": 1.0,
+     "ic95_bootstrap_por_objetivo": [
+      0.0,
+      0.25
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "multi_consulta",
+     "aciertos_a": 16,
+     "aciertos_b": 16,
+     "solo_a": 0,
+     "solo_b": 0,
+     "p_mcnemar": 1.0,
+     "dif_media_b_menos_a": 0.0,
+     "ic95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "objetivos": 21,
+     "objetivos_a_favor_a": 0,
+     "objetivos_a_favor_b": 0,
+     "p_signo_por_objetivo": 1.0,
+     "ic95_bootstrap_por_objetivo": [
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "oraculo",
+     "aciertos_a": 16,
+     "aciertos_b": 16,
+     "solo_a": 0,
+     "solo_b": 0,
+     "p_mcnemar": 1.0,
+     "dif_media_b_menos_a": 0.0,
+     "ic95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "objetivos": 21,
+     "objetivos_a_favor_a": 0,
+     "objetivos_a_favor_b": 0,
+     "p_signo_por_objetivo": 1.0,
+     "ic95_bootstrap_por_objetivo": [
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "por_tipo": {
+    "autocontenida_mismo_tema": {
+     "n": 8,
+     "literal": 5,
+     "concat": 6,
+     "reescritura_v2": 6,
+     "multi_consulta": 5,
+     "oraculo": 5
+    },
+    "cambio_de_parametro": {
+     "n": 4,
+     "literal": 3,
+     "concat": 4,
+     "reescritura_v2": 4,
+     "multi_consulta": 4,
+     "oraculo": 4
+    },
+    "cambio_de_tema": {
+     "n": 7,
+     "literal": 6,
+     "concat": 4,
+     "reescritura_v2": 6,
+     "multi_consulta": 6,
+     "oraculo": 6
+    },
+    "cambio_de_tema_auto": {
+     "n": 8,
+     "literal": 5,
+     "concat": 3,
+     "reescritura_v2": 6,
+     "multi_consulta": 5,
+     "oraculo": 5
+    },
+    "correccion": {
+     "n": 5,
+     "literal": 2,
+     "concat": 4,
+     "reescritura_v2": 5,
+     "multi_consulta": 5,
+     "oraculo": 3
+    },
+    "correferencia": {
+     "n": 13,
+     "literal": 9,
+     "concat": 7,
+     "reescritura_v2": 9,
+     "multi_consulta": 10,
+     "oraculo": 10
+    },
+    "elipsis_documento": {
+     "n": 4,
+     "literal": 3,
+     "concat": 3,
+     "reescritura_v2": 2,
+     "multi_consulta": 4,
+     "oraculo": 4
+    },
+    "tres_turnos": {
+     "n": 2,
+     "literal": 1,
+     "concat": 1,
+     "reescritura_v2": 1,
+     "multi_consulta": 1,
+     "oraculo": 2
+    }
+   }
+  },
+  "dense": {
+   "n_historial": 28,
+   "objetivos_historial": 27,
+   "n_autocontenidas": 23,
+   "aciertos_historial": {
+    "literal": 14,
+    "concat": 15,
+    "reescritura_v2": 19,
+    "multi_consulta": 17,
+    "oraculo": 20
+   },
+   "recall_historial": {
+    "literal": 0.5,
+    "concat": 0.536,
+    "reescritura_v2": 0.679,
+    "multi_consulta": 0.607,
+    "oraculo": 0.714
+   },
+   "aciertos_autocontenidas": {
+    "literal": 16,
+    "concat": 11,
+    "reescritura_v2": 14,
+    "multi_consulta": 15,
+    "oraculo": 16
+   },
+   "pares_historial": [
+    {
+     "a": "literal",
+     "b": "concat",
+     "aciertos_a": 14,
+     "aciertos_b": 15,
+     "solo_a": 2,
+     "solo_b": 3,
+     "p_mcnemar": 1.0,
+     "dif_media_b_menos_a": 0.036,
+     "ic95_bootstrap": [
+      -0.1071,
+      0.1786
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 2,
+     "objetivos_a_favor_b": 3,
+     "p_signo_por_objetivo": 1.0,
+     "ic95_bootstrap_por_objetivo": [
+      -0.1111,
+      0.1852
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "reescritura_v2",
+     "aciertos_a": 14,
+     "aciertos_b": 19,
+     "solo_a": 1,
+     "solo_b": 6,
+     "p_mcnemar": 0.125,
+     "dif_media_b_menos_a": 0.179,
+     "ic95_bootstrap": [
+      0.0,
+      0.3571
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 1,
+     "objetivos_a_favor_b": 6,
+     "p_signo_por_objetivo": 0.125,
+     "ic95_bootstrap_por_objetivo": [
+      0.0,
+      0.3704
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "multi_consulta",
+     "aciertos_a": 14,
+     "aciertos_b": 17,
+     "solo_a": 0,
+     "solo_b": 3,
+     "p_mcnemar": 0.25,
+     "dif_media_b_menos_a": 0.107,
+     "ic95_bootstrap": [
+      0.0,
+      0.2143
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 0,
+     "objetivos_a_favor_b": 3,
+     "p_signo_por_objetivo": 0.25,
+     "ic95_bootstrap_por_objetivo": [
+      0.0,
+      0.2333
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "oraculo",
+     "aciertos_a": 14,
+     "aciertos_b": 20,
+     "solo_a": 2,
+     "solo_b": 8,
+     "p_mcnemar": 0.109,
+     "dif_media_b_menos_a": 0.214,
+     "ic95_bootstrap": [
+      0.0,
+      0.4286
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 2,
+     "objetivos_a_favor_b": 8,
+     "p_signo_por_objetivo": 0.109,
+     "ic95_bootstrap_por_objetivo": [
+      0.0,
+      0.4286
+     ]
+    },
+    {
+     "a": "concat",
+     "b": "multi_consulta",
+     "aciertos_a": 15,
+     "aciertos_b": 17,
+     "solo_a": 2,
+     "solo_b": 4,
+     "p_mcnemar": 0.688,
+     "dif_media_b_menos_a": 0.071,
+     "ic95_bootstrap": [
+      -0.1071,
+      0.25
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 2,
+     "objetivos_a_favor_b": 4,
+     "p_signo_por_objetivo": 0.688,
+     "ic95_bootstrap_por_objetivo": [
+      -0.1071,
+      0.2414
+     ]
+    },
+    {
+     "a": "reescritura_v2",
+     "b": "multi_consulta",
+     "aciertos_a": 19,
+     "aciertos_b": 17,
+     "solo_a": 3,
+     "solo_b": 1,
+     "p_mcnemar": 0.625,
+     "dif_media_b_menos_a": -0.071,
+     "ic95_bootstrap": [
+      -0.2143,
+      0.0714
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 3,
+     "objetivos_a_favor_b": 1,
+     "p_signo_por_objetivo": 0.625,
+     "ic95_bootstrap_por_objetivo": [
+      -0.2222,
+      0.0667
+     ]
+    },
+    {
+     "a": "multi_consulta",
+     "b": "oraculo",
+     "aciertos_a": 17,
+     "aciertos_b": 20,
+     "solo_a": 3,
+     "solo_b": 6,
+     "p_mcnemar": 0.508,
+     "dif_media_b_menos_a": 0.107,
+     "ic95_bootstrap": [
+      -0.1071,
+      0.3214
+     ],
+     "objetivos": 27,
+     "objetivos_a_favor_a": 3,
+     "objetivos_a_favor_b": 6,
+     "p_signo_por_objetivo": 0.508,
+     "ic95_bootstrap_por_objetivo": [
+      -0.1,
+      0.3214
+     ]
+    }
+   ],
+   "pares_autocontenidas": [
+    {
+     "a": "literal",
+     "b": "concat",
+     "aciertos_a": 16,
+     "aciertos_b": 11,
+     "solo_a": 6,
+     "solo_b": 1,
+     "p_mcnemar": 0.125,
+     "dif_media_b_menos_a": -0.217,
+     "ic95_bootstrap": [
+      -0.4348,
+      0.0
+     ],
+     "objetivos": 21,
+     "objetivos_a_favor_a": 6,
+     "objetivos_a_favor_b": 1,
+     "p_signo_por_objetivo": 0.125,
+     "ic95_bootstrap_por_objetivo": [
+      -0.4231,
+      0.0
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "reescritura_v2",
+     "aciertos_a": 16,
+     "aciertos_b": 14,
+     "solo_a": 2,
+     "solo_b": 0,
+     "p_mcnemar": 0.5,
+     "dif_media_b_menos_a": -0.087,
+     "ic95_bootstrap": [
+      -0.2174,
+      0.0
+     ],
+     "objetivos": 21,
+     "objetivos_a_favor_a": 2,
+     "objetivos_a_favor_b": 0,
+     "p_signo_por_objetivo": 0.5,
+     "ic95_bootstrap_por_objetivo": [
+      -0.2174,
+      0.0
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "multi_consulta",
+     "aciertos_a": 16,
+     "aciertos_b": 15,
+     "solo_a": 1,
+     "solo_b": 0,
+     "p_mcnemar": 1.0,
+     "dif_media_b_menos_a": -0.043,
+     "ic95_bootstrap": [
+      -0.1304,
+      0.0
+     ],
+     "objetivos": 21,
+     "objetivos_a_favor_a": 1,
+     "objetivos_a_favor_b": 0,
+     "p_signo_por_objetivo": 1.0,
+     "ic95_bootstrap_por_objetivo": [
+      -0.1364,
+      0.0
+     ]
+    },
+    {
+     "a": "literal",
+     "b": "oraculo",
+     "aciertos_a": 16,
+     "aciertos_b": 16,
+     "solo_a": 0,
+     "solo_b": 0,
+     "p_mcnemar": 1.0,
+     "dif_media_b_menos_a": 0.0,
+     "ic95_bootstrap": [
+      0.0,
+      0.0
+     ],
+     "objetivos": 21,
+     "objetivos_a_favor_a": 0,
+     "objetivos_a_favor_b": 0,
+     "p_signo_por_objetivo": 1.0,
+     "ic95_bootstrap_por_objetivo": [
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "por_tipo": {
+    "autocontenida_mismo_tema": {
+     "n": 8,
+     "literal": 6,
+     "concat": 5,
+     "reescritura_v2": 5,
+     "multi_consulta": 5,
+     "oraculo": 6
+    },
+    "cambio_de_parametro": {
+     "n": 4,
+     "literal": 3,
+     "concat": 4,
+     "reescritura_v2": 4,
+     "multi_consulta": 4,
+     "oraculo": 4
+    },
+    "cambio_de_tema": {
+     "n": 7,
+     "literal": 5,
+     "concat": 4,
+     "reescritura_v2": 5,
+     "multi_consulta": 5,
+     "oraculo": 5
+    },
+    "cambio_de_tema_auto": {
+     "n": 8,
+     "literal": 5,
+     "concat": 2,
+     "reescritura_v2": 4,
+     "multi_consulta": 5,
+     "oraculo": 5
+    },
+    "correccion": {
+     "n": 5,
+     "literal": 2,
+     "concat": 2,
+     "reescritura_v2": 4,
+     "multi_consulta": 4,
+     "oraculo": 3
+    },
+    "correferencia": {
+     "n": 13,
+     "literal": 8,
+     "concat": 7,
+     "reescritura_v2": 8,
+     "multi_consulta": 8,
+     "oraculo": 9
+    },
+    "elipsis_documento": {
+     "n": 4,
+     "literal": 0,
+     "concat": 1,
+     "reescritura_v2": 2,
+     "multi_consulta": 0,
+     "oraculo": 2
+    },
+    "tres_turnos": {
+     "n": 2,
+     "literal": 1,
+     "concat": 1,
+     "reescritura_v2": 1,
+     "multi_consulta": 1,
+     "oraculo": 2
+    }
+   }
+  }
+ },
+ "abstencion": {
+  "literal": {
+   "abstenciones": 10,
+   "n": 12,
+   "tasa_abstencion": 0.833,
+   "tasa_alucinacion": 0.167,
+   "ic95_wilson": [
+    0.552,
+    0.953
+   ]
+  },
+  "multi_consulta": {
+   "abstenciones": 10,
+   "n": 12,
+   "tasa_abstencion": 0.833,
+   "tasa_alucinacion": 0.167,
+   "ic95_wilson": [
+    0.552,
+    0.953
+   ]
+  }
+ },
+ "criterios": {
+  "c1_multi_consulta_no_peor_que_literal": true,
+  "c1_significativo_por_objetivo": true,
+  "c2_distancia_al_oraculo_puntos": -3.6,
+  "c2_distancia_al_oraculo_max_10": true,
+  "c4_perdidas_autocontenidas": 0,
+  "c4_perdidas_max_2": true,
+  "c5_abstencion_no_baja": true
+ },
+ "costo": {
+  "reescritura_latencia_p50_ms": 478.4,
+  "reescritura_latencia_p95_ms": 638.5,
+  "reescritura_tokens_in_p50": 1299.0,
+  "reescritura_tokens_out_p50": 63.0,
+  "fallbacks": {
+   "vacia": 1
+  },
+  "tokens_embedder_max_reescritura": 42,
+  "busqueda_p50_ms": {
+   "concat": 13.7,
+   "literal": 11.4,
+   "multi_consulta": 22.9,
+   "oraculo": 12.1,
+   "reescritura_v2": 11.4
+  }
+ },
+ "oraculo_v1_revalidado": {
+  "conversaciones": {
+   "c04": {
+    "split": "dev",
+    "pregunta_autonoma_v1": "¿Se ejecutó la Fase 1 del PLAN (leave-one-out con multi-prototipo) y contra qué referencia debía compararse?",
+    "pregunta_autonoma": "¿Se ejecutó la Fase 1 del PLAN y contra qué referencia debía compararse?",
+    "hybrid_rrf_antes": true,
+    "dense_antes": false,
+    "hybrid_rrf_ahora": true,
+    "dense_ahora": false
+   },
+   "c05": {
+    "split": "dev",
+    "pregunta_autonoma_v1": "¿Sobre cuántos segmentos se calibraron los rangos p5/p95 según genesis, y cuántos segmentos tiene el dataset actual según el benchmark?",
+    "pregunta_autonoma": "¿Sobre cuántos segmentos se calibraron los rangos según genesis, frente a los que tiene el dataset hoy?",
+    "hybrid_rrf_antes": false,
+    "dense_antes": false,
+    "hybrid_rrf_ahora": true,
+    "dense_ahora": false
+   },
+   "c19": {
+    "split": "dev",
+    "pregunta_autonoma_v1": "Ambos documentos reportan la validación de kernel_size=9 para HPSS con números distintos. ¿Cuáles son esos números en cada documento, y cuál merece más confianza?",
+    "pregunta_autonoma": "¿Y con el kernel 9 de HPSS? Los dos documentos dan números distintos: ¿cuáles son y cuál es más confiable?",
+    "hybrid_rrf_antes": true,
+    "dense_antes": true,
+    "hybrid_rrf_ahora": true,
+    "dense_ahora": true
+   },
+   "c36": {
+    "split": "dev",
+    "pregunta_autonoma_v1": "¿Por qué la desviación estándar de balanced accuracy es tan amplia (±13.3 en Random Forest, ±13.1 en árbol de decisión) según el propio documento?",
+    "pregunta_autonoma": "¿Por qué la desviación estándar del Random Forest es tan amplia?",
+    "hybrid_rrf_antes": true,
+    "dense_antes": false,
+    "hybrid_rrf_ahora": false,
+    "dense_ahora": false
+   },
+   "c39": {
+    "split": "test",
+    "pregunta_autonoma_v1": "¿Respeta fewshot/embed_mert.py el preprocesamiento de audio que el PLAN exige para MERT?",
+    "pregunta_autonoma": "¿El script que calcula los embeddings respeta el preprocesamiento de audio que exige MERT?",
+    "hybrid_rrf_antes": true,
+    "dense_antes": true,
+    "hybrid_rrf_ahora": false,
+    "dense_ahora": true
+   }
+  },
+  "fase2_28": {
+   "hybrid_rrf": {
+    "oraculo_fase2_antes": 25,
+    "oraculo_fase2_ahora": 24
+   },
+   "dense": {
+    "oraculo_fase2_antes": 24,
+    "oraculo_fase2_ahora": 24
+   }
+  },
+  "fase3": {
+   "dev": {
+    "oraculo_antes": 14,
+    "oraculo_ahora": 14
+   },
+   "test": {
+    "oraculo_antes": 11,
+    "oraculo_ahora": 10
+   }
+  }
+ }
+}

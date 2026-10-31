@@ -1,0 +1,784 @@
+{
+ "exp": "multiturno_v1",
+ "n_conversaciones": 41,
+ "retrieval": {
+  "hybrid_rrf": {
+   "todas": {
+    "n_usa_historial": 28,
+    "n_no_usa_historial": 8,
+    "aciertos_usa_historial": {
+     "literal": 17,
+     "concat": 22,
+     "reescritura_3b": 21,
+     "reescritura_8b": 20,
+     "oraculo": 25
+    },
+    "aciertos_no_usa_historial": {
+     "literal": 6,
+     "concat": 7,
+     "reescritura_3b": 6,
+     "reescritura_8b": 6,
+     "oraculo": 6
+    },
+    "pares_usa_historial": [
+     {
+      "a": "literal",
+      "b": "reescritura_3b",
+      "aciertos_a": 17,
+      "aciertos_b": 21,
+      "solo_a": 2,
+      "solo_b": 6,
+      "p_mcnemar": 0.289,
+      "dif_media_b_menos_a": 0.143,
+      "ic95_bootstrap": [
+       -0.0357,
+       0.3214
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "reescritura_8b",
+      "aciertos_a": 17,
+      "aciertos_b": 20,
+      "solo_a": 2,
+      "solo_b": 5,
+      "p_mcnemar": 0.453,
+      "dif_media_b_menos_a": 0.107,
+      "ic95_bootstrap": [
+       -0.0714,
+       0.2857
+      ]
+     },
+     {
+      "a": "concat",
+      "b": "reescritura_3b",
+      "aciertos_a": 22,
+      "aciertos_b": 21,
+      "solo_a": 3,
+      "solo_b": 2,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": -0.036,
+      "ic95_bootstrap": [
+       -0.1786,
+       0.1071
+      ]
+     },
+     {
+      "a": "concat",
+      "b": "reescritura_8b",
+      "aciertos_a": 22,
+      "aciertos_b": 20,
+      "solo_a": 5,
+      "solo_b": 3,
+      "p_mcnemar": 0.727,
+      "dif_media_b_menos_a": -0.071,
+      "ic95_bootstrap": [
+       -0.2857,
+       0.1071
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "concat",
+      "aciertos_a": 17,
+      "aciertos_b": 22,
+      "solo_a": 2,
+      "solo_b": 7,
+      "p_mcnemar": 0.18,
+      "dif_media_b_menos_a": 0.179,
+      "ic95_bootstrap": [
+       -0.0357,
+       0.3929
+      ]
+     }
+    ],
+    "pares_no_usa_historial": [
+     {
+      "a": "literal",
+      "b": "reescritura_3b",
+      "aciertos_a": 6,
+      "aciertos_b": 6,
+      "solo_a": 0,
+      "solo_b": 0,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": 0.0,
+      "ic95_bootstrap": [
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "reescritura_8b",
+      "aciertos_a": 6,
+      "aciertos_b": 6,
+      "solo_a": 0,
+      "solo_b": 0,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": 0.0,
+      "ic95_bootstrap": [
+       0.0,
+       0.0
+      ]
+     }
+    ]
+   },
+   "test": {
+    "n_usa_historial": 12,
+    "n_no_usa_historial": 1,
+    "aciertos_usa_historial": {
+     "literal": 7,
+     "concat": 10,
+     "reescritura_3b": 10,
+     "reescritura_8b": 8,
+     "oraculo": 11
+    },
+    "aciertos_no_usa_historial": {
+     "literal": 1,
+     "concat": 1,
+     "reescritura_3b": 1,
+     "reescritura_8b": 1,
+     "oraculo": 1
+    },
+    "pares_usa_historial": [
+     {
+      "a": "literal",
+      "b": "reescritura_3b",
+      "aciertos_a": 7,
+      "aciertos_b": 10,
+      "solo_a": 0,
+      "solo_b": 3,
+      "p_mcnemar": 0.25,
+      "dif_media_b_menos_a": 0.25,
+      "ic95_bootstrap": [
+       0.0,
+       0.5
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "reescritura_8b",
+      "aciertos_a": 7,
+      "aciertos_b": 8,
+      "solo_a": 0,
+      "solo_b": 1,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": 0.083,
+      "ic95_bootstrap": [
+       0.0,
+       0.25
+      ]
+     },
+     {
+      "a": "concat",
+      "b": "reescritura_3b",
+      "aciertos_a": 10,
+      "aciertos_b": 10,
+      "solo_a": 1,
+      "solo_b": 1,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": 0.0,
+      "ic95_bootstrap": [
+       -0.25,
+       0.25
+      ]
+     },
+     {
+      "a": "concat",
+      "b": "reescritura_8b",
+      "aciertos_a": 10,
+      "aciertos_b": 8,
+      "solo_a": 3,
+      "solo_b": 1,
+      "p_mcnemar": 0.625,
+      "dif_media_b_menos_a": -0.167,
+      "ic95_bootstrap": [
+       -0.5,
+       0.1667
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "concat",
+      "aciertos_a": 7,
+      "aciertos_b": 10,
+      "solo_a": 1,
+      "solo_b": 4,
+      "p_mcnemar": 0.375,
+      "dif_media_b_menos_a": 0.25,
+      "ic95_bootstrap": [
+       -0.0833,
+       0.5833
+      ]
+     }
+    ],
+    "pares_no_usa_historial": [
+     {
+      "a": "literal",
+      "b": "reescritura_3b",
+      "aciertos_a": 1,
+      "aciertos_b": 1,
+      "solo_a": 0,
+      "solo_b": 0,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": 0.0,
+      "ic95_bootstrap": [
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "reescritura_8b",
+      "aciertos_a": 1,
+      "aciertos_b": 1,
+      "solo_a": 0,
+      "solo_b": 0,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": 0.0,
+      "ic95_bootstrap": [
+       0.0,
+       0.0
+      ]
+     }
+    ]
+   },
+   "por_tipo": {
+    "autocontenida_mismo_tema": {
+     "n": 4,
+     "literal": 3,
+     "concat": 4,
+     "reescritura_3b": 3,
+     "reescritura_8b": 3,
+     "oraculo": 3
+    },
+    "cambio_de_parametro": {
+     "n": 4,
+     "literal": 3,
+     "concat": 4,
+     "reescritura_3b": 4,
+     "reescritura_8b": 4,
+     "oraculo": 4
+    },
+    "cambio_de_tema": {
+     "n": 4,
+     "literal": 3,
+     "concat": 3,
+     "reescritura_3b": 3,
+     "reescritura_8b": 3,
+     "oraculo": 3
+    },
+    "correccion": {
+     "n": 3,
+     "literal": 1,
+     "concat": 2,
+     "reescritura_3b": 2,
+     "reescritura_8b": 2,
+     "oraculo": 3
+    },
+    "correferencia": {
+     "n": 12,
+     "literal": 7,
+     "concat": 9,
+     "reescritura_3b": 9,
+     "reescritura_8b": 8,
+     "oraculo": 10
+    },
+    "elipsis_documento": {
+     "n": 6,
+     "literal": 5,
+     "concat": 6,
+     "reescritura_3b": 5,
+     "reescritura_8b": 4,
+     "oraculo": 5
+    },
+    "tres_turnos": {
+     "n": 3,
+     "literal": 1,
+     "concat": 1,
+     "reescritura_3b": 1,
+     "reescritura_8b": 2,
+     "oraculo": 3
+    }
+   }
+  },
+  "dense": {
+   "todas": {
+    "n_usa_historial": 28,
+    "n_no_usa_historial": 8,
+    "aciertos_usa_historial": {
+     "literal": 14,
+     "concat": 20,
+     "reescritura_3b": 18,
+     "reescritura_8b": 18,
+     "oraculo": 24
+    },
+    "aciertos_no_usa_historial": {
+     "literal": 6,
+     "concat": 7,
+     "reescritura_3b": 6,
+     "reescritura_8b": 6,
+     "oraculo": 6
+    },
+    "pares_usa_historial": [
+     {
+      "a": "literal",
+      "b": "reescritura_3b",
+      "aciertos_a": 14,
+      "aciertos_b": 18,
+      "solo_a": 3,
+      "solo_b": 7,
+      "p_mcnemar": 0.344,
+      "dif_media_b_menos_a": 0.143,
+      "ic95_bootstrap": [
+       -0.0714,
+       0.3571
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "reescritura_8b",
+      "aciertos_a": 14,
+      "aciertos_b": 18,
+      "solo_a": 1,
+      "solo_b": 5,
+      "p_mcnemar": 0.219,
+      "dif_media_b_menos_a": 0.143,
+      "ic95_bootstrap": [
+       0.0,
+       0.3214
+      ]
+     },
+     {
+      "a": "concat",
+      "b": "reescritura_3b",
+      "aciertos_a": 20,
+      "aciertos_b": 18,
+      "solo_a": 5,
+      "solo_b": 3,
+      "p_mcnemar": 0.727,
+      "dif_media_b_menos_a": -0.071,
+      "ic95_bootstrap": [
+       -0.25,
+       0.1429
+      ]
+     },
+     {
+      "a": "concat",
+      "b": "reescritura_8b",
+      "aciertos_a": 20,
+      "aciertos_b": 18,
+      "solo_a": 5,
+      "solo_b": 3,
+      "p_mcnemar": 0.727,
+      "dif_media_b_menos_a": -0.071,
+      "ic95_bootstrap": [
+       -0.2857,
+       0.1071
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "concat",
+      "aciertos_a": 14,
+      "aciertos_b": 20,
+      "solo_a": 1,
+      "solo_b": 7,
+      "p_mcnemar": 0.07,
+      "dif_media_b_menos_a": 0.214,
+      "ic95_bootstrap": [
+       0.0357,
+       0.3929
+      ]
+     }
+    ],
+    "pares_no_usa_historial": [
+     {
+      "a": "literal",
+      "b": "reescritura_3b",
+      "aciertos_a": 6,
+      "aciertos_b": 6,
+      "solo_a": 0,
+      "solo_b": 0,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": 0.0,
+      "ic95_bootstrap": [
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "reescritura_8b",
+      "aciertos_a": 6,
+      "aciertos_b": 6,
+      "solo_a": 0,
+      "solo_b": 0,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": 0.0,
+      "ic95_bootstrap": [
+       0.0,
+       0.0
+      ]
+     }
+    ]
+   },
+   "test": {
+    "n_usa_historial": 12,
+    "n_no_usa_historial": 1,
+    "aciertos_usa_historial": {
+     "literal": 6,
+     "concat": 11,
+     "reescritura_3b": 10,
+     "reescritura_8b": 8,
+     "oraculo": 12
+    },
+    "aciertos_no_usa_historial": {
+     "literal": 1,
+     "concat": 1,
+     "reescritura_3b": 1,
+     "reescritura_8b": 1,
+     "oraculo": 1
+    },
+    "pares_usa_historial": [
+     {
+      "a": "literal",
+      "b": "reescritura_3b",
+      "aciertos_a": 6,
+      "aciertos_b": 10,
+      "solo_a": 0,
+      "solo_b": 4,
+      "p_mcnemar": 0.125,
+      "dif_media_b_menos_a": 0.333,
+      "ic95_bootstrap": [
+       0.0833,
+       0.5833
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "reescritura_8b",
+      "aciertos_a": 6,
+      "aciertos_b": 8,
+      "solo_a": 0,
+      "solo_b": 2,
+      "p_mcnemar": 0.5,
+      "dif_media_b_menos_a": 0.167,
+      "ic95_bootstrap": [
+       0.0,
+       0.4167
+      ]
+     },
+     {
+      "a": "concat",
+      "b": "reescritura_3b",
+      "aciertos_a": 11,
+      "aciertos_b": 10,
+      "solo_a": 1,
+      "solo_b": 0,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": -0.083,
+      "ic95_bootstrap": [
+       -0.25,
+       0.0
+      ]
+     },
+     {
+      "a": "concat",
+      "b": "reescritura_8b",
+      "aciertos_a": 11,
+      "aciertos_b": 8,
+      "solo_a": 3,
+      "solo_b": 0,
+      "p_mcnemar": 0.25,
+      "dif_media_b_menos_a": -0.25,
+      "ic95_bootstrap": [
+       -0.5,
+       0.0
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "concat",
+      "aciertos_a": 6,
+      "aciertos_b": 11,
+      "solo_a": 0,
+      "solo_b": 5,
+      "p_mcnemar": 0.062,
+      "dif_media_b_menos_a": 0.417,
+      "ic95_bootstrap": [
+       0.1667,
+       0.6667
+      ]
+     }
+    ],
+    "pares_no_usa_historial": [
+     {
+      "a": "literal",
+      "b": "reescritura_3b",
+      "aciertos_a": 1,
+      "aciertos_b": 1,
+      "solo_a": 0,
+      "solo_b": 0,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": 0.0,
+      "ic95_bootstrap": [
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "a": "literal",
+      "b": "reescritura_8b",
+      "aciertos_a": 1,
+      "aciertos_b": 1,
+      "solo_a": 0,
+      "solo_b": 0,
+      "p_mcnemar": 1.0,
+      "dif_media_b_menos_a": 0.0,
+      "ic95_bootstrap": [
+       0.0,
+       0.0
+      ]
+     }
+    ]
+   },
+   "por_tipo": {
+    "autocontenida_mismo_tema": {
+     "n": 4,
+     "literal": 3,
+     "concat": 4,
+     "reescritura_3b": 3,
+     "reescritura_8b": 3,
+     "oraculo": 3
+    },
+    "cambio_de_parametro": {
+     "n": 4,
+     "literal": 3,
+     "concat": 4,
+     "reescritura_3b": 3,
+     "reescritura_8b": 3,
+     "oraculo": 4
+    },
+    "cambio_de_tema": {
+     "n": 4,
+     "literal": 3,
+     "concat": 3,
+     "reescritura_3b": 3,
+     "reescritura_8b": 3,
+     "oraculo": 3
+    },
+    "correccion": {
+     "n": 3,
+     "literal": 2,
+     "concat": 2,
+     "reescritura_3b": 1,
+     "reescritura_8b": 2,
+     "oraculo": 2
+    },
+    "correferencia": {
+     "n": 12,
+     "literal": 6,
+     "concat": 9,
+     "reescritura_3b": 8,
+     "reescritura_8b": 8,
+     "oraculo": 11
+    },
+    "elipsis_documento": {
+     "n": 6,
+     "literal": 2,
+     "concat": 4,
+     "reescritura_3b": 5,
+     "reescritura_8b": 3,
+     "oraculo": 4
+    },
+    "tres_turnos": {
+     "n": 3,
+     "literal": 1,
+     "concat": 1,
+     "reescritura_3b": 1,
+     "reescritura_8b": 2,
+     "oraculo": 3
+    }
+   }
+  }
+ },
+ "criterios": {
+  "hybrid_rrf": {
+   "reescritura_3b": {
+    "todas": {
+     "fraccion_del_oraculo": 0.84,
+     "c1_alcanza_80_del_oraculo": true,
+     "c2_supera_literal_significativo": false,
+     "c3_supera_concat": false,
+     "c4_sin_perdida_significativa_sin_historial": true
+    },
+    "test": {
+     "fraccion_del_oraculo": 0.909,
+     "c1_alcanza_80_del_oraculo": true,
+     "c2_supera_literal_significativo": false,
+     "c3_supera_concat": false,
+     "c4_sin_perdida_significativa_sin_historial": true
+    }
+   },
+   "reescritura_8b": {
+    "todas": {
+     "fraccion_del_oraculo": 0.8,
+     "c1_alcanza_80_del_oraculo": true,
+     "c2_supera_literal_significativo": false,
+     "c3_supera_concat": false,
+     "c4_sin_perdida_significativa_sin_historial": true
+    },
+    "test": {
+     "fraccion_del_oraculo": 0.727,
+     "c1_alcanza_80_del_oraculo": false,
+     "c2_supera_literal_significativo": false,
+     "c3_supera_concat": false,
+     "c4_sin_perdida_significativa_sin_historial": true
+    }
+   }
+  },
+  "dense": {
+   "reescritura_3b": {
+    "todas": {
+     "fraccion_del_oraculo": 0.75,
+     "c1_alcanza_80_del_oraculo": false,
+     "c2_supera_literal_significativo": false,
+     "c3_supera_concat": false,
+     "c4_sin_perdida_significativa_sin_historial": true
+    },
+    "test": {
+     "fraccion_del_oraculo": 0.833,
+     "c1_alcanza_80_del_oraculo": true,
+     "c2_supera_literal_significativo": false,
+     "c3_supera_concat": false,
+     "c4_sin_perdida_significativa_sin_historial": true
+    }
+   },
+   "reescritura_8b": {
+    "todas": {
+     "fraccion_del_oraculo": 0.75,
+     "c1_alcanza_80_del_oraculo": false,
+     "c2_supera_literal_significativo": false,
+     "c3_supera_concat": false,
+     "c4_sin_perdida_significativa_sin_historial": true
+    },
+    "test": {
+     "fraccion_del_oraculo": 0.667,
+     "c1_alcanza_80_del_oraculo": false,
+     "c2_supera_literal_significativo": false,
+     "c3_supera_concat": false,
+     "c4_sin_perdida_significativa_sin_historial": true
+    }
+   }
+  }
+ },
+ "costo_reescritura": {
+  "reescritura_3b": {
+   "modelo": "llama3.2:3b",
+   "validas": 41,
+   "n": 41,
+   "latencia_p50_ms": 248.0,
+   "latencia_p95_ms": 361.6,
+   "tokens_in_p50": 395.0,
+   "tokens_out_p50": 32.0,
+   "tokens_embedder_p50": 24.0,
+   "tokens_embedder_max": 42,
+   "superan_limite_embedder": 0
+  },
+  "reescritura_8b": {
+   "modelo": "llama3.1:8b-instruct-q4_K_M",
+   "validas": 41,
+   "n": 41,
+   "latencia_p50_ms": 487.5,
+   "latencia_p95_ms": 681.2,
+   "tokens_in_p50": 380.0,
+   "tokens_out_p50": 31.0,
+   "tokens_embedder_p50": 22.0,
+   "tokens_embedder_max": 44,
+   "superan_limite_embedder": 0
+  }
+ },
+ "fidelidad_juez": {
+  "reescritura_3b": {
+   "todas": {
+    "parcial": 23,
+    "equivalente": 16,
+    "distinta": 2
+   },
+   "usa_historial": {
+    "parcial": 23,
+    "equivalente": 8,
+    "distinta": 2
+   },
+   "no_usa_historial": {
+    "equivalente": 8
+   }
+  },
+  "reescritura_8b": {
+   "todas": {
+    "parcial": 20,
+    "equivalente": 18,
+    "distinta": 3
+   },
+   "usa_historial": {
+    "parcial": 20,
+    "equivalente": 10,
+    "distinta": 3
+   },
+   "no_usa_historial": {
+    "equivalente": 8
+   }
+  }
+ },
+ "abstencion": {
+  "un_turno": {
+   "abstenciones": 17,
+   "n": 20,
+   "ic95_wilson": [
+    0.6396,
+    0.9476
+   ]
+  },
+  "concat": {
+   "abstenciones": 4,
+   "n": 5,
+   "ic95_wilson": [
+    0.3755,
+    0.9638
+   ]
+  },
+  "literal": {
+   "abstenciones": 4,
+   "n": 5,
+   "ic95_wilson": [
+    0.3755,
+    0.9638
+   ]
+  },
+  "oraculo": {
+   "abstenciones": 4,
+   "n": 5,
+   "ic95_wilson": [
+    0.3755,
+    0.9638
+   ]
+  },
+  "reescritura_3b": {
+   "abstenciones": 4,
+   "n": 5,
+   "ic95_wilson": [
+    0.3755,
+    0.9638
+   ]
+  },
+  "reescritura_8b": {
+   "abstenciones": 3,
+   "n": 5,
+   "ic95_wilson": [
+    0.2307,
+    0.8824
+   ]
+  }
+ }
+}
