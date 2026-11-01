@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://scribe:scribe@127.0.0.1:1015/scribe"
     query_log_enabled: bool = False
     require_api_key: bool = False
+    api_key_store: str = "db"
+    api_keys_parameter: str = "/scribe-lab/api_keys"
 
     corpus_dir: str = "corpus_demo"
     questions_path: str = "shared/eval/questions"

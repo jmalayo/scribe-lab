@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import secrets
 import threading
 import time
 from collections.abc import Callable
@@ -16,12 +17,19 @@ logger = structlog.get_logger("app.auth")
 CACHE_SECONDS = 60
 WINDOW_SECONDS = 60
 
+KEY_PREFIX = "sk_scribe_"
+
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 def hash_key(key: str) -> str:
 
     return hashlib.sha256(key.encode("utf-8")).hexdigest()
+
+
+def generate_key() -> str:
+
+    return KEY_PREFIX + secrets.token_urlsafe(32)
 
 
 @dataclass(frozen=True)

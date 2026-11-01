@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, Request
 
+from app import ssm_keys
 from app.auth import KeyStore
 from shared.db import build_writer_engine, load_active_keys
 from shared.ingest import build_qdrant_client, get_embedder
@@ -38,13 +39,22 @@ def build_pipeline() -> Pipeline:
     return Pipeline(config, build_qdrant_client(), get_embedder(), llm, grounder, rewriter)
 
 
+def build_key_store(engine) -> KeyStore:
+
+    if settings.api_key_store == "ssm":
+        return KeyStore(lambda: ssm_keys.load_active_keys(settings.api_keys_parameter))
+
+    return KeyStore(lambda: load_active_keys(engine))
+
+
 def startup(app: FastAPI) -> None:
 
     app.state.pipeline = build_pipeline()
-    engine = build_writer_engine() if settings.query_log_enabled or settings.require_api_key else None
+    keys_in_db = settings.require_api_key and settings.api_key_store == "db"
+    engine = build_writer_engine() if settings.query_log_enabled or keys_in_db else None
     app.state.writer_engine = engine
     app.state.query_log = engine if settings.query_log_enabled else None
-    app.state.api_keys = KeyStore(lambda: load_active_keys(engine)) if settings.require_api_key else None
+    app.state.api_keys = build_key_store(engine) if settings.require_api_key else None
 
 
 def shutdown(app: FastAPI) -> None:
