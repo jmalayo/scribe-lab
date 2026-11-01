@@ -25,6 +25,7 @@ from shared.retrieval import (
     fetch_all_chunks,
     reciprocal_rank_fusion,
 )
+from shared.tracing import document_attributes, set_attributes, span
 
 if TYPE_CHECKING:
     from qdrant_client import QdrantClient
@@ -192,43 +193,68 @@ class Pipeline:
         latencies: dict[str, float] = {}
         candidates: list[dict] = []
 
-        if self.config.method in ("dense", "hybrid_rrf"):
+        with span("retrieve", "RETRIEVER", input__value=question) as retrieve_span:
 
-            t0 = time.perf_counter()
+            if self.config.method in ("dense", "hybrid_rrf"):
 
-            vector = self.embedder.encode(question, normalize_embeddings=True).tolist()
-            latencies["embedding"] = _get_time_ms(t0)
+                t0 = time.perf_counter()
 
-            t0 = time.perf_counter()
-            dense = [
-                {**c, "dense_score": c["score"]}
-                    for c in dense_search_vector(self.client, self.config.collection, vector, pool)
-            ]
+                with span("embedding", "EMBEDDING"):
+                    vector = self.embedder.encode(question, normalize_embeddings=True).tolist()
 
-            if self.config.method == "hybrid_rrf":
-                candidates = reciprocal_rank_fusion(
-                    rankings=[dense, self._bm25_index().search(question, pool)], 
-                    top_k=pool
-                )
+                latencies["embedding"] = _get_time_ms(t0)
+
+                t0 = time.perf_counter()
+
+                with span("dense_search", "RETRIEVER") as current:
+                    dense = [
+                        {**c, "dense_score": c["score"]}
+                            for c in dense_search_vector(self.client, self.config.collection, vector, pool)
+                    ]
+                    set_attributes(current, **document_attributes(dense, "dense_score"))
+
+                if self.config.method == "hybrid_rrf":
+
+                    with span("bm25", "RETRIEVER") as current:
+                        sparse = self._bm25_index().search(question, pool)
+                        set_attributes(current, **document_attributes(sparse, "score"))
+
+                    with span("fusion", "CHAIN") as current:
+                        candidates = reciprocal_rank_fusion(
+                            rankings=[dense, sparse],
+                            top_k=pool
+                        )
+                        set_attributes(current, **document_attributes(candidates, "rrf_score"))
+
+                else:
+                    candidates = dense
+
+                latencies["retrieval"] = _get_time_ms(t0)
 
             else:
-                candidates = dense
+                t0 = time.perf_counter()
 
-            latencies["retrieval"] = _get_time_ms(t0)
+                with span("bm25", "RETRIEVER") as current:
+                    candidates = self._bm25_index().search(question, pool)
+                    set_attributes(current, **document_attributes(candidates, "score"))
 
-        else:
-            t0 = time.perf_counter()
-            
-            candidates = self._bm25_index().search(question, pool)
-            latencies["retrieval"] = _get_time_ms(t0)
+                latencies["retrieval"] = _get_time_ms(t0)
 
-        if self.config.reranker:
-            from shared.retrieval import rerank
+            if self.config.reranker:
+                from shared.retrieval import rerank
 
-            t0 = time.perf_counter()
+                t0 = time.perf_counter()
 
-            candidates = rerank(question, candidates, k)
-            latencies["rerank"] = _get_time_ms(t0)
+                with span("rerank", "RERANKER", reranker__top_k=k) as current:
+                    candidates = rerank(question, candidates, k)
+                    set_attributes(
+                        current,
+                        **document_attributes(candidates[:k], "rerank_score", prefix="reranker__output"),
+                    )
+
+                latencies["rerank"] = _get_time_ms(t0)
+
+            set_attributes(retrieve_span, **document_attributes(candidates[:k], self.score_key))
 
         return RetrievalResult(
             chunks=candidates[:k], 
@@ -239,12 +265,24 @@ class Pipeline:
 
         messages = build_messages(history, question, self.config.memory.prompt_version)
 
-        try:
-            raw = self.rewriter.chat(messages, json_format=True).text
-        except requests.RequestException:
-            return question
+        with span(
+            "rewrite",
+            "LLM",
+            input__value=question,
+            llm__model_name=self.rewriter.model,
+            llm__provider=self.rewriter.provider,
+        ) as current:
 
-        return parse_rewrite(raw, history, question)["pregunta"]
+            try:
+                raw = self.rewriter.chat(messages, json_format=True).text
+            except requests.RequestException:
+                current.set_attribute("scribe.rewrite_failed", True)
+                return question
+
+            rewritten = parse_rewrite(raw, history, question)["pregunta"]
+            set_attributes(current, output__value=rewritten)
+
+        return rewritten
 
     def retrieve_fused(self, question: str, rewritten: str, top_k: int | None = None) -> RetrievalResult:
 
@@ -294,6 +332,24 @@ class Pipeline:
         history: Sequence[tuple[str, str]] = (),
     ) -> PipelineResult:
 
+        with span("query", "CHAIN", input__value=question, scribe__history_turns=len(history)) as root:
+            result = self._run(question, top_k, history)
+            set_attributes(
+                root,
+                output__value=result.answer,
+                scribe__abstained=result.abstained,
+                scribe__rewritten_question=result.rewritten_question,
+            )
+
+        return result
+
+    def _run(
+        self,
+        question: str,
+        top_k: int | None,
+        history: Sequence[tuple[str, str]],
+    ) -> PipelineResult:
+
         t_total = time.perf_counter()
 
         retrieved, rewritten = self.retrieve_with_history(question, history, top_k)
@@ -328,7 +384,21 @@ class Pipeline:
 
         t0 = time.perf_counter()
 
-        completion = self.llm.complete(prompt)
+        with span(
+            "llm",
+            "LLM",
+            input__value=prompt,
+            llm__model_name=self.llm.model,
+            llm__provider=self.llm.provider,
+        ) as current:
+            completion = self.llm.complete(prompt)
+            set_attributes(
+                current,
+                output__value=completion.text,
+                llm__token_count__prompt=completion.tokens_in,
+                llm__token_count__completion=completion.tokens_out,
+            )
+
         latencies["llm"] = _get_time_ms(t0)
 
         grounding = None
@@ -336,7 +406,14 @@ class Pipeline:
         if self.config.grounding.enabled:
             t0 = time.perf_counter()
 
-            grounding = self.grounder(question_to_answer, completion.text, [chunk_block(c) for c in chunks])
+            with span("grounding", "GUARDRAIL") as current:
+                grounding = self.grounder(question_to_answer, completion.text, [chunk_block(c) for c in chunks])
+                set_attributes(
+                    current,
+                    scribe__grounding_score=grounding.score,
+                    scribe__unsupported_sentences=len(grounding.unsupported_sentences),
+                )
+
             latencies["grounding"] = _get_time_ms(t0)
 
         latencies["total"] = _get_time_ms(t_total)

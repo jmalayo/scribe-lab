@@ -11,8 +11,10 @@ from app import query_log
 from app.api.v1 import router
 from app.deps import lifespan
 from app.log import configure_logging
+from app.telemetry import configure_tracing
 
 configure_logging()
+configure_tracing()
 logger = structlog.get_logger("app")
 
 app = FastAPI(title="scribe-lab API", version="0.1.0", lifespan=lifespan)
