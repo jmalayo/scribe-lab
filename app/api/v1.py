@@ -2,10 +2,11 @@ import time
 
 import requests
 import structlog
-from fastapi import APIRouter, BackgroundTasks, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.responses import JSONResponse
 
 from app import query_log
+from app.auth import require_api_key
 from app.deps import PipelineDep
 from app.schemas import (
     Citation,
@@ -36,7 +37,7 @@ def _citations(chunks: list[dict], score_key: str) -> list[Citation]:
     ]
 
 
-@router.post("/v1/query", response_model=QueryResponse)
+@router.post("/v1/query", response_model=QueryResponse, dependencies=[Depends(require_api_key)])
 def query(
     req: QueryRequest,
     pipeline: PipelineDep,
@@ -82,7 +83,7 @@ def query(
     )
 
 
-@router.post("/v1/retrieve", response_model=RetrieveResponse)
+@router.post("/v1/retrieve", response_model=RetrieveResponse, dependencies=[Depends(require_api_key)])
 def retrieve(req: RetrieveRequest, pipeline: PipelineDep) -> RetrieveResponse:
 
     t0 = time.perf_counter()

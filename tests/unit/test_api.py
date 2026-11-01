@@ -164,6 +164,7 @@ def test_each_request_logs_one_json_line(client_for, log_lines):
             "path": "/health",
             "status": 200,
             "latency_ms": lines[0]["latency_ms"],
+            "api_key": None,
             "level": "info",
             "logger": "app",
             "timestamp": lines[0]["timestamp"],

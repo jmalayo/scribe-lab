@@ -26,6 +26,7 @@ def start_record(request: Request, req: QueryRequest, pipeline: Pipeline) -> dic
         "row": {
             "id": uuid.uuid4(),
             "request_id": request.state.request_id,
+            "api_key_id": getattr(request.state, "api_key_id", None),
             "sesion_id": req.session_id,
             "turno": len(req.history) + 1 if req.session_id else None,
             "pregunta": req.question,

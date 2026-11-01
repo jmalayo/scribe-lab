@@ -17,6 +17,7 @@ from sqlalchemy import (
     create_engine,
     event,
     func,
+    select,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, insert
@@ -252,6 +253,33 @@ consulta_chunks = Table(
 )
 
 
+api_keys = Table(
+    "api_keys",
+    metadata,
+    Column(
+        "id",
+        Uuid,
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    ),
+    Column(
+        "dueno",
+        Text,
+        nullable=False,
+        unique=True,
+    ),
+    Column(
+        "hash",
+        Text,
+        nullable=False,
+        unique=True,
+    ),
+    Column("limite_por_minuto", Integer, nullable=False, server_default="60"),
+    Column("creada_en", DateTime(timezone=True), server_default=func.now()),
+    Column("revocada_en", DateTime(timezone=True)),
+)
+
+
 def build_engine(url: str | None = None) -> Engine:
 
     return create_engine(url or settings.database_url)
@@ -306,3 +334,19 @@ def insert_query(engine: Engine, row: dict, chunk_rows: list[dict]) -> None:
 
         if chunk_rows:
             conn.execute(insert(consulta_chunks).values(chunk_rows))
+
+
+def load_active_keys(engine: Engine) -> list[tuple]:
+
+    query = (
+        select(
+            api_keys.c.id,
+            api_keys.c.dueno,
+            api_keys.c.hash,
+            api_keys.c.limite_por_minuto,
+        )
+            .where(api_keys.c.revocada_en.is_(None))
+    )
+
+    with engine.connect() as conn:
+        return [tuple(row) for row in conn.execute(query)]

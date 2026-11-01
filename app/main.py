@@ -35,6 +35,7 @@ async def request_context(request: Request, call_next):
         path=request.url.path,
         status=response.status_code,
         latency_ms=elapsed,
+        api_key=getattr(request.state, "api_key_owner", None),
     )
 
     return response
