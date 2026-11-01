@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     qdrant_mode: str = "server"
     qdrant_host: str = "127.0.0.1"
     qdrant_port: int = 6333
+    qdrant_url: str | None = None
+    qdrant_api_key: str | None = None
 
     text_embedder_mode: str = "server"
     text_embedder_url: str = "http://127.0.0.1:1010"

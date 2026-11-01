@@ -392,6 +392,9 @@ def get_current_config(client: QdrantClient, collection_name: str) -> dict | Non
 def build_qdrant_client(local_path: str | None = None) -> QdrantClient:
     from qdrant_client import QdrantClient
 
+    if settings.qdrant_url:
+        return QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key, timeout=10)
+
     if settings.qdrant_mode == "server":
 
         return QdrantClient(

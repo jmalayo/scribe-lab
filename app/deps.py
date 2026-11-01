@@ -38,18 +38,29 @@ def build_pipeline() -> Pipeline:
     return Pipeline(config, build_qdrant_client(), get_embedder(), llm, grounder, rewriter)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+def startup(app: FastAPI) -> None:
 
     app.state.pipeline = build_pipeline()
     engine = build_writer_engine() if settings.query_log_enabled or settings.require_api_key else None
+    app.state.writer_engine = engine
     app.state.query_log = engine if settings.query_log_enabled else None
     app.state.api_keys = KeyStore(lambda: load_active_keys(engine)) if settings.require_api_key else None
 
+
+def shutdown(app: FastAPI) -> None:
+
+    if getattr(app.state, "writer_engine", None) is not None:
+        app.state.writer_engine.dispose()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+
+    startup(app)
+
     yield
 
-    if engine is not None:
-        engine.dispose()
+    shutdown(app)
 
 
 def get_pipeline(request: Request) -> Pipeline:
