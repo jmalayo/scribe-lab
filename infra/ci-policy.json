@@ -1,0 +1,43 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EcrLogin",
+            "Effect": "Allow",
+            "Action": "ecr:GetAuthorizationToken",
+            "Resource": "*"
+        },
+        {
+            "Sid": "EcrPush",
+            "Effect": "Allow",
+            "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:BatchGetImage",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:InitiateLayerUpload",
+                "ecr:UploadLayerPart",
+                "ecr:CompleteLayerUpload",
+                "ecr:PutImage"
+            ],
+            "Resource": "arn:aws:ecr:us-east-2:<cuenta>:repository/scribe-lab-api"
+        },
+        {
+            "Sid": "LambdaDeploy",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:GetFunction",
+                "lambda:GetFunctionConfiguration",
+                "lambda:UpdateFunctionCode",
+                "lambda:PublishVersion",
+                "lambda:InvokeFunction",
+                "lambda:GetAlias",
+                "lambda:UpdateAlias",
+                "lambda:GetFunctionUrlConfig"
+            ],
+            "Resource": [
+                "arn:aws:lambda:us-east-2:<cuenta>:function:scribe-lab-api",
+                "arn:aws:lambda:us-east-2:<cuenta>:function:scribe-lab-api:*"
+            ]
+        }
+    ]
+}

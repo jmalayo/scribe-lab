@@ -1,0 +1,92 @@
+name: cd
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      rollback_to:
+        description: "Versión de la Lambda a la que vuelve el alias live (vacío = desplegar el tag)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-2
+  FUNCTION: scribe-lab-api
+  REPOSITORY: scribe-lab-api
+
+jobs:
+  deploy:
+    if: vars.CD_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Roll back the live alias
+        if: inputs.rollback_to != ''
+        run: |
+          aws lambda update-alias --function-name "$FUNCTION" --name live --function-version "${{ inputs.rollback_to }}"
+          echo "live -> ${{ inputs.rollback_to }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - id: ecr
+        if: inputs.rollback_to == ''
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build the image
+        if: inputs.rollback_to == ''
+        run: |
+          echo "IMAGE=${{ steps.ecr.outputs.registry }}/$REPOSITORY:${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+          docker build -f app/Dockerfile.lambda -t "${{ steps.ecr.outputs.registry }}/$REPOSITORY:${GITHUB_REF_NAME}" .
+
+      - name: Scan the image
+        if: inputs.rollback_to == ''
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Publish a new version
+        if: inputs.rollback_to == ''
+        run: |
+          docker push "$IMAGE"
+          echo "PREVIOUS=$(aws lambda get-alias --function-name "$FUNCTION" --name live --query FunctionVersion --output text)" >> "$GITHUB_ENV"
+          aws lambda update-function-code --function-name "$FUNCTION" --image-uri "$IMAGE" > /dev/null
+          aws lambda wait function-updated-v2 --function-name "$FUNCTION"
+          echo "VERSION=$(aws lambda publish-version --function-name "$FUNCTION" --description "$GITHUB_REF_NAME" --query Version --output text)" >> "$GITHUB_ENV"
+
+      - name: Smoke test the new version before it goes live
+        if: inputs.rollback_to == ''
+        run: |
+          printf '%s' '{"version":"2.0","rawPath":"/health","rawQueryString":"","headers":{},"requestContext":{"http":{"method":"GET","path":"/health","sourceIp":"127.0.0.1"}},"isBase64Encoded":false}' > event.json
+          aws lambda invoke --function-name "$FUNCTION" --qualifier "$VERSION" --payload fileb://event.json out.json > /dev/null
+          python3 -c "import json,sys; sys.exit(0 if json.load(open('out.json')).get('statusCode') == 200 else 1)"
+
+      - name: Move live and check the public URL
+        if: inputs.rollback_to == ''
+        run: |
+          aws lambda update-alias --function-name "$FUNCTION" --name live --function-version "$VERSION" > /dev/null
+          URL=$(aws lambda get-function-url-config --function-name "$FUNCTION" --qualifier live --query FunctionUrl --output text)
+          health=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 "${URL}health")
+          unauthorized=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 -X POST -H 'content-type: application/json' -d '{"query":"q"}' "${URL}v1/retrieve")
+          if [ "$health" != "200" ] || [ "$unauthorized" != "401" ]; then
+            aws lambda update-alias --function-name "$FUNCTION" --name live --function-version "$PREVIOUS" > /dev/null
+            echo "Smoke test falló (health=$health, sin clave=$unauthorized): live vuelve a la versión $PREVIOUS" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "live -> $VERSION ($GITHUB_REF_NAME); health=200, sin clave=401" >> "$GITHUB_STEP_SUMMARY"
