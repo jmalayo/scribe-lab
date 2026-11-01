@@ -5,6 +5,7 @@ import requests
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from qdrant_client.http.exceptions import ResponseHandlingException
 from starlette.background import BackgroundTask
 
 from app import query_log
@@ -81,8 +82,9 @@ async def upstream_http_error(request: Request, exc: requests.HTTPError) -> JSON
     )
 
 
+@app.exception_handler(ResponseHandlingException)
 @app.exception_handler(requests.RequestException)
-async def upstream_unavailable(request: Request, exc: requests.RequestException) -> JSONResponse:
+async def upstream_unavailable(request: Request, exc: Exception) -> JSONResponse:
 
     logger.warning("upstream_unavailable", error=type(exc).__name__)
 

@@ -286,3 +286,19 @@ def test_without_llm_query_is_503_and_retrieve_still_works(client_for, saved_que
     assert retrieve.status_code == 200
     assert [(row["estado"], row["error"]) for _, row, _ in saved_queries] == [(503, "LLMUnavailableError")]
 
+
+def test_qdrant_unreachable_is_503(client_for, saved_queries):
+
+    from qdrant_client.http.exceptions import ResponseHandlingException
+
+    pipeline = make_pipeline()
+
+    def unreachable(*args, **kwargs):
+        raise ResponseHandlingException(ConnectionError("qdrant"))
+
+    pipeline.client.query_points = unreachable
+    resp = client_for(pipeline).post("/v1/query", json={"question": "q"})
+
+    assert resp.status_code == 503
+    assert [(row["estado"], row["error"]) for _, row, _ in saved_queries] == [(503, "ResponseHandlingException")]
+
