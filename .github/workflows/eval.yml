@@ -14,6 +14,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: eval-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   EMBEDDING_MODEL: paraphrase-multilingual-MiniLM-L12-v2
   EMBEDDING_REVISION: e8f8c211226b894fcb81acc59f3b34ba3efd5f42
