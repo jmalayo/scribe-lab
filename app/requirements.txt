@@ -11,3 +11,6 @@ markdown==3.10.3
 transformers==5.16.1
 tokenizers==0.23.1
 structlog==26.1.0
+sqlalchemy==2.0.52
+psycopg[binary]==3.2.13
+alembic==1.19.1

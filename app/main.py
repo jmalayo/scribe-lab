@@ -5,7 +5,9 @@ import requests
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from starlette.background import BackgroundTask
 
+from app import query_log
 from app.api.v1 import router
 from app.deps import lifespan
 from app.log import configure_logging
@@ -38,13 +40,29 @@ async def request_context(request: Request, call_next):
     return response
 
 
+def failed_query_task(request: Request, status: int, exc: Exception) -> BackgroundTask | None:
+
+    record = getattr(request.state, "query_record", None)
+
+    if record is None:
+        return None
+
+    query_log.finish_failure(record, status, exc)
+
+    return BackgroundTask(query_log.save, getattr(request.app.state, "query_log", None), record)
+
+
 @app.exception_handler(requests.HTTPError)
 async def upstream_http_error(request: Request, exc: requests.HTTPError) -> JSONResponse:
 
     status = getattr(exc.response, "status_code", None)
     logger.warning("upstream_error", upstream_status=status)
 
-    return JSONResponse(status_code=502, content={"detail": "Un servicio interno respondió con error."})
+    return JSONResponse(
+        status_code=502,
+        content={"detail": "Un servicio interno respondió con error."},
+        background=failed_query_task(request, 502, exc),
+    )
 
 
 @app.exception_handler(requests.RequestException)
@@ -52,7 +70,11 @@ async def upstream_unavailable(request: Request, exc: requests.RequestException)
 
     logger.warning("upstream_unavailable", error=type(exc).__name__)
 
-    return JSONResponse(status_code=503, content={"detail": "Un servicio interno no está disponible."})
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Un servicio interno no está disponible."},
+        background=failed_query_task(request, 503, exc),
+    )
 
 
 @app.exception_handler(Exception)
@@ -60,4 +82,8 @@ async def unhandled(request: Request, exc: Exception) -> JSONResponse:
 
     logger.exception("unhandled_error")
 
-    return JSONResponse(status_code=500, content={"detail": "Error interno."})
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Error interno."},
+        background=failed_query_task(request, 500, exc),
+    )

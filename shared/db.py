@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Column,
     Connection,
@@ -14,6 +15,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Uuid,
     create_engine,
+    event,
     func,
     text,
 )
@@ -167,6 +169,56 @@ veredictos = Table(
 )
 
 
+sesiones = Table(
+    "sesiones",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("api_key_id", Uuid),
+    Column("creada_en", DateTime(timezone=True), server_default=func.now()),
+)
+
+consultas = Table(
+    "consultas",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("request_id", Text, nullable=False),
+    Column("creada_en", DateTime(timezone=True), server_default=func.now()),
+    Column("api_key_id", Uuid),
+    Column("sesion_id", Uuid),
+    Column("turno", Integer),
+    Column("pregunta", Text, nullable=False),
+    Column("pregunta_reescrita", Text),
+    Column("respuesta", Text),
+    Column("estado", Integer, nullable=False),
+    Column("error", Text),
+    Column("abstencion", Boolean),
+    Column("grounding_score", Float),
+    Column("oraciones_sin_respaldo", Integer),
+    Column("latencia_total_ms", Float),
+    Column("latencia_embedding_ms", Float),
+    Column("latencia_busqueda_ms", Float),
+    Column("latencia_rerank_ms", Float),
+    Column("latencia_llm_ms", Float),
+    Column("latencia_grounding_ms", Float),
+    Column("tokens_entrada", Integer),
+    Column("tokens_salida", Integer),
+    Column("proveedor", Text),
+    Column("modelo", Text),
+    Column("pipeline_version", Text, nullable=False),
+    Column("prompt_version", Text, nullable=False),
+)
+
+consulta_chunks = Table(
+    "consulta_chunks",
+    metadata,
+    Column("consulta_id", Uuid, primary_key=True),
+    Column("posicion", Integer, primary_key=True),
+    Column("chunk_id", Text, nullable=False),
+    Column("doc_id", Text, nullable=False),
+    Column("score", Float),
+)
+
+
 def build_engine(url: str | None = None) -> Engine:
 
     return create_engine(url or settings.database_url)
@@ -185,3 +237,39 @@ def upsert(conn: Connection, table: Table, rows: list[dict], keys: list[str]) ->
         )
 
     return len(rows)
+
+
+def build_writer_engine(url: str | None = None) -> Engine:
+
+    engine = create_engine(
+        url or settings.database_url,
+        pool_pre_ping=True,
+        connect_args={"connect_timeout": 2},
+    )
+
+    @event.listens_for(engine, "connect")
+    def _set_role(dbapi_connection, _record) -> None:
+
+        with dbapi_connection.cursor() as cursor:
+            cursor.execute("SET ROLE app_writer")
+
+        dbapi_connection.commit()
+
+    return engine
+
+
+def insert_query(engine: Engine, row: dict, chunk_rows: list[dict]) -> None:
+
+    with engine.begin() as conn:
+
+        if row.get("sesion_id"):
+            conn.execute(
+                insert(sesiones)
+                    .values(id=row["sesion_id"], api_key_id=row.get("api_key_id"))
+                    .on_conflict_do_nothing()
+            )
+
+        conn.execute(insert(consultas).values(row))
+
+        if chunk_rows:
+            conn.execute(insert(consulta_chunks).values(chunk_rows))

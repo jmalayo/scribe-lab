@@ -2,9 +2,10 @@ import time
 
 import requests
 import structlog
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
 
+from app import query_log
 from app.deps import PipelineDep
 from app.schemas import (
     Citation,
@@ -36,10 +37,19 @@ def _citations(chunks: list[dict], score_key: str) -> list[Citation]:
 
 
 @router.post("/v1/query", response_model=QueryResponse)
-def query(req: QueryRequest, pipeline: PipelineDep) -> QueryResponse:
+def query(
+    req: QueryRequest,
+    pipeline: PipelineDep,
+    request: Request,
+    background: BackgroundTasks,
+) -> QueryResponse:
 
+    record = query_log.start_record(request, req, pipeline)
     history = [(turn.question, turn.answer) for turn in req.history]
     result = pipeline.run(req.question, top_k=req.top_k, history=history)
+
+    query_log.finish_success(record, result, pipeline.score_key)
+    background.add_task(query_log.save, getattr(request.app.state, "query_log", None), record)
 
     logger.info(
         "query",

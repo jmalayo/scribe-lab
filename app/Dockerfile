@@ -15,6 +15,8 @@ RUN pip install -r app/requirements.txt
 
 COPY shared shared
 COPY app app
+COPY migrations migrations
+COPY alembic.ini alembic.ini
 COPY corpus_demo corpus_demo
 
 RUN mkdir -p /home/app/.cache/huggingface && chown -R app:app /home/app/.cache

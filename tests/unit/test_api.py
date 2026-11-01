@@ -198,3 +198,75 @@ def test_unhandled_error_is_logged_as_json(client_for, log_lines):
 
     assert error["level"] == "error"
     assert "RuntimeError: boom" in error["exception"]
+
+
+@pytest.fixture
+def saved_queries(monkeypatch):
+
+    from app import query_log
+
+    saved = []
+    monkeypatch.setattr(app.state, "query_log", "engine", raising=False)
+    monkeypatch.setattr(query_log, "insert_query", lambda engine, row, chunks: saved.append((engine, row, chunks)))
+
+    return saved
+
+
+def test_successful_query_is_recorded_with_its_chunks(client_for, saved_queries):
+
+    session = "6f1d3c1e-7a51-4b43-9a55-0c5a7e8f9b10"
+    client_for(make_pipeline()).post(
+        "/v1/query",
+        json={
+            "question": "¿qué pasó?",
+            "session_id": session,
+            "history": [{"question": "antes", "answer": "algo"}],
+        },
+        headers={"x-request-id": "rid-3"},
+    )
+    [(engine, row, chunks)] = saved_queries
+
+    assert engine == "engine"
+    assert (row["request_id"], row["estado"], row["pregunta"], row["respuesta"]) == ("rid-3", 200, "¿qué pasó?", "respuesta")
+    assert (str(row["sesion_id"]), row["turno"]) == (session, 2)
+    assert (row["tokens_entrada"], row["tokens_salida"], row["abstencion"]) == (11, 3, False)
+    assert row["latencia_total_ms"] >= 0
+    assert [(c["posicion"], c["chunk_id"], c["consulta_id"]) for c in chunks] == [
+        (1, "c0", row["id"]),
+        (2, "c1", row["id"]),
+        (3, "c2", row["id"]),
+    ]
+
+
+def test_failed_query_is_recorded_with_its_status(client_for, saved_queries):
+
+    resp = client_for(make_pipeline(llm=RaisingLLM(requests.ConnectionError()))).post("/v1/query", json={"question": "q"})
+    [(_, row, chunks)] = saved_queries
+
+    assert resp.status_code == 503
+    assert (row["estado"], row["error"], row.get("respuesta"), row["turno"]) == (503, "ConnectionError", None, None)
+    assert row["latencia_total_ms"] >= 0
+    assert chunks == []
+
+
+def test_query_still_answers_when_the_database_fails(client_for, monkeypatch, log_lines):
+
+    from app import query_log
+
+    def broken(engine, row, chunks):
+        raise ConnectionRefusedError()
+
+    monkeypatch.setattr(app.state, "query_log", "engine", raising=False)
+    monkeypatch.setattr(query_log, "insert_query", broken)
+    resp = client_for(make_pipeline()).post("/v1/query", json={"question": "q"})
+    warning = next(line for line in log_lines() if line["event"] == "query_log_failed")
+
+    assert resp.status_code == 200
+    assert (warning["level"], warning["error"]) == ("warning", "ConnectionRefusedError")
+
+
+def test_retrieve_is_not_recorded(client_for, saved_queries):
+
+    client_for(make_pipeline()).post("/v1/retrieve", json={"query": "q"})
+
+    assert saved_queries == []

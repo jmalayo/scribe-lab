@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     scribe_api_url: str = "http://127.0.0.1:1013"
 
     database_url: str = "postgresql+psycopg://scribe:scribe@127.0.0.1:1015/scribe"
+    query_log_enabled: bool = False
 
     corpus_dir: str = "corpus_demo"
     questions_path: str = "shared/eval/questions"

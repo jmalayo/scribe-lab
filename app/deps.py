@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, Request
 
+from shared.db import build_writer_engine
 from shared.ingest import build_qdrant_client, get_embedder
 from shared.llm import build_llm
 from shared.pipeline import Pipeline, PipelineConfig, http_grounder
@@ -40,8 +41,12 @@ def build_pipeline() -> Pipeline:
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     app.state.pipeline = build_pipeline()
+    app.state.query_log = build_writer_engine() if settings.query_log_enabled else None
 
     yield
+
+    if app.state.query_log is not None:
+        app.state.query_log.dispose()
 
 
 def get_pipeline(request: Request) -> Pipeline:
