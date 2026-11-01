@@ -169,6 +169,39 @@ veredictos = Table(
 )
 
 
+conversaciones_eval = Table(
+    "conversaciones_eval",
+    metadata,
+    Column("conjunto", Text, primary_key=True),
+    Column("conv_id", Text, primary_key=True),
+    Column("tipo", Text, nullable=False),
+    Column("split", Text, nullable=False),
+    Column("autor", Text),
+    Column("ref_id", Text),
+    Column("pregunta_autonoma", Text, nullable=False),
+    Column("respuesta_esperada", Text),
+    Column("gold_spans", JSONB, nullable=False),
+    Column("source_doc", Text),
+    Column("usa_historial", Boolean, nullable=False),
+    Column("debe_abstenerse", Boolean, nullable=False),
+)
+
+turnos_eval = Table(
+    "turnos_eval",
+    metadata,
+    Column("conjunto", Text, primary_key=True),
+    Column("conv_id", Text, primary_key=True),
+    Column("idx", Integer, primary_key=True),
+    Column("rol", Text, nullable=False),
+    Column("texto", Text, nullable=False),
+    Column("ref_id", Text),
+    ForeignKeyConstraint(
+        ["conjunto", "conv_id"],
+        ["conversaciones_eval.conjunto", "conversaciones_eval.conv_id"],
+        ondelete="RESTRICT",
+    ),
+)
+
 sesiones = Table(
     "sesiones",
     metadata,
