@@ -93,3 +93,8 @@ KEY_STORE=ssm KEY_ACTION=create KEY_OWNER=canario-nube KEY_ENV_VAR=CANARIO_NUBE_
 ## Resultados
 
 Esta sección se completa con cada `apply` y con la prueba de destrucción.
+
+| Fecha | Paso | Resultado |
+| --- | --- | --- |
+| 2026-11-01 | Base (`deploy_function=false`) | 9 recursos creados; `terraform plan` posterior sin cambios. Budgets `scribe-lab-usd-1` y `scribe-lab-usd-10` activos; suscripción de correo confirmada |
+| 2026-11-01 | Corpus en Qdrant Cloud | 400 chunks. Con el modelo int8 de la Lambda: recall@10 0.667 frente a 0.659 de la línea base (1 pregunta perdida, 2 ganadas, McNemar p = 1.0); 111 ms por pregunta desde la PC |
