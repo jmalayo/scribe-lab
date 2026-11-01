@@ -24,7 +24,7 @@ JUEZ = ["correcta", "parcial", "parcial", "incorrecta", "correcta", "correcta"]
 def cargada(db):
 
     config, engine = db
-    command.upgrade(config, "head")
+    command.upgrade(config, "heads")
 
     ids = [f"q{i:03d}" for i in range(1, len(HUMANO) + 1)]
 
@@ -126,4 +126,10 @@ def test_downgrade_drops_the_views(cargada, db):
     with cargada.connect() as c:
         names = c.execute(text("SELECT table_name FROM information_schema.views WHERE table_schema = 'public'")).scalars().all()
 
-    assert names == []
+    assert set(names) == {
+        "v_latencia_movil",
+        "v_errores_por_dia",
+        "v_drift_semanal",
+        "v_sesiones",
+        "v_rachas_sin_grounding",
+    }

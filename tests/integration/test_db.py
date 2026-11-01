@@ -30,7 +30,7 @@ PREGUNTA = {
 def test_declared_tables_match_the_migrations(db):
 
     config, engine = db
-    command.upgrade(config, "head")
+    command.upgrade(config, "heads")
 
     with engine.connect() as c:
         assert compare_metadata(MigrationContext.configure(c), metadata) == []
@@ -39,7 +39,7 @@ def test_declared_tables_match_the_migrations(db):
 def test_upsert_twice_keeps_one_row_with_the_latest_values(db):
 
     config, engine = db
-    command.upgrade(config, "head")
+    command.upgrade(config, "heads")
 
     with engine.begin() as c:
         upsert(c, preguntas, [PREGUNTA], ["id"])
@@ -52,7 +52,7 @@ def test_upsert_twice_keeps_one_row_with_the_latest_values(db):
 def test_upsert_splits_large_loads_into_batches(db, monkeypatch):
 
     config, engine = db
-    command.upgrade(config, "head")
+    command.upgrade(config, "heads")
     monkeypatch.setattr("shared.db.BATCH_SIZE", 2)
 
     rows = [
@@ -72,7 +72,7 @@ def test_upsert_splits_large_loads_into_batches(db, monkeypatch):
 def resultado(db):
 
     config, engine = db
-    command.upgrade(config, "head")
+    command.upgrade(config, "heads")
 
     with engine.begin() as c:
         upsert(c, preguntas, [PREGUNTA], ["id"])

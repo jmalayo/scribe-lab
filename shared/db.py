@@ -10,6 +10,7 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Integer,
     MetaData,
+    SmallInteger,
     Table,
     Text,
     UniqueConstraint,
@@ -185,6 +186,7 @@ conversaciones_eval = Table(
     Column("source_doc", Text),
     Column("usa_historial", Boolean, nullable=False),
     Column("debe_abstenerse", Boolean, nullable=False),
+    CheckConstraint("split IN ('dev', 'test')", name="conversaciones_eval_split"),
 )
 
 turnos_eval = Table(
@@ -201,6 +203,7 @@ turnos_eval = Table(
         ["conversaciones_eval.conjunto", "conversaciones_eval.conv_id"],
         ondelete="RESTRICT",
     ),
+    CheckConstraint("rol IN ('user', 'assistant')", name="turnos_eval_rol"),
 )
 
 sesiones = Table(
@@ -208,7 +211,7 @@ sesiones = Table(
     metadata,
     Column("id", Uuid, primary_key=True),
     Column("api_key_id", Uuid),
-    Column("creada_en", DateTime(timezone=True), server_default=func.now()),
+    Column("creada_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
 )
 
 consultas = Table(
@@ -216,7 +219,7 @@ consultas = Table(
     metadata,
     Column("id", Uuid, primary_key=True),
     Column("request_id", Text, nullable=False),
-    Column("creada_en", DateTime(timezone=True), server_default=func.now()),
+    Column("creada_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("api_key_id", Uuid),
     Column("sesion_id", Uuid),
     Column("turno", Integer),
@@ -240,6 +243,7 @@ consultas = Table(
     Column("modelo", Text),
     Column("pipeline_version", Text, nullable=False),
     Column("prompt_version", Text, nullable=False),
+    CheckConstraint("turno >= 1", name="consultas_turno"),
 )
 
 consulta_chunks = Table(
@@ -250,6 +254,23 @@ consulta_chunks = Table(
     Column("chunk_id", Text, nullable=False),
     Column("doc_id", Text, nullable=False),
     Column("score", Float),
+    CheckConstraint("posicion >= 1", name="consulta_chunks_posicion"),
+)
+
+feedback = Table(
+    "feedback",
+    metadata,
+    Column(
+        "id",
+        Uuid,
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    ),
+    Column("consulta_id", Uuid, nullable=False),
+    Column("valor", SmallInteger, nullable=False),
+    Column("comentario", Text),
+    Column("creada_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    CheckConstraint("valor IN (-1, 1)", name="feedback_valor"),
 )
 
 
@@ -275,8 +296,9 @@ api_keys = Table(
         unique=True,
     ),
     Column("limite_por_minuto", Integer, nullable=False, server_default="60"),
-    Column("creada_en", DateTime(timezone=True), server_default=func.now()),
+    Column("creada_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("revocada_en", DateTime(timezone=True)),
+    CheckConstraint("limite_por_minuto > 0", name="api_keys_limite_por_minuto"),
 )
 
 
