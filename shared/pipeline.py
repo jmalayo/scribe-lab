@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from qdrant_client import QdrantClient
 
 class LLMConfig(BaseModel):
-    provider: Literal["ollama"] = "ollama"
+    provider: Literal["ollama", "bedrock", "none"] = "ollama"
     model: str = "llama3.2:3b"
     max_tokens: int = 500
     base_url: str | None = None

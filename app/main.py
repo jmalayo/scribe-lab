@@ -12,6 +12,7 @@ from app.api.v1 import router
 from app.deps import lifespan
 from app.log import configure_logging
 from app.telemetry import configure_tracing
+from shared.llm import LLMUnavailableError
 
 configure_logging()
 configure_tracing()
@@ -53,6 +54,18 @@ def failed_query_task(request: Request, status: int, exc: Exception) -> Backgrou
     query_log.finish_failure(record, status, exc)
 
     return BackgroundTask(query_log.save, getattr(request.app.state, "query_log", None), record)
+
+
+@app.exception_handler(LLMUnavailableError)
+async def llm_unavailable(request: Request, exc: LLMUnavailableError) -> JSONResponse:
+
+    logger.info("llm_unavailable")
+
+    return JSONResponse(
+        status_code=503,
+        content={"detail": f"{exc} /v1/query no está disponible; /v1/retrieve sí funciona."},
+        background=failed_query_task(request, 503, exc),
+    )
 
 
 @app.exception_handler(requests.HTTPError)

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     nli_url: str = "http://127.0.0.1:1012"
 
     llm_host: str = "http://127.0.0.1:1014"
+    aws_region: str = "us-east-2"
     llm_backend: str = "ollama"
     llm_model_base: str = "llama3.2:3b"
     llm_model_answer: str = "llama3.1:8b-instruct-q4_K_M"

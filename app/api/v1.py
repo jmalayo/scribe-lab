@@ -16,6 +16,7 @@ from app.schemas import (
     RetrieveResponse,
     Usage,
 )
+from shared.llm import LLMUnavailableError
 from shared.settings import settings
 
 router = APIRouter()
@@ -46,6 +47,10 @@ def query(
 ) -> QueryResponse:
 
     record = query_log.start_record(request, req, pipeline)
+
+    if pipeline.llm.provider == "none":
+        raise LLMUnavailableError("Este despliegue no tiene modelo de lenguaje configurado.")
+
     history = [(turn.question, turn.answer) for turn in req.history]
     result = pipeline.run(req.question, top_k=req.top_k, history=history)
 

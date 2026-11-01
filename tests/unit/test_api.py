@@ -271,3 +271,18 @@ def test_retrieve_is_not_recorded(client_for, saved_queries):
     client_for(make_pipeline()).post("/v1/retrieve", json={"query": "q"})
 
     assert saved_queries == []
+
+
+def test_without_llm_query_is_503_and_retrieve_still_works(client_for, saved_queries):
+
+    from shared.llm import NoLLM
+
+    client = client_for(make_pipeline(llm=NoLLM()))
+    query = client.post("/v1/query", json={"question": "q"})
+    retrieve = client.post("/v1/retrieve", json={"query": "q"})
+
+    assert query.status_code == 503
+    assert "/v1/retrieve sí funciona" in query.json()["detail"]
+    assert retrieve.status_code == 200
+    assert [(row["estado"], row["error"]) for _, row, _ in saved_queries] == [(503, "LLMUnavailableError")]
+
