@@ -74,6 +74,13 @@ def test_calculate_hit_at_k(ranking):
     assert calculate_hit_at_k(results, questions, 3) == [1.0, 0.0, 0.0]
     assert calculate_hit_at_k(results, questions, 5) == [1.0, 1.0, 0.0]
 
+def test_question_missing_from_results_counts_as_miss(ranking):
+    results, questions = ranking
+    del results["q1"]
+
+    assert calculate_hit_at_k(results, questions, 5) == [0.0, 1.0, 0.0]
+    assert recall_at_k(results, questions, 5) == pytest.approx(1 / 3)
+
 def test_percentile_linear_interpolation():
     values = [7, 3, 10, 1, 5, 9, 2, 8, 4, 6]
 

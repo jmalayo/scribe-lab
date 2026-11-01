@@ -73,21 +73,15 @@ def is_chunk_correct(chunk: dict, question: dict) -> bool:
 def calculate_hit_at_k(results: dict, questions: list, k: int) -> list[float]:
 
     return [
-        1.0 if any(is_chunk_correct(c, q) for c in results[q["id"]][:k]) else 0.0
-        for q in questions
+        1.0 if any(is_chunk_correct(c, q) for c in results.get(q["id"], [])[:k]) else 0.0
+            for q in questions
     ]
 
 def recall_at_k(results: dict[str, list[dict]], questions: list[dict], k: int) -> float:
-    
-    hits = 0
 
-    for q in questions:
-        retrieved = results.get(q["id"], [])[:k]
+    hits = calculate_hit_at_k(results, questions, k)
 
-        if any(is_chunk_correct(c, q) for c in retrieved):
-            hits += 1
-
-    return hits / len(questions) if questions else 0.0
+    return sum(hits) / len(hits) if hits else 0.0
 
 def mrr(results: dict[str, list[dict]], questions: list[dict], k: int | None = None) -> float:
     
