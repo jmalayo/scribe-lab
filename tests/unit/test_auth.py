@@ -93,7 +93,7 @@ def test_key_store_failure_returns_503(keys, monkeypatch):
     def broken():
         raise ConnectionRefusedError()
 
-    monkeypatch.setattr(app.state, "api_keys", KeyStore(broken), raising=False)
+    monkeypatch.setattr(app.state.api_keys, "load", broken)
 
     assert retrieve(client, KEY).status_code == 503
 
