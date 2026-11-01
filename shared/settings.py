@@ -1,14 +1,24 @@
-from pydantic_settings import BaseSettings
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 
 
 class Settings(BaseSettings):
 
+    model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore")
+
     qdrant_mode: str = "server"
     qdrant_host: str = "127.0.0.1"
     qdrant_port: int = 6333
+    qdrant_url: str | None = None
+    qdrant_api_key: str | None = None
 
     text_embedder_mode: str = "server"
     text_embedder_url: str = "http://127.0.0.1:1010"
+    onnx_model_dir: str = "embedder_cache/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2"
+    onnx_model_file: str = "onnx/model.onnx"
 
     embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2"
     embedding_revision: str | None = None
@@ -21,6 +31,7 @@ class Settings(BaseSettings):
     nli_url: str = "http://127.0.0.1:1012"
 
     llm_host: str = "http://127.0.0.1:1014"
+    aws_region: str = "us-east-2"
     llm_backend: str = "ollama"
     llm_model_base: str = "llama3.2:3b"
     llm_model_answer: str = "llama3.1:8b-instruct-q4_K_M"
@@ -33,8 +44,14 @@ class Settings(BaseSettings):
     mlflow_tracking_uri: str = "http://127.0.0.1:5000/"
 
     scribe_api_url: str = "http://127.0.0.1:1013"
+    scribe_api_key: str | None = None
+    agent_scribe_api_key: str | None = None
 
     database_url: str = "postgresql+psycopg://scribe:scribe@127.0.0.1:1015/scribe"
+    query_log_enabled: bool = False
+    require_api_key: bool = False
+    api_key_store: str = "db"
+    api_keys_parameter: str = "/scribe-lab/api_keys"
 
     corpus_dir: str = "corpus_demo"
     questions_path: str = "shared/eval/questions"

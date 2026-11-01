@@ -16,6 +16,7 @@ x-app-env: &app-env
   LLM_HOST: http://ollama:1014
   DETECTOR_URL: http://detector:1011
   NLI_URL: http://nli:1012
+  DATABASE_URL: postgresql+psycopg://scribe:scribe@postgres:5432/scribe
 
 services:
   qdrant:
@@ -94,6 +95,61 @@ services:
       - hf_cache:/home/app/.cache/huggingface
     logging: *default-logging
 
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: scribe
+      POSTGRES_PASSWORD: scribe
+      POSTGRES_DB: scribe
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scribe -d scribe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  phoenix:
+    image: arizephoenix/phoenix:version-21.0.0
+    restart: unless-stopped
+    volumes:
+      - phoenix_data:/mnt/data
+    environment:
+      PHOENIX_WORKING_DIR: /mnt/data
+      PHOENIX_ENABLE_AUTH: "false"
+    ports:
+      - "127.0.0.1:1016:6006"
+    logging: *default-logging
+
+  n8n:
+    image: n8nio/n8n:2.45.7
+    restart: unless-stopped
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n:/workflows:ro
+    environment:
+      GENERIC_TIMEZONE: UTC
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+    ports:
+      - "127.0.0.1:1017:5678"
+    logging: *default-logging
+
+  migrate:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    image: scribe-app:local
+    restart: "no"
+    command: ["alembic", "upgrade", "servicio@head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment: *app-env
+    logging: *default-logging
+
   app:
     build:
       context: .
@@ -105,7 +161,13 @@ services:
         condition: service_completed_successfully
       ollama-pull:
         condition: service_completed_successfully
-    environment: *app-env
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: *app-env
+      QUERY_LOG_ENABLED: "true"
+      REQUIRE_API_KEY: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://phoenix:6006
     volumes:
       - hf_cache:/home/app/.cache/huggingface
     ports:
@@ -151,3 +213,6 @@ volumes:
   ollama_data:
   hf_cache:
   detector_models:
+  postgres_data:
+  phoenix_data:
+  n8n_data:

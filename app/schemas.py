@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, Field
 
 from shared.eval.grounding import GroundingResult
@@ -12,6 +14,7 @@ class QueryRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     top_k: int | None = Field(default=None, ge=1, le=50)
     history: list[HistoryTurn] = Field(default_factory=list, max_length=20)
+    session_id: UUID | None = None
 
 
 class RetrieveRequest(BaseModel):

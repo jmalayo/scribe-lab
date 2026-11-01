@@ -1,9 +1,12 @@
 import time
 
 import requests
-from fastapi import APIRouter
+import structlog
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.responses import JSONResponse
 
+from app import query_log
+from app.auth import require_api_key
 from app.deps import PipelineDep
 from app.schemas import (
     Citation,
@@ -13,9 +16,11 @@ from app.schemas import (
     RetrieveResponse,
     Usage,
 )
+from shared.llm import LLMUnavailableError
 from shared.settings import settings
 
 router = APIRouter()
+logger = structlog.get_logger("app.query")
 
 
 def _citations(chunks: list[dict], score_key: str) -> list[Citation]:
@@ -33,11 +38,39 @@ def _citations(chunks: list[dict], score_key: str) -> list[Citation]:
     ]
 
 
-@router.post("/v1/query", response_model=QueryResponse)
-def query(req: QueryRequest, pipeline: PipelineDep) -> QueryResponse:
+@router.post("/v1/query", response_model=QueryResponse, dependencies=[Depends(require_api_key)])
+def query(
+    req: QueryRequest,
+    pipeline: PipelineDep,
+    request: Request,
+    background: BackgroundTasks,
+) -> QueryResponse:
+
+    record = query_log.start_record(request, req, pipeline)
+
+    if pipeline.llm.provider == "none":
+        raise LLMUnavailableError("Este despliegue no tiene modelo de lenguaje configurado.")
 
     history = [(turn.question, turn.answer) for turn in req.history]
     result = pipeline.run(req.question, top_k=req.top_k, history=history)
+
+    query_log.finish_success(record, result, pipeline.score_key)
+    background.add_task(query_log.save, getattr(request.app.state, "query_log", None), record)
+
+    logger.info(
+        "query",
+        latencies_ms=result.latencies_ms,
+        tokens_in=result.tokens_in,
+        tokens_out=result.tokens_out,
+        history_turns=len(history),
+        rewritten=result.rewritten_question is not None,
+        abstained=result.abstained,
+        chunk_ids=[c["chunk_id"] for c in result.chunks],
+        provider=result.provider,
+        model=result.model,
+        pipeline_version=pipeline.config.pipeline_version,
+        prompt_version=pipeline.config.prompt_version,
+    )
 
     return QueryResponse(
         answer=result.answer,
@@ -55,7 +88,7 @@ def query(req: QueryRequest, pipeline: PipelineDep) -> QueryResponse:
     )
 
 
-@router.post("/v1/retrieve", response_model=RetrieveResponse)
+@router.post("/v1/retrieve", response_model=RetrieveResponse, dependencies=[Depends(require_api_key)])
 def retrieve(req: RetrieveRequest, pipeline: PipelineDep) -> RetrieveResponse:
 
     t0 = time.perf_counter()

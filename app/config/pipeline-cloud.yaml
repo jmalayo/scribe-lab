@@ -1,0 +1,27 @@
+pipeline_version: 2026-10-29-19cf2f4-cloud
+collection: corpus_demo
+corpus_dir: corpus_demo
+chunk_size: 293
+chunk_overlap: 73
+method: hybrid_rrf
+reranker: false
+pool_size: 20
+top_k: 10
+prompt_version: v1
+llm:
+  provider: none
+  model: none
+  max_tokens: 500
+abstention:
+  enabled: false
+grounding:
+  enabled: false
+  threshold: 0.5
+  entailment_threshold: 0.5
+  contradiction_threshold: 0.5
+memory:
+  enabled: false
+  model: llama3.2:3b
+  max_tokens: 120
+  prompt_version: v2
+  rrf_k: 60

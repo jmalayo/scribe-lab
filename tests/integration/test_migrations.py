@@ -13,6 +13,14 @@ TABLES = {
     "corridas_eval",
     "resultados_pregunta",
     "veredictos",
+    "conversaciones_eval",
+    "turnos_eval",
+    "api_keys",
+    "sesiones",
+    "consultas",
+    "consulta_chunks",
+    "feedback",
+    "canario_ejecuciones",
 }
 
 
@@ -25,7 +33,7 @@ def test_upgrade_creates_the_tables_and_downgrade_removes_them(db):
 
     config, engine = db
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "heads")
     assert tables(engine) == TABLES
 
     command.downgrade(config, "base")
@@ -35,7 +43,7 @@ def test_upgrade_creates_the_tables_and_downgrade_removes_them(db):
 def test_a_document_with_chunks_cannot_be_deleted(db):
 
     config, engine = db
-    command.upgrade(config, "head")
+    command.upgrade(config, "heads")
 
     with engine.begin() as c:
         doc = c.execute(
@@ -71,7 +79,7 @@ def test_a_document_with_chunks_cannot_be_deleted(db):
 def test_constraints_reject_invalid_rows(db, statement):
 
     config, engine = db
-    command.upgrade(config, "head")
+    command.upgrade(config, "heads")
 
     with pytest.raises(IntegrityError), engine.begin() as c:
         c.execute(text(statement))

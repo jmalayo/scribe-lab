@@ -13,3 +13,8 @@ pyyaml>=6.0
 sqlalchemy==2.0.52
 alembic==1.19.1
 psycopg[binary]==3.2.13
+structlog>=26.1
+opentelemetry-api>=1.45
+opentelemetry-sdk>=1.45
+opentelemetry-exporter-otlp-proto-http>=1.45
+boto3>=1.43

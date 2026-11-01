@@ -65,3 +65,27 @@ def test_kappa_view_matches_the_labels_file(conn):
     ).scalar()
 
     assert float(kappa) == pytest.approx(expected, abs=1e-3)
+
+
+def test_multiturn_sets_match_their_files(conn):
+
+    import json
+
+    from shared.db import conversaciones_eval, turnos_eval
+
+    expected = {}
+
+    for path in sorted(Path("shared/eval/multiturn").glob("multiturno_*.jsonl")):
+        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+        expected[path.stem.removeprefix("multiturno_")] = (len(rows), sum(len(r["turnos"]) for r in rows))
+
+    loaded = {}
+
+    for table, position in ((conversaciones_eval, 0), (turnos_eval, 1)):
+        for conjunto, count in conn.execute(select(table.c.conjunto, func.count()).group_by(table.c.conjunto)):
+            loaded.setdefault(conjunto, [0, 0])[position] = count
+
+    if not loaded:
+        pytest.skip("los sets multiturno no están cargados (experiments/sql/load_eval.py)")
+
+    assert {k: tuple(v) for k, v in loaded.items()} == expected

@@ -23,3 +23,10 @@ experiments/evaluation/benchmark-models/results/exp_*
 
 definition
 .coverage
+
+# Terraform: estado local y proveedores descargados
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/terraform.tfvars
+infra/*.tfplan

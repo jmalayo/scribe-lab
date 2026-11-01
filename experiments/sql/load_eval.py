@@ -16,11 +16,13 @@ import mlflow
 from shared.db import (
     build_engine,
     chunks,
+    conversaciones_eval,
     corridas_eval,
     documentos,
     pregunta_documentos,
     preguntas,
     resultados_pregunta,
+    turnos_eval,
     upsert,
     veredictos,
 )
@@ -41,6 +43,8 @@ AGENT_EXPERIMENT = f"{settings.mlflow_experiment_prefix}-agent"
 AGENT_EXP = "exp_2"
 AGENT_RESULTS = REPO_ROOT / "experiments" / "agent" / "results" / AGENT_EXP
 AGENT_SIDES = ("pipeline", "agent")
+
+MULTITURN_DIR = REPO_ROOT / "shared" / "eval" / "multiturn"
 
 
 def sha256(text: str) -> str:
@@ -234,13 +238,62 @@ def load_agent_benchmark(conn, questions: list[dict]) -> dict:
     }
 
 
+def load_multiturn_sets(conn) -> dict:
+
+    conversations, turns = [], []
+
+    for path in sorted(MULTITURN_DIR.glob("multiturno_*.jsonl")):
+        conjunto = path.stem.removeprefix("multiturno_")
+
+        for line in path.read_text(encoding="utf-8").splitlines():
+            conv = json.loads(line)
+            target = conv["objetivo"]
+
+            conversations.append(
+                {
+                    "conjunto": conjunto,
+                    "conv_id": conv["conv_id"],
+                    "tipo": conv["tipo"],
+                    "split": conv["split"],
+                    "autor": conv.get("autor"),
+                    "ref_id": target.get("ref_id"),
+                    "pregunta_autonoma": target["pregunta_autonoma"],
+                    "respuesta_esperada": target.get("expected_answer"),
+                    "gold_spans": target.get("gold_spans") or [],
+                    "source_doc": target.get("source_doc"),
+                    "usa_historial": target["usa_historial"],
+                    "debe_abstenerse": target["debe_abstenerse"],
+                }
+            )
+            turns += [
+                {
+                    "conjunto": conjunto,
+                    "conv_id": conv["conv_id"],
+                    "idx": idx,
+                    "rol": turn["rol"],
+                    "texto": turn["texto"],
+                    "ref_id": turn.get("ref_id"),
+                }
+                    for idx, turn in enumerate(conv["turnos"])
+            ]
+
+    return {
+        "conversaciones_eval": upsert(conn, conversaciones_eval, conversations, ["conjunto", "conv_id"]),
+        "turnos_eval": upsert(conn, turnos_eval, turns, ["conjunto", "conv_id", "idx"]),
+    }
+
+
 def main() -> dict:
 
     mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
     questions = load_questions()
 
     with build_engine().begin() as conn:
-        counts = load_corpus_and_questions(conn, questions) | load_agent_benchmark(conn, questions)
+        counts = (
+            load_corpus_and_questions(conn, questions)
+                | load_agent_benchmark(conn, questions)
+                | load_multiturn_sets(conn)
+        )
 
     print(json.dumps(counts, indent=2))
 

@@ -1,6 +1,7 @@
 import logging
 import uuid
 
+import numpy as np
 import pytest
 
 import shared.ingest as ingest
@@ -10,6 +11,7 @@ from shared.ingest import (
     corpus_hash,
     get_current_config,
     load_corpus,
+    mean_pool,
     qualified_collection_name,
     validate_chunk,
 )
@@ -242,3 +244,13 @@ def test_get_embedder_builds_one_remote_embedder(monkeypatch):
         ORIGINAL_GET_EMBEDDER.cache_clear()
 
     assert created == [(ingest.settings.text_embedder_url, f"sentence-transformers/{ingest.settings.embedding_model}")]
+
+
+def test_mean_pool_ignores_padding_and_normalizes():
+
+    hidden = np.array([[[3.0, 4.0], [100.0, 100.0]], [[1.0, 0.0], [0.0, 1.0]]], dtype=np.float32)
+    mask = np.array([[1, 0], [1, 1]])
+
+    vectors = mean_pool(hidden, mask)
+
+    assert np.allclose(vectors, [[0.6, 0.8], [2 ** -0.5, 2 ** -0.5]])
