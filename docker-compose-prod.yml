@@ -123,6 +123,20 @@ services:
       - "127.0.0.1:1016:6006"
     logging: *default-logging
 
+  n8n:
+    image: n8nio/n8n:2.45.7
+    restart: unless-stopped
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n:/workflows:ro
+    environment:
+      GENERIC_TIMEZONE: UTC
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+    ports:
+      - "127.0.0.1:1017:5678"
+    logging: *default-logging
+
   migrate:
     build:
       context: .
@@ -201,3 +215,4 @@ volumes:
   detector_models:
   postgres_data:
   phoenix_data:
+  n8n_data:

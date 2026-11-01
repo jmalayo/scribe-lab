@@ -1,0 +1,182 @@
+{
+  "name": "Canario diario",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 13
+            }
+          ]
+        }
+      },
+      "id": "a1",
+      "name": "Cada día 13:00 UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a2",
+      "name": "A mano",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const PREGUNTAS = [\n  \"En el modelo de producción sin perc_ratio, ¿qué tres features concentran más de la mitad de la importancia del Random Forest y cuánto suman?\",\n  \"¿Sobre qué conjunto se midieron la regla lineal (49.7 %) y el acuerdo final del router de confianza (74.0 %) reportados en el benchmark de DSP?\",\n  \"En la arquitectura original del proyecto, ¿qué papel cumplía Route B (CLAP zero-shot) dentro de la clasificación combinada?\",\n  \"¿Qué sesgo mostró CLAP zero-shot al usar prompts largos y densos en palabras clave?\",\n  \"¿Qué balanced accuracy obtuvo el sistema de prototipos few-shot usando k=5 canciones de soporte por categoría?\"\n];\n\nconst corrida = $execution.id;\n\nreturn PREGUNTAS.map((question) => ({ json: { question, corrida } }));\n"
+      },
+      "id": "a3",
+      "name": "Preguntas fijas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://app:1013/v1/query",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ question: $json.question }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "a4",
+      "name": "Consultar la API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "canario-api-key",
+          "name": "API key canario-local"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const LIMITE_LATENCIA_MS = 30000;\n\nreturn $input.all().map((item, i) => {\n  const enviada = $('Preguntas fijas').all()[i].json;\n  const r = item.json;\n  let estado = 'ok';\n  let motivo = null;\n  const codigo = r.statusCode ?? null;\n  const latencia = r.body?.latency_ms ?? null;\n\n  if (r.error) {\n    estado = 'falla';\n    motivo = `la API no responde: ${r.error.message ?? r.error}`;\n  } else if (codigo !== 200) {\n    estado = 'falla';\n    motivo = `HTTP ${codigo}: ${r.body?.detail ?? 'sin detalle'}`;\n  } else if (!r.body?.answer || !r.body.answer.trim()) {\n    estado = 'falla';\n    motivo = 'respuesta vacía';\n  } else if (latencia > LIMITE_LATENCIA_MS) {\n    estado = 'falla';\n    motivo = `latencia ${Math.round(latencia)} ms supera el límite de ${LIMITE_LATENCIA_MS} ms`;\n  }\n\n  return {\n    json: {\n      corrida_id: String(enviada.corrida),\n      pregunta: enviada.question,\n      estado,\n      codigo_http: codigo,\n      latencia_ms: latencia,\n      motivo,\n    },\n  };\n});\n"
+      },
+      "id": "a5",
+      "name": "Revisar respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO canario_ejecuciones (corrida_id, pregunta, estado, codigo_http, latencia_ms, motivo) VALUES ($1, $2, $3, $4, $5, $6)",
+        "options": {
+          "queryReplacement": "={{ [$json.corrida_id, $json.pregunta, $json.estado, $json.codigo_http, $json.latencia_ms, $json.motivo] }}"
+        }
+      },
+      "id": "a6",
+      "name": "Guardar en Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        960,
+        100
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "canario-postgres",
+          "name": "Postgres scribe"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cada día 13:00 UTC": {
+      "main": [
+        [
+          {
+            "node": "Preguntas fijas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A mano": {
+      "main": [
+        [
+          {
+            "node": "Preguntas fijas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preguntas fijas": {
+      "main": [
+        [
+          {
+            "node": "Consultar la API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar la API": {
+      "main": [
+        [
+          {
+            "node": "Revisar respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revisar respuesta": {
+      "main": [
+        [
+          {
+            "node": "Guardar en Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "canario-diario",
+  "active": false
+}

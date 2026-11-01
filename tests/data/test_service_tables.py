@@ -60,6 +60,7 @@ def test_service_branch_creates_only_service_tables(service_db):
         "consultas",
         "consulta_chunks",
         "feedback",
+        "canario_ejecuciones",
         "v_latencia_movil",
         "v_errores_por_dia",
         "v_drift_semanal",

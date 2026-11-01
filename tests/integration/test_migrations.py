@@ -20,6 +20,7 @@ TABLES = {
     "consultas",
     "consulta_chunks",
     "feedback",
+    "canario_ejecuciones",
 }
 
 

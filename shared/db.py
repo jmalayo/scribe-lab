@@ -302,6 +302,26 @@ api_keys = Table(
 )
 
 
+canario_ejecuciones = Table(
+    "canario_ejecuciones",
+    metadata,
+    Column(
+        "id",
+        Uuid,
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    ),
+    Column("corrida_id", Text, nullable=False),
+    Column("creada_en", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("pregunta", Text, nullable=False),
+    Column("estado", Text, nullable=False),
+    Column("codigo_http", Integer),
+    Column("latencia_ms", Float),
+    Column("motivo", Text),
+    CheckConstraint("estado IN ('ok', 'falla')", name="canario_ejecuciones_estado"),
+)
+
+
 def build_engine(url: str | None = None) -> Engine:
 
     return create_engine(url or settings.database_url)
