@@ -36,7 +36,10 @@ async def agent_tools() -> AsyncIterator[list[BaseTool]]:
                 "command": sys.executable,
                 "args": ["-m", "mcp_server.server"],
                 "cwd": str(REPO_ROOT),
-                "env": {"SCRIBE_API_URL": settings.scribe_api_url},
+                "env": {
+                    "SCRIBE_API_URL": settings.scribe_api_url,
+                    **({"SCRIBE_API_KEY": settings.agent_scribe_api_key} if settings.agent_scribe_api_key else {}),
+                },
             }
         }
     )

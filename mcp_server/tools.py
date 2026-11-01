@@ -11,7 +11,12 @@ def _post(path: str, payload: dict, timeout: float) -> dict:
     url = f"{settings.scribe_api_url}{path}"
 
     try:
-        resp = httpx.post(url, json=payload, timeout=timeout)
+        resp = httpx.post(
+            url,
+            json=payload,
+            timeout=timeout,
+            headers={"X-API-Key": settings.scribe_api_key} if settings.scribe_api_key else None,
+        )
 
     except httpx.TimeoutException as exc:
         raise RuntimeError(f"La API no respondió en {timeout:.0f} s ({url}).") from exc

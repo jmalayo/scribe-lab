@@ -39,7 +39,7 @@ def api(monkeypatch):
     calls = []
     replies = []
 
-    def post(url, json, timeout):
+    def post(url, json, timeout, headers=None):
         calls.append((url, json, timeout))
         reply = replies.pop(0)
 
@@ -163,3 +163,23 @@ def test_api_failure_reaches_the_client_as_a_tool_error(api):
 
     assert result.isError is True
     assert "respondió 503" in result.content[0].text
+
+
+def test_api_key_is_sent_only_when_configured(monkeypatch):
+
+    sent = []
+
+    def post(url, json, timeout, headers=None):
+        sent.append(headers)
+        return ok({"chunks": []})
+
+    monkeypatch.setattr(tools.settings, "scribe_api_url", "http://api")
+    monkeypatch.setattr(tools.httpx, "post", post)
+
+    monkeypatch.setattr(tools.settings, "scribe_api_key", None)
+    tools.buscar_documentos("q")
+    monkeypatch.setattr(tools.settings, "scribe_api_key", "sk_scribe_test")
+    tools.buscar_documentos("q")
+
+    assert sent == [None, {"X-API-Key": "sk_scribe_test"}]
+

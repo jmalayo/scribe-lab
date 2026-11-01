@@ -117,3 +117,26 @@ def test_writer_records_a_query_and_cannot_read_it_back(service_db):
         ).one()
 
     assert tuple(counts) == (1, 10, 2)
+
+
+def test_created_key_is_visible_to_the_writer_until_revoked(service_db):
+
+    from app.auth import hash_key
+    from app.manage_keys import create, revoke
+    from shared.db import load_active_keys
+
+    with build_engine(service_db).begin() as conn:
+        key = create(conn, "test-dueno", 5)
+
+    writer = build_writer_engine(service_db)
+    active = {owner: (stored_hash, limit) for _, owner, stored_hash, limit in load_active_keys(writer)}
+
+    assert key.startswith("sk_scribe_") and len(key) == len("sk_scribe_") + 43
+    assert active["test-dueno"] == (hash_key(key), 5)
+
+    with build_engine(service_db).begin() as conn:
+        assert revoke(conn, "test-dueno") == 1
+
+    assert "test-dueno" not in {owner for _, owner, _, _ in load_active_keys(writer)}
+
+    writer.dispose()

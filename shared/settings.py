@@ -1,7 +1,13 @@
-from pydantic_settings import BaseSettings
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 
 
 class Settings(BaseSettings):
+
+    model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore")
 
     qdrant_mode: str = "server"
     qdrant_host: str = "127.0.0.1"
@@ -33,6 +39,8 @@ class Settings(BaseSettings):
     mlflow_tracking_uri: str = "http://127.0.0.1:5000/"
 
     scribe_api_url: str = "http://127.0.0.1:1013"
+    scribe_api_key: str | None = None
+    agent_scribe_api_key: str | None = None
 
     database_url: str = "postgresql+psycopg://scribe:scribe@127.0.0.1:1015/scribe"
     query_log_enabled: bool = False

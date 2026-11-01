@@ -140,6 +140,7 @@ services:
     environment:
       <<: *app-env
       QUERY_LOG_ENABLED: "true"
+      REQUIRE_API_KEY: "true"
     volumes:
       - hf_cache:/home/app/.cache/huggingface
     ports:
