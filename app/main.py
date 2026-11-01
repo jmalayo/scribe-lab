@@ -1,21 +1,17 @@
-import logging
-import sys
 import time
 import uuid
 
 import requests
+import structlog
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.api.v1 import router
 from app.deps import lifespan
+from app.log import configure_logging
 
-logging.basicConfig(
-    stream=sys.stdout,
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s",
-)
-logger = logging.getLogger("app")
+configure_logging()
+logger = structlog.get_logger("app")
 
 app = FastAPI(title="scribe-lab API", version="0.1.0", lifespan=lifespan)
 app.include_router(router)
@@ -25,17 +21,18 @@ app.include_router(router)
 async def request_context(request: Request, call_next):
 
     request.state.request_id = request.headers.get("x-request-id") or uuid.uuid4().hex
+    structlog.contextvars.clear_contextvars()
+    structlog.contextvars.bind_contextvars(request_id=request.state.request_id)
     t0 = time.perf_counter()
     response = await call_next(request)
     elapsed = round((time.perf_counter() - t0) * 1000, 2)
     response.headers["x-request-id"] = request.state.request_id
     logger.info(
-        "request_id=%s method=%s path=%s status=%s latency_ms=%s",
-        request.state.request_id,
-        request.method,
-        request.url.path,
-        response.status_code,
-        elapsed,
+        "request",
+        method=request.method,
+        path=request.url.path,
+        status=response.status_code,
+        latency_ms=elapsed,
     )
 
     return response
@@ -45,7 +42,7 @@ async def request_context(request: Request, call_next):
 async def upstream_http_error(request: Request, exc: requests.HTTPError) -> JSONResponse:
 
     status = getattr(exc.response, "status_code", None)
-    logger.warning("request_id=%s upstream_status=%s", getattr(request.state, "request_id", None), status)
+    logger.warning("upstream_error", upstream_status=status)
 
     return JSONResponse(status_code=502, content={"detail": "Un servicio interno respondió con error."})
 
@@ -53,7 +50,7 @@ async def upstream_http_error(request: Request, exc: requests.HTTPError) -> JSON
 @app.exception_handler(requests.RequestException)
 async def upstream_unavailable(request: Request, exc: requests.RequestException) -> JSONResponse:
 
-    logger.warning("request_id=%s upstream_unavailable=%s", getattr(request.state, "request_id", None), type(exc).__name__)
+    logger.warning("upstream_unavailable", error=type(exc).__name__)
 
     return JSONResponse(status_code=503, content={"detail": "Un servicio interno no está disponible."})
 
@@ -61,6 +58,6 @@ async def upstream_unavailable(request: Request, exc: requests.RequestException)
 @app.exception_handler(Exception)
 async def unhandled(request: Request, exc: Exception) -> JSONResponse:
 
-    logger.exception("request_id=%s unhandled", getattr(request.state, "request_id", None))
+    logger.exception("unhandled_error")
 
     return JSONResponse(status_code=500, content={"detail": "Error interno."})

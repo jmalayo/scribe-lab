@@ -1,6 +1,6 @@
-import logging
-import sys
+import structlog
 
+from app.log import configure_logging
 from shared.ingest import (
     build_qdrant_client,
     chunk_documents,
@@ -11,12 +11,12 @@ from shared.ingest import (
 from shared.pipeline import PipelineConfig
 from shared.settings import settings
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
-logger = logging.getLogger("app.reindex")
+logger = structlog.get_logger("app.reindex")
 
 
 def main() -> None:
 
+    configure_logging()
     config = PipelineConfig.from_yaml(settings.pipeline_config_path)
     client = build_qdrant_client()
 
@@ -44,7 +44,13 @@ def main() -> None:
         },
     )
 
-    logger.info("alias=%s docs=%s chunks=%s result=%s", config.collection, len(docs), len(chunks), result)
+    logger.info(
+        "reindex",
+        alias=config.collection,
+        docs=len(docs),
+        chunks=len(chunks),
+        result=result,
+    )
 
 
 if __name__ == "__main__":

@@ -132,3 +132,69 @@ def test_ready_fails_without_the_collection_alias(client_for):
 
     assert resp.status_code == 503
     assert resp.json()["checks"]["qdrant_collection"] is False
+
+
+@pytest.fixture
+def log_lines():
+
+    import io
+    import json
+
+    from app.log import configure_logging
+
+    buffer = io.StringIO()
+    configure_logging(stream=buffer)
+
+    yield lambda: [json.loads(line) for line in buffer.getvalue().splitlines()]
+
+    configure_logging()
+
+
+def test_each_request_logs_one_json_line(client_for, log_lines):
+
+    resp = client_for(make_pipeline()).get("/health", headers={"x-request-id": "rid-1"})
+    lines = [line for line in log_lines() if line["event"] == "request"]
+
+    assert resp.status_code == 200
+    assert lines == [
+        {
+            "event": "request",
+            "request_id": "rid-1",
+            "method": "GET",
+            "path": "/health",
+            "status": 200,
+            "latency_ms": lines[0]["latency_ms"],
+            "level": "info",
+            "logger": "app",
+            "timestamp": lines[0]["timestamp"],
+        }
+    ]
+
+
+def test_query_event_has_metrics_but_not_the_question(client_for, log_lines):
+
+    question = "¿pregunta privada del usuario?"
+    client_for(make_pipeline()).post(
+        "/v1/query",
+        json={"question": question},
+        headers={"x-request-id": "rid-2"},
+    )
+    lines = log_lines()
+    event = next(line for line in lines if line["event"] == "query")
+
+    assert event["request_id"] == "rid-2"
+    assert (event["tokens_in"], event["tokens_out"]) == (11, 3)
+    assert event["chunk_ids"] == ["c0", "c1", "c2"]
+    assert event["latencies_ms"]["total"] >= 0
+    assert (event["rewritten"], event["abstained"], event["history_turns"]) == (False, False, 0)
+    assert (event["pipeline_version"], event["prompt_version"]) == ("test", "v1")
+    assert all(question not in json_line for json_line in map(str, lines))
+
+
+def test_unhandled_error_is_logged_as_json(client_for, log_lines):
+
+    client_for(make_pipeline(llm=RaisingLLM(RuntimeError("boom")))).post("/v1/query", json={"question": "q"})
+    error = next(line for line in log_lines() if line["event"] == "unhandled_error")
+
+    assert error["level"] == "error"
+    assert "RuntimeError: boom" in error["exception"]

@@ -1,6 +1,7 @@
 import time
 
 import requests
+import structlog
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
@@ -16,6 +17,7 @@ from app.schemas import (
 from shared.settings import settings
 
 router = APIRouter()
+logger = structlog.get_logger("app.query")
 
 
 def _citations(chunks: list[dict], score_key: str) -> list[Citation]:
@@ -38,6 +40,21 @@ def query(req: QueryRequest, pipeline: PipelineDep) -> QueryResponse:
 
     history = [(turn.question, turn.answer) for turn in req.history]
     result = pipeline.run(req.question, top_k=req.top_k, history=history)
+
+    logger.info(
+        "query",
+        latencies_ms=result.latencies_ms,
+        tokens_in=result.tokens_in,
+        tokens_out=result.tokens_out,
+        history_turns=len(history),
+        rewritten=result.rewritten_question is not None,
+        abstained=result.abstained,
+        chunk_ids=[c["chunk_id"] for c in result.chunks],
+        provider=result.provider,
+        model=result.model,
+        pipeline_version=pipeline.config.pipeline_version,
+        prompt_version=pipeline.config.prompt_version,
+    )
 
     return QueryResponse(
         answer=result.answer,
