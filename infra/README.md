@@ -56,7 +56,7 @@ El estado queda en esta carpeta, fuera de git. Conviene guardar una copia de `te
    ```bash
    REPO=$(terraform output -raw ecr_repository_url)
    aws ecr get-login-password --profile scribe-lab | docker login --username AWS --password-stdin "${REPO%%/*}"
-   docker build -f ../app/Dockerfile.lambda -t "$REPO:v0.1.0" ..
+   docker build --provenance=false -f ../app/Dockerfile.lambda -t "$REPO:v0.1.0" ..
    docker push "$REPO:v0.1.0"
    ```
 
@@ -98,3 +98,7 @@ Esta sección se completa con cada `apply` y con la prueba de destrucción.
 | --- | --- | --- |
 | 2026-11-01 | Base (`deploy_function=false`) | 9 recursos creados; `terraform plan` posterior sin cambios. Budgets `scribe-lab-usd-1` y `scribe-lab-usd-10` activos; suscripción de correo confirmada |
 | 2026-11-01 | Corpus en Qdrant Cloud | 400 chunks. Con el modelo int8 de la Lambda: recall@10 0.667 frente a 0.659 de la línea base (1 pregunta perdida, 2 ganadas, McNemar p = 1.0); 111 ms por pregunta desde la PC |
+| 2026-11-01 | Lambda y URL pública (`v0.1.0`, luego `v0.1.1`) | 7 recursos creados. Desde internet: `/health` 200, `/v1/retrieve` con clave 200, sin clave o con clave inválida 401, `/v1/query` 503 |
+| 2026-11-01 | Arranque en frío | La primera invocación tras subir una imagen nueva tarda unos 45 s, porque AWS descarga la imagen y el arranque pasa el límite de 10 s. Con la imagen en caché, una instancia nueva responde en unos 6.7 s, y una caliente en 30 ms dentro de AWS (0.4 s medidos desde la PC). Por eso el tiempo máximo pasó de 30 s a 60 s, y el modelo se carga en la primera consulta en vez de en el arranque |
+
+<mark>`cd.yml` invoca la versión nueva antes de mover `live`, así que esa espera de la primera invocación no la sufre quien usa la URL.</mark>

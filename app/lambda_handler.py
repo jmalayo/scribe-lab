@@ -41,10 +41,16 @@ def build_handler():
     from app.main import app
     from app.telemetry import flush
 
-    startup(app)
     adapter = Mangum(app, lifespan="off")
+    started = False
 
     def handler(event, context):
+
+        nonlocal started
+
+        if not started:
+            startup(app)
+            started = True
 
         try:
             return adapter(event, context)

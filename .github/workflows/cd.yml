@@ -50,7 +50,7 @@ jobs:
         if: inputs.rollback_to == ''
         run: |
           echo "IMAGE=${{ steps.ecr.outputs.registry }}/$REPOSITORY:${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
-          docker build -f app/Dockerfile.lambda -t "${{ steps.ecr.outputs.registry }}/$REPOSITORY:${GITHUB_REF_NAME}" .
+          docker build --provenance=false -f app/Dockerfile.lambda -t "${{ steps.ecr.outputs.registry }}/$REPOSITORY:${GITHUB_REF_NAME}" .
 
       - name: Scan the image
         if: inputs.rollback_to == ''
@@ -74,7 +74,7 @@ jobs:
         if: inputs.rollback_to == ''
         run: |
           printf '%s' '{"version":"2.0","rawPath":"/health","rawQueryString":"","headers":{},"requestContext":{"http":{"method":"GET","path":"/health","sourceIp":"127.0.0.1"}},"isBase64Encoded":false}' > event.json
-          aws lambda invoke --function-name "$FUNCTION" --qualifier "$VERSION" --payload fileb://event.json out.json > /dev/null
+          aws lambda invoke --cli-read-timeout 120 --function-name "$FUNCTION" --qualifier "$VERSION" --payload fileb://event.json out.json > /dev/null
           python3 -c "import json,sys; sys.exit(0 if json.load(open('out.json')).get('statusCode') == 200 else 1)"
 
       - name: Move live and check the public URL

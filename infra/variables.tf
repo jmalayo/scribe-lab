@@ -56,8 +56,9 @@ variable "memory_mb" {
 }
 
 variable "timeout_seconds" {
-  type    = number
-  default = 30
+  description = "La primera consulta de una instancia carga el modelo y el índice BM25; tras un despliegue también descarga la imagen."
+  type        = number
+  default     = 60
 }
 
 variable "ssm_parameters" {
