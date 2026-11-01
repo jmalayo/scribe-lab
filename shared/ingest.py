@@ -282,8 +282,72 @@ class RemoteEmbedder:
         return vectors[0] if single else vectors
 
 
+def mean_pool(hidden, mask):
+
+    import numpy as np
+
+    weights = mask[..., None].astype(np.float32)
+    vectors = (hidden * weights).sum(axis=1) / np.clip(weights.sum(axis=1), 1e-9, None)
+    norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+
+    return (vectors / np.clip(norms, 1e-12, None)).astype(np.float32)
+
+
+class OnnxEmbedder:
+
+    _BATCH = 32
+
+    def __init__(self, model_dir: str, model_file: str = "onnx/model.onnx", max_seq_length: int = 128):
+
+        import onnxruntime
+        from tokenizers import Tokenizer
+
+        options = onnxruntime.SessionOptions()
+        options.log_severity_level = 3
+
+        self._tokenizer = Tokenizer.from_file(str(Path(model_dir) / "tokenizer.json"))
+        self._tokenizer.enable_truncation(max_seq_length)
+        self._session = onnxruntime.InferenceSession(
+            str(Path(model_dir) / model_file), options, providers=["CPUExecutionProvider"]
+        )
+        self._inputs = {i.name for i in self._session.get_inputs()}
+        self.max_seq_length = max_seq_length
+
+    def get_dimension(self) -> int:
+        return int(self._session.get_outputs()[0].shape[-1])
+
+    def health(self) -> bool:
+        return True
+
+    def encode(self, texts, normalize_embeddings=False):
+
+        import numpy as np
+
+        single = isinstance(texts, str)
+        inputs = [texts] if single else list(texts)
+        batches = []
+
+        for start in range(0, len(inputs), self._BATCH):
+
+            encodings = self._tokenizer.encode_batch(inputs[start : start + self._BATCH])
+            feed = {
+                "input_ids": np.array([e.ids for e in encodings], dtype=np.int64),
+                "attention_mask": np.array([e.attention_mask for e in encodings], dtype=np.int64),
+                "token_type_ids": np.array([e.type_ids for e in encodings], dtype=np.int64),
+            }
+            hidden = self._session.run(None, {k: v for k, v in feed.items() if k in self._inputs})[0]
+            batches.append(mean_pool(hidden, feed["attention_mask"]))
+
+        vectors = np.concatenate(batches) if batches else np.zeros((0, self.get_dimension()), np.float32)
+
+        return vectors[0] if single else vectors
+
+
 @functools.lru_cache(maxsize=1)
 def get_embedder():
+
+    if settings.text_embedder_mode == "onnx":
+        return OnnxEmbedder(settings.onnx_model_dir, settings.onnx_model_file)
 
     if settings.text_embedder_mode == "server":
         return RemoteEmbedder(

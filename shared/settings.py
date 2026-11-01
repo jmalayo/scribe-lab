@@ -15,6 +15,8 @@ class Settings(BaseSettings):
 
     text_embedder_mode: str = "server"
     text_embedder_url: str = "http://127.0.0.1:1010"
+    onnx_model_dir: str = "embedder_cache/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2"
+    onnx_model_file: str = "onnx/model.onnx"
 
     embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2"
     embedding_revision: str | None = None
